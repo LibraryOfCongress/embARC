@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+
+<fx:root type="javafx.scene.layout.AnchorPane"
+	xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+	<children>
+		<AnchorPane fx:id="writeFilesSummaryPane" minHeight="0.0"
+			minWidth="0.0" prefHeight="200.0" prefWidth="160.0"
+			style="-fx-background-color: #d1d9de;" AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0">
+			<children></children>
+		</AnchorPane>
+	</children>
+</fx:root>

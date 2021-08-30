@@ -1,0 +1,191 @@
+buildscript {
+
+    repositories {
+
+        jcenter()
+
+        maven {
+
+            url "https://plugins.gradle.org/m2/"
+
+        }
+
+    }
+
+    dependencies {
+
+        classpath 'edu.sc.seis.gradle:launch4j:2.4.4'
+
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
+
+        classpath 'de.jensd:fontawesomefx-commons:9.1.2'
+
+        classpath "edu.sc.seis:macAppBundle:2.3.0"
+
+    }
+
+}
+
+apply plugin: 'java'
+
+apply plugin: 'eclipse'
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+apply plugin: 'application'
+
+apply plugin: 'distribution'
+
+apply plugin: 'launch4j'
+
+apply plugin: "edu.sc.seis.macAppBundle"
+
+mainClassName = "com.portalmedia.embarc.gui.Main"
+
+repositories {
+
+    mavenCentral()
+    
+    mavenLocal()
+
+}
+
+sourceSets.main {
+
+    java {
+
+        srcDirs = ['src/main']
+
+    }
+
+    resources {
+
+        srcDirs = ['src/main', 'src/resources']
+
+    }
+
+}
+
+sourceSets.test {
+
+    java {
+
+        srcDirs = ['src/tests']
+
+    }
+
+    resources {
+
+        srcDir 'tests/resources'
+
+    }
+
+}
+
+version = '1.0.0'
+
+jar {
+
+    manifest {
+
+        attributes 'Implementation-Title': 'Gradle Quickstart',
+
+                   'Implementation-Version': version,
+
+                   'Main-Class': 'com.portalmedia.embarc.gui.Main'
+
+    }
+
+}
+
+macAppBundle {
+
+    mainClassName = "com.portalmedia.embarc.gui.Main"
+
+    icon = "${projectDir}/icons/embarc.icns"
+
+    bundleJRE = true
+
+    backgroundImage = "${projectDir}/icons/embARC.png"
+
+    jreHome = "/Library/Java/JavaVirtualMachines/amazon-corretto-8.jdk/Contents/Home"
+
+}
+
+shadowJar {
+
+    archiveName = 'embARC.jar'
+
+    baseName = 'embARC'
+
+}
+
+launch4j {
+
+    mainClassName = "com.portalmedia.embarc.gui.Main"
+
+    outfile = 'embARC.exe'
+
+    copyConfigurable = project.tasks.shadowJar.outputs.files
+
+    jar = "lib/${project.tasks.shadowJar.archiveName}"
+
+    icon = "${projectDir}/icons/embarc_gRr_icon.ico"
+
+    maxHeapSize = 6000
+
+    jvmOptions=['-XX:+UseG1GC','-Xms64m']
+
+    maxHeapPercent = 10
+
+}
+
+dependencies {
+
+	compile group: 'org.apache.tika', name: 'tika-core', version: '1.4'
+
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
+
+    compile group: 'net.sf.trove4j', name: 'trove4j', version: '3.0.3'
+
+    compile group: 'commons-io', name: 'commons-io', version: '2.8.0'
+
+    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+
+    compile group: 'net.byteseek', name: 'byteseek', version: '2.0.3'
+
+    compile 'org.dizitart:nitrite:3.1.0'
+
+    compile 'de.jensd:fontawesomefx-emojione:2.2.7-2'
+
+    compile 'de.jensd:fontawesomefx-fontawesome:4.7.0-5'
+
+    compile 'de.jensd:fontawesomefx-icons525:3.0.0-4'
+
+    compile 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
+
+    compile 'de.jensd:fontawesomefx-materialicons:2.2.0-5'
+
+    compile 'de.jensd:fontawesomefx-octicons:4.3.0-5'
+
+    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-5'
+
+	compile 'org.controlsfx:controlsfx:8.40.14'
+
+    compile group: 'junit', name: 'junit', version: '4.+'
+
+    compile gradleApi()
+
+	compile files("../maj/target/classes")
+
+	compile files("../droid/droid-core/target/classes")
+
+	compile files("../droid/droid-core-interfaces/target/classes")
+
+}
+
+test {
+
+    systemProperties 'property': 'value'
+
+}

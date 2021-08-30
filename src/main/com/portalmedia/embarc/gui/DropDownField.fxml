@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import org.controlsfx.control.textfield.CustomTextField?>
+
+<fx:root
+	type="javafx.scene.layout.AnchorPane"
+	xmlns="http://javafx.com/javafx/8"
+	xmlns:fx="http://javafx.com/fxml/1"
+>
+	<children>
+		<HBox
+			AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0"
+			AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0"
+		>
+			<children>
+				<Label
+					fx:id="editorTextFieldLabel"
+					layoutX="14.0"
+					layoutY="14.0"
+					prefHeight="26.0"
+					prefWidth="200.0"
+					text="Label GOES HERE"
+					HBox.hgrow="NEVER"
+				/>
+				<ComboBox
+					fx:id="comboBoxField"
+					layoutX="184.0"
+					layoutY="9.0"
+					HBox.hgrow="ALWAYS"
+					prefWidth="294"
+					maxWidth="294"
+				/>
+			</children>
+			<padding>
+				<Insets bottom="5.0" top="5.0" />
+			</padding>
+		</HBox>
+	</children>
+</fx:root>

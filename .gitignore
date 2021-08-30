@@ -1,0 +1,7 @@
+/bin/
+/.gradle/
+/build/
+*.DS_Store
+src/tests/.DS_Store
+*.mxf
+embarc-logfile.log

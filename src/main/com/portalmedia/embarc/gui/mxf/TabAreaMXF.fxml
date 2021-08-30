@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import com.portalmedia.embarc.gui.*?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+
+<AnchorPane
+	fx:id="tabAreaAnchorPane"
+	prefHeight="870.0"
+	AnchorPane.bottomAnchor="0.0"
+	AnchorPane.leftAnchor="0.0"
+	AnchorPane.rightAnchor="0.0"
+	AnchorPane.topAnchor="0.0"
+	xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
+	fx:controller="com.portalmedia.embarc.gui.mxf.TabAreaMXFController"
+>
+	<children>
+		<BorderPane
+			prefHeight="433.0"
+			prefWidth="989.0"
+			AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0"
+			AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0"
+		>
+			<top>
+				<VBox
+					AnchorPane.bottomAnchor="0.0"
+					AnchorPane.leftAnchor="0.0"
+					AnchorPane.rightAnchor="0.0"
+					AnchorPane.topAnchor="0.0"
+				>
+					<children>
+						<AnchorPane
+							AnchorPane.bottomAnchor="0.0"
+							AnchorPane.leftAnchor="0.0"
+							AnchorPane.rightAnchor="0.0"
+							AnchorPane.topAnchor="0.0"
+						>
+							<children>
+								<TabPane
+									fx:id="mxfTabPane"
+									tabClosingPolicy="UNAVAILABLE"
+									AnchorPane.bottomAnchor="0.0"
+									AnchorPane.leftAnchor="0.0"
+									AnchorPane.rightAnchor="0.0"
+									AnchorPane.topAnchor="0.0"
+								>
+									<tabs>
+										<Tab fx:id="fileInfoTab" text="File Info" />
+										<Tab fx:id="descriptorsTab" text="Descriptors" />
+										<Tab fx:id="coreTab" text="Core DMS" />
+										<Tab fx:id="tdTab" text="Text DMS" />
+										<Tab fx:id="bdTab" text="Binary DMS" />
+									</tabs>
+								</TabPane>
+							</children>
+						</AnchorPane>
+					</children>
+				</VBox>
+			</top>
+			<center>
+				<AnchorPane
+					AnchorPane.bottomAnchor="0.0"
+					AnchorPane.leftAnchor="0.0"
+					AnchorPane.rightAnchor="0.0"
+					AnchorPane.topAnchor="0.0"
+				>
+					<children>
+						<TableView
+							fx:id="mxfTable"
+							AnchorPane.bottomAnchor="0.0"
+							AnchorPane.leftAnchor="0.0"
+							AnchorPane.rightAnchor="0.0"
+							AnchorPane.topAnchor="0.0"
+						/>
+					</children>
+				</AnchorPane>
+			</center>
+		</BorderPane>
+	</children>
+</AnchorPane>
+
+
+

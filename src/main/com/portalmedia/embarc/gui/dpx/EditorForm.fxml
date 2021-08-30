@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import com.portalmedia.embarc.gui.*?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+
+<fx:root
+	type="javafx.scene.layout.AnchorPane"
+	xmlns="http://javafx.com/javafx/8"
+	xmlns:fx="http://javafx.com/fxml/1"
+>
+	<children>
+		<SplitPane
+			dividerPositions="0.5"
+			layoutX="7.0"
+			orientation="VERTICAL"
+			prefHeight="200.0"
+			prefWidth="160.0"
+			AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0"
+			AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0"
+		>
+			<items>
+				<AnchorPane
+					fx:id="editorPane"
+					minHeight="0.0"
+					minWidth="0.0"
+					prefHeight="100.0"
+					prefWidth="160.0"
+					style="-fx-background-color: #d1d9de;"
+				>
+					<VBox
+						fx:id="userDataContainer"
+						style="-fx-background-color: transparent;"
+						AnchorPane.bottomAnchor="0.0"
+						AnchorPane.leftAnchor="0.0"
+						AnchorPane.rightAnchor="0.0"
+						AnchorPane.topAnchor="0.0"
+					>
+						<children>
+							<VBox
+								styleClass="editor-header-box"
+								prefHeight="70.00"
+								AnchorPane.bottomAnchor="0.0"
+								AnchorPane.leftAnchor="0.0"
+								AnchorPane.rightAnchor="0.0"
+								AnchorPane.topAnchor="0.0"
+							>
+								<children>
+									<Label
+										fx:id="sectionLabel"
+										alignment="TOP_LEFT"
+										prefHeight="25.00"
+										styleClass="editor-header"
+										VBox.vgrow="ALWAYS"
+									>
+									</Label>
+									<Label
+										fx:id="selectedFilesLabel"
+										alignment="TOP_LEFT"
+										prefHeight="25.0"
+										styleClass="editor-header"
+										VBox.vgrow="ALWAYS"
+									>
+									</Label>
+								</children>
+							</VBox>
+							<HBox
+								fx:id="subsectionBox"
+								AnchorPane.bottomAnchor="0.0"
+								AnchorPane.leftAnchor="0.0"
+								AnchorPane.rightAnchor="0.0"
+								AnchorPane.topAnchor="0.0"
+							>
+								<children>
+									<Label
+										layoutX="14.0"
+										layoutY="14.0"
+										prefHeight="26.0"
+										prefWidth="200.0"
+										text="Image Element"
+										HBox.hgrow="NEVER"
+									/>
+									<ComboBox
+										fx:id="subsectionDropDown"
+										layoutX="184.0"
+										layoutY="9.0"
+									/>
+								</children>
+								<padding>
+									<Insets
+										bottom="5.0"
+										left="23.0"
+										right="10.0"
+										top="5.0"
+									/>
+								</padding>
+							</HBox>
+							<Accordion
+								fx:id="editorAccordion"
+								style="-fx-background-color: #d1d9de;"
+							>
+								<panes>
+									<TitledPane
+										fx:id="editableFieldsAccordian"
+										animated="false"
+										style="-fx-background-color: transparent"
+										text="Editable Fields"
+									>
+										<content>
+											<AnchorPane
+												style="-fx-background-color: transparent;"
+											>
+												<children>
+													<ScrollPane
+														fx:id="sectionEditableFieldsContainer"
+														prefHeight="500"
+														style="-fx-background-color: transparent;"
+														AnchorPane.bottomAnchor="0.0"
+														AnchorPane.leftAnchor="0.0"
+														AnchorPane.rightAnchor="0.0"
+														AnchorPane.topAnchor="0.0"
+													>
+														<content>
+															<VBox
+																fx:id="sectionEditableFields"
+																AnchorPane.bottomAnchor="0.0"
+																AnchorPane.leftAnchor="0.0"
+																AnchorPane.rightAnchor="0.0"
+																AnchorPane.topAnchor="0.0"
+															>
+																<children>
+																</children>
+															</VBox>
+														</content>
+													</ScrollPane>
+												</children>
+											</AnchorPane>
+										</content>
+									</TitledPane>
+									<TitledPane
+										fx:id="notEditableFieldsAccordian"
+										animated="false"
+										text="Not Editable Fields"
+									>
+										<content>
+											<AnchorPane
+												style="-fx-background-color: transparent;"
+											>
+												<children>
+													<ScrollPane
+														fx:id="sectionNotEditableFieldsContainer"
+														prefHeight="500"
+														style="-fx-background-color: transparent;"
+														AnchorPane.bottomAnchor="0.0"
+														AnchorPane.leftAnchor="0.0"
+														AnchorPane.rightAnchor="0.0"
+														AnchorPane.topAnchor="0.0"
+													>
+														<content>
+															<VBox
+																fx:id="sectionNotEditableFields"
+																AnchorPane.bottomAnchor="0.0"
+																AnchorPane.leftAnchor="0.0"
+																AnchorPane.rightAnchor="0.0"
+																AnchorPane.topAnchor="0.0"
+															>
+																<children>
+																</children>
+															</VBox>
+														</content>
+													</ScrollPane>
+												</children>
+											</AnchorPane>
+										</content>
+									</TitledPane>
+								</panes>
+							</Accordion>
+						</children>
+					</VBox>
+				</AnchorPane>
+				<AnchorPane
+					maxHeight="100.0"
+					minHeight="100.0"
+					minWidth="0.0"
+					prefHeight="100.0"
+					prefWidth="160.0"
+					style="-fx-background-color: #496879;"
+				>
+					<children>
+						<Button
+							fx:id="applyChangesButton"
+							layoutY="50.0"
+							mnemonicParsing="false"
+							prefHeight="30.0"
+							prefWidth="132.0"
+							style="-fx-background-color: #7EFFFE;"
+							text="Apply Changes"
+							textFill="#496879"
+							AnchorPane.rightAnchor="30.0"
+						/>
+						<Button
+							fx:id="toggleEditingButton"
+							layoutY="50.0"
+							mnemonicParsing="false"
+							prefHeight="30.0"
+							prefWidth="132.0"
+							style="-fx-background-color: #7EFFFE;"
+							text="Start Editing"
+							textFill="#496879"
+							AnchorPane.leftAnchor="30.0"
+						/>
+						<Label
+							fx:id="editingSummary"
+							AnchorPane.rightAnchor="30.0"
+							layoutY="10.0"
+							textFill="#fcfafa"
+						/>
+					</children>
+				</AnchorPane>
+			</items>
+		</SplitPane>
+	</children>
+</fx:root>

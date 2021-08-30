@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.paint.*?>
+
+<fx:root
+	type="javafx.scene.layout.AnchorPane"
+	xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
+>
+	<children>
+		<BorderPane
+			prefHeight="700.0"
+			prefWidth="989.0"
+			AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0"
+			AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0"
+		>
+			<top>
+				<VBox
+					styleClass="editor-header-box"
+					prefHeight="70.00"
+					AnchorPane.bottomAnchor="0.0"
+					AnchorPane.leftAnchor="0.0"
+					AnchorPane.rightAnchor="0.0"
+					AnchorPane.topAnchor="0.0"
+				>
+					<children>
+						<Label
+							fx:id="sectionLabel"
+							alignment="TOP_LEFT"
+							prefHeight="25.00"
+							styleClass="editor-header"
+							VBox.vgrow="ALWAYS"
+						/>
+					</children>
+				</VBox>
+			</top>
+			<center>
+				<VBox
+					fx:id="tdbdVBox"
+					AnchorPane.bottomAnchor="0.0"
+					AnchorPane.leftAnchor="0.0"
+					AnchorPane.rightAnchor="0.0"
+					AnchorPane.topAnchor="0.0"
+				>
+					<children>
+					</children>
+				</VBox>
+			</center>
+		</BorderPane>
+	</children>
+</fx:root>

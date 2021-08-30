@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.text.Text?>
+
+<VBox
+	prefHeight="400.0"
+	alignment="CENTER"
+	xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
+>
+	<HBox
+		prefHeight="400.0"
+		alignment="CENTER"
+	>
+		<Pane prefHeight="400.0">
+			<children>
+				<VBox
+					prefHeight="400.0"
+					alignment="CENTER"
+				>
+					<HBox alignment="CENTER">
+						<children>
+							<Button
+								alignment="CENTER"
+								fx:id="aboutButton"
+								mnemonicParsing="false"
+								prefWidth="72.0"
+								text="About"
+							/>
+							<Label prefWidth="30.0" />
+							<Button
+								alignment="CENTER"
+								fx:id="licenseButton"
+								mnemonicParsing="false"
+								text="Licenses"
+							/>
+						</children>
+					</HBox>
+					<VBox prefHeight="300.0">
+						<children>
+							<VBox
+								fx:id="aboutPane"
+								prefHeight="350.0"
+								alignment="CENTER"
+								visible="true"
+							>
+								<children>
+									<Label
+										prefHeight="50.0"
+										text="embARC"
+									>
+										<font>
+											<Font size="15.0" />
+										</font>
+									</Label>
+									<Label
+										text="“embARC” for “Metadata Embedded for Archival Content”"
+									/>
+									<Label prefHeight="30.0" />
+									<HBox
+										alignment="CENTER"
+										prefHeight="100.0"
+									>
+										<children>
+											<Pane prefHeight="50.0">
+												<children>
+													<ImageView
+														layoutY="-30.0"
+														layoutX="10.0"
+														scaleX="0.75"
+														scaleY="0.75"
+													>
+														<image>
+															<Image url="resources/fadgi_box.jpg" />
+														</image>
+													</ImageView>
+												</children>
+											</Pane>
+											<Pane prefHeight="50.0">
+												<children>
+													<Label
+														text="Version: 1.0.0"
+													/>
+													<Hyperlink
+														fx:id="fadgiLink"
+														layoutY="30.0"
+														text="http://digitizationguidelines.gov/"
+													/>
+												</children>
+											</Pane>
+										</children>
+									</HBox>
+									<Label
+										alignment="CENTER"
+										wrapText="true"
+										maxWidth="400.0"
+										text="embARC was developed by the Federal Agencies Digital Guidelines Initiative (FADGI) supported by AVP and PortalMedia."
+									>
+										<font>
+											<Font size="11.0" />
+										</font>
+									</Label>
+								</children>
+							</VBox>
+							<VBox
+								fx:id="licensePane"
+								prefHeight="0.0"
+								visible="false"
+							>
+								<children>
+									<ScrollPane
+										prefHeight="350.0"
+										prefWidth="600"
+										hbarPolicy="NEVER"
+									>
+										<content>
+											<VBox>
+												<children>
+													<Label
+														prefHeight="30.0"
+														text="embARC"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="embARC v.1 will be released as an open source application with specific license terms TBD but will fall in line with FADGI policy which supports as unrestricted a license as possible (for example but not limited to the 2-Clause BSD License or 3-Clause BSD License).  This version of embARC is for testing purposes and as such, carries no specific license."
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+													<Label
+														prefHeight="30.0"
+														text="FontAwesome"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="Copyright 2013-2016 Jens Deters http Licensed under the Apache License, Version 2.0 (the 'License'); you may not use this file except in compliance with the License. You may obtain a copy of the License athttp://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License."
+													/>
+													<Hyperlink
+														text="http://www.apache.org/licenses/LICENSE-2.0.txt"
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+													<Label
+														prefHeight="30.0"
+														text="Nitrite"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="Copyright 2017-2018 Nitrite author or authors Licensed under the Apache License, Version 2.0 (the 'License'); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License."
+													/>
+													<Hyperlink
+														text="http://www.apache.org/licenses/LICENSE-2.0.txt"
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+													<Label
+														prefHeight="30.0"
+														text="FFmpeg"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="This software uses code of FFmpeg licensed under the LGPLv2.1 and its source can be downloaded at http://www.digitizationguidelines.gov/guidelines/embARC.html"
+													/>
+													<Hyperlink
+														text="http://ffmpeg.org"
+													/>
+													<Hyperlink
+														text="http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
+													/>
+													<Hyperlink
+														text="http://www.digitizationguidelines.gov/guidelines/embARC.html"
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+													<Label
+														prefHeight="30.0"
+														text="CRC32C"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="Copyright 2017, The CRC32C Authors. &#10; &#10;Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:&#10; &#9;* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.&#10; &#9;* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.&#10; &#9;* Neither the name of Google Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. &#10; &#10;THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+													/>
+													<Hyperlink
+														text="https://github.com/google/crc32c/blob/master/LICENSE"
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+													<Label
+														prefHeight="30.0"
+														text="Apache Tika"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="Copyright 2020 Apache Licensed under the Apache License, Version 2.0 (the 'License'); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License."
+													/>
+													<Hyperlink
+														text="http://www.apache.org/licenses/LICENSE-2.0.txt"
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+													<Label
+														prefHeight="30.0"
+														text="Media Authoring with Java API (MAJ)"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="Copyright 2020 Apache Licensed under the Apache License, Version 2.0 (the 'License'); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License."
+													/>
+													<Hyperlink
+														text="http://www.apache.org/licenses/LICENSE-2.0.txt"
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+													<Label
+														prefHeight="30.0"
+														text="DROID (Digital Record Object Identification)"
+													>
+														<font>
+															<Font size="20.0" />
+														</font>
+													</Label>
+													<Text
+														wrappingWidth="550.0"
+														text="Copyright (c) 2016, The National Archives &lt;pronom@nationalarchives.gov.uk&gt;  &#10;All rights reserved.  &#10; &#10;Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  &#10; &#9;* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  &#10; &#9;* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.  &#10; &#9;* Neither the name of the The National Archives nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.  &#10; &#10;THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+													/>
+													<Hyperlink
+														text="https://github.com/digital-preservation/droid/blob/master/LICENSE"
+													/>
+													<Label
+														prefHeight="30.0"
+													/>
+												</children>
+											</VBox>
+										</content>
+										<padding>
+											<Insets bottom="5.0" left="10.0" right="5.0" top="5.0" />
+										</padding>
+									</ScrollPane>
+								</children>
+							</VBox>
+						</children>
+					</VBox>
+					<ButtonBar prefHeight="60.0">
+						<buttons>
+							<Button
+								fx:id="closeAboutButton"
+								mnemonicParsing="false"
+								text="Close"
+							/>
+						</buttons>
+					</ButtonBar>
+				</VBox>
+			</children>
+		</Pane>
+	</HBox>
+</VBox>

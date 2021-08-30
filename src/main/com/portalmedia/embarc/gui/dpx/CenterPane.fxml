@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import com.portalmedia.embarc.gui.*?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+
+<AnchorPane fx:id="centerPane" AnchorPane.bottomAnchor="0.0"
+	AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+	AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
+	fx:controller="com.portalmedia.embarc.gui.dpx.CenterPaneController">
+	<children>
+		<BorderPane prefHeight="433.0" prefWidth="989.0"
+			AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+			AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+			<top>
+				<VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+					AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+					<children>
+						<AnchorPane AnchorPane.bottomAnchor="0.0"
+							AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+							AnchorPane.topAnchor="0.0">
+							<children>
+								<TabPane fx:id="tabPane" prefHeight="33.0"
+									prefWidth="989.0" tabClosingPolicy="UNAVAILABLE"
+									AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+									AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+									<tabs>
+										<Tab fx:id="generalTab" styleClass="general-tab"
+											text="General" />
+										<Tab fx:id="fileInformationTab" styleClass="file-info-tab"
+											text="File Info" />
+										<Tab fx:id="imageInformationTab" styleClass="img-info-tab"
+											text="Image Info" />
+										<Tab fx:id="imageSourceInformationTab"
+											styleClass="img-src-tab" text="Image Source Info" />
+										<Tab fx:id="motionPictureFilmTab" styleClass="film-tab"
+											text="Motion Picture Film Info" />
+										<Tab fx:id="televisionTab" styleClass="tv-tab"
+											text="Television Info" />
+										<Tab fx:id="userDefinedTab" styleClass="user-tab"
+											text="User Defined Info" />
+									</tabs>
+								</TabPane>
+							</children>
+						</AnchorPane>
+					</children>
+				</VBox>
+			</top>
+			<center>
+				<AnchorPane AnchorPane.bottomAnchor="0.0"
+					AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+					AnchorPane.topAnchor="0.0">
+					<children>
+						<TableView fx:id="table" prefHeight="400.0"
+							prefWidth="989.0" AnchorPane.bottomAnchor="0.0"
+							AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+							AnchorPane.topAnchor="0.0" />
+					</children>
+				</AnchorPane>
+			</center>
+		</BorderPane>
+	</children>
+</AnchorPane>
