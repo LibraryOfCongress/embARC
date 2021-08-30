@@ -21,7 +21,7 @@ Material eXchange Format
 #### Building and Running from Source Code
 
 ##### Project Setup
-Import the source code into eclipse or the IDE of your choice. Import (MAJ)[https://github.com/AMWA-TV/maj] and (DROID)[https://github.com/PortalMedia/embARC-maj] projects and include alongside embARC. Include `droid-core`, `droid-core-interfaces`, and `maj` as projects in the build path.
+Import the source code into eclipse or the IDE of your choice. Import (MAJ)[https://github.com/PortalMedia/embARC-maj] and (DROID)[https://github.com/digital-preservation/droid] projects and include alongside embARC. Include `droid-core`, `droid-core-interfaces`, and `maj` as projects in the build path.
 
 ##### Testing
 There are separate tests for each supported file type (DPX & MXF) included in the src/tests folder. Tests include reading, writing, and file format detection.
