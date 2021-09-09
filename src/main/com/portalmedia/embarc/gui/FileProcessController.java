@@ -144,19 +144,17 @@ public class FileProcessController {
 		progressDialog.showLabels(labels);
 		progressDialog.showCloseButton();
 
-		// fetch the new file list if any valid files were added
-		if (validFileList.size() > 0) {
-			validFileList.removeAll(validFileList);
-			notValidFileList.removeAll(notValidFileList);
-			validFileFailures.removeAll(validFileFailures);
+		// reset the lists and update the working file list
+		validFileList.clear();
+		notValidFileList.clear();
+		validFileFailures.clear();
 
-			if (fileFormat == FileFormat.DPX) {
-				ControllerMediatorDPX.getInstance().refetchFileList();
-			} else if (fileFormat == FileFormat.MXF) {
-				ControllerMediatorMXF.getInstance().setFileList();
-			}
-			System.gc();
+		if (fileFormat == FileFormat.DPX) {
+			ControllerMediatorDPX.getInstance().refetchFileList();
+		} else if (fileFormat == FileFormat.MXF) {
+			ControllerMediatorMXF.getInstance().setFileList();
 		}
+		System.gc();
 
 		if (event != null) {
 			event.consume();

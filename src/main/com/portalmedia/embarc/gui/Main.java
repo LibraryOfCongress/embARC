@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -71,7 +73,7 @@ public class Main extends Application {
 		try {
 			String logFileDir = "";
 
-		    String os = System.getProperty("os.name");
+			String os = System.getProperty("os.name");
 			String cleanHomePath = CleanInputPathHelper.cleanString(System.getProperty("user.home"));
 			if (os != null && os.startsWith("Mac")) {
 				// MacOS log file location
@@ -81,14 +83,14 @@ public class Main extends Application {
 				logFileDir = cleanHomePath + "/AppData/Local/embARC";
 			}
 
-		    File directory = new File(logFileDir);
-		    if (!directory.exists()) directory.mkdir();
-		    String fullPath = logFileDir + "/embARC.log";
-		    fileHandler = new FileHandler(fullPath);
-		    System.out.println("log file location: " + fullPath);
-		    SimpleFormatter simple = new SimpleFormatter();
-		    fileHandler.setFormatter(simple);
-		    LOGGER.addHandler(fileHandler);
+			File directory = new File(logFileDir);
+			if (!directory.exists()) directory.mkdir();
+			Path fullPath = Paths.get(logFileDir, "embARC.log");
+			fileHandler = new FileHandler(fullPath.toString());
+			System.out.println("log file location: " + fullPath);
+			SimpleFormatter simple = new SimpleFormatter();
+			fileHandler.setFormatter(simple);
+			LOGGER.addHandler(fileHandler);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
