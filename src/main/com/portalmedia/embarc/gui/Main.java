@@ -108,7 +108,7 @@ public class Main extends Application {
 
 			StackPane stack = new StackPane();
 
-			Label embarcLabel = new Label("embARC v1.0.0");
+			Label embarcLabel = new Label("embARC v1.0.3");
 			embarcLabel.setFont(Font.font ("Verdana", 14));
 			embarcLabel.setPadding(new Insets(150,0,0,400));
 
@@ -265,6 +265,10 @@ public class Main extends Application {
 		return splashStage;
 	}
 
+	public static MenuBar getMXFMenuBar() {
+		return menuBarMXF;
+	}
+
 	public static void setMenuBarDPX(Boolean refresh) {
 		if (refresh) {
 			rootLayout.getChildren().remove(menuBarDPX);
@@ -306,5 +310,5 @@ public class Main extends Application {
 			splashLayout.setTop(splashMenuBar);
 		}
 	}
-	
+
 }

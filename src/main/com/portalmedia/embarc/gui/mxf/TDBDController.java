@@ -208,6 +208,7 @@ public class TDBDController extends AnchorPane {
 		final ChoiceDialog<ButtonData> dialog = new ChoiceDialog<>();
 		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
 		icon.setStyleClass("write-files-icon");
+		icon.setSize("20");
 		dialog.setGraphic(icon);
 		dialog.getDialogPane().setPrefSize(525, 120);
 		String tdbd = isTD ? "Text Data" : "Binary Data";

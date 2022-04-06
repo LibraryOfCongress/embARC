@@ -24,6 +24,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.DragEvent;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -43,7 +44,7 @@ public class FileProcessController {
 	List<String> validFileFailures = new ArrayList<>();
 	int totalItemsCount;
 	FileFormat fileFormat = FileFormat.OTHER;
-    private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
+	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
 
 	private static class ControllerHolder {
 		private static final FileProcessController INSTANCE = new FileProcessController();
@@ -134,12 +135,12 @@ public class FileProcessController {
 		}
 
 		// create file processing report labels for ProgressDialog
-		final List<Label> labels = new ArrayList<>();
+		final List<Text> labels = new ArrayList<>();
 		final int total = validFileList.size() + validFileFailures.size() + notValidFileList.size();
-		labels.add(new Label(fileFormat + " Successes: " + validFileList.size()));
-		labels.add(new Label(fileFormat + " Failures: " + validFileFailures.size()));
-		labels.add(new Label("Non-" + fileFormat + " Ignored: " + notValidFileList.size()));
-		final Label totalProcessed = new Label("Total Files Processed: " + total);
+		labels.add(new Text(fileFormat + " Successes: " + validFileList.size()));
+		labels.add(new Text(fileFormat + " Failures: " + validFileFailures.size()));
+		labels.add(new Text("Non-" + fileFormat + " Ignored: " + notValidFileList.size()));
+		final Text totalProcessed = new Text("Total Files Processed: " + total);
 		labels.add(totalProcessed);
 		progressDialog.showLabels(labels);
 		progressDialog.showCloseButton();

@@ -53,6 +53,7 @@
 							prefHeight="100.0"
 							maxHeight="100.0"
 							minHeight="100.0"
+							alignment="CENTER"
 						>
 							<children>
 								<Region HBox.hgrow="ALWAYS"/>
@@ -71,7 +72,11 @@
 										<Insets right="10.0" />
 									</HBox.margin>
 								</Pane>
-								<Pane prefWidth="270.0">
+								<SplitPane
+									fx:id="writeMXFFilesControlWrapper"
+									style="-fx-background-color: #496879;"
+									maxHeight="50.0"
+								>
 									<Button
 										fx:id="writeMXFFilesButton"
 										layoutY="25.0"
@@ -93,7 +98,7 @@
 									<HBox.margin>
 										<Insets right="10.0" />
 									</HBox.margin>
-								</Pane>
+								</SplitPane>
 								<Region HBox.hgrow="ALWAYS"/>
 							</children>
 						</HBox>

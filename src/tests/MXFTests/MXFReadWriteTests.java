@@ -360,10 +360,9 @@ public class MXFReadWriteTests {
         
         Assert.assertFalse(metadata.getCoreColumns().isEmpty());
         HashMap<MXFColumn, MetadataColumnDef> coreCols = metadata.getCoreColumns();
-        System.out.println("AudioCount" + metadata.getAudioTrackCount());
-        System.out.println("VideoCount" + metadata.getVideoTrackCount());
-        System.out.println("CaptionCount" + metadata.getCaptionTrackCount());
-        System.out.println("TimecodeCount" + metadata.getTimecodeTrackCount());
+        System.out.println("SoundCount" + metadata.getSoundTrackCount());
+        System.out.println("PictureCount" + metadata.getPictureTrackCount());
+        System.out.println("OtherCount" + metadata.getOtherTrackCount());
         for(MXFColumn col : coreCols.keySet())
         {
         	System.out.println(col.getDisplayName() + ":" + coreCols.get(col).toString());

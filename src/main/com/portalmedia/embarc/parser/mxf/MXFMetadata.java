@@ -6,10 +6,9 @@ import java.util.LinkedHashMap;
 import com.portalmedia.embarc.parser.MetadataColumnDef;
 
 public class MXFMetadata {
-	int videoTrackCount;
-	int audioTrackCount;
-	int captionTrackCount;
-	int timecodeTrackCount;
+	int pictureTrackCount;
+	int soundTrackCount;
+	int otherTrackCount;
 	String format;
 	String version;
 	String profile;
@@ -17,10 +16,12 @@ public class MXFMetadata {
 	int bdCount;
 	int tdCount;
 	MXFFileDescriptorResult fileDescriptors;
+	boolean hasAS07CoreDMSFramework;
 
 	public MXFFileDescriptorResult getFileDescriptors() {
 		return fileDescriptors;
 	}
+
 	public void setFileDescriptors(MXFFileDescriptorResult fileDescriptors) {
 		this.fileDescriptors = fileDescriptors;
 	}
@@ -32,6 +33,7 @@ public class MXFMetadata {
 	public void setTDCount(int tdCount) {
 		this.tdCount = tdCount;
 	}
+
 	public int getBDCount() {
 		return bdCount;
 	}
@@ -39,36 +41,28 @@ public class MXFMetadata {
 	public void setBDCount(int bdCount) {
 		this.bdCount = bdCount;
 	}
-	public int getVideoTrackCount() {
-		return videoTrackCount;
+
+	public int getPictureTrackCount() {
+		return pictureTrackCount;
 	}
 
-	public void setVideoTrackCount(int videoTrackCount) {
-		this.videoTrackCount = videoTrackCount;
+	public void setPictureTrackCount(int pictureTrackCount) {
+		this.pictureTrackCount = pictureTrackCount;
 	}
 
-	public int getCaptionTrackCount() {
-		return captionTrackCount;
+	public int getOtherTrackCount() {
+		return otherTrackCount;
 	}
 
-	public void setCaptionTrackCount(int captionTrackCount) {
-		this.captionTrackCount = captionTrackCount;
+	public void setOtherTrackCount(int otherTrackCount) {
+		this.otherTrackCount = otherTrackCount;
+	}
+	public int getSoundTrackCount() {
+		return soundTrackCount;
 	}
 
-	public int getTimecodeTrackCount() {
-		return timecodeTrackCount;
-	}
-
-	public void setTimecodeTrackCount(int timecodeTrackCount) {
-		this.timecodeTrackCount = timecodeTrackCount;
-	}
-	
-	public int getAudioTrackCount() {
-		return audioTrackCount;
-	}
-
-	public void setAudioTrackCount(int audioTrackCount) {
-		this.audioTrackCount = audioTrackCount;
+	public void setSoundTrackCount(int soundTrackCount) {
+		this.soundTrackCount = soundTrackCount;
 	}
 
 	public String getFormat() {
@@ -133,6 +127,14 @@ public class MXFMetadata {
 
 	public void setCoreColumns(HashMap<MXFColumn, MetadataColumnDef> coreColumns) {
 		this.coreColumns = coreColumns;
+	}
+
+	public boolean getHasAS07CoreDMSFramework() {
+		return hasAS07CoreDMSFramework;
+	}
+
+	public void setHasAS07CoreDMSFramework(boolean hasCore) {
+		this.hasAS07CoreDMSFramework = hasCore;
 	}
 	
 }
