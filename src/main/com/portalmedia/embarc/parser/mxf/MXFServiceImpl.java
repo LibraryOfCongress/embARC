@@ -311,7 +311,8 @@ public class MXFServiceImpl implements MXFService {
 		
 		return headerMetadata.getPreface();
 	}
-	public boolean writeFile(String outputFilePath, HashMap<MXFColumn, MetadataColumnDef> coreColumns) throws IOException {
+	public MXFFileWriteResult writeFile(String outputFilePath, HashMap<MXFColumn, MetadataColumnDef> coreColumns) throws IOException {
+		MXFFileWriteResult result = new MXFFileWriteResult();
 		try {
 			AS07CoreDMSFramework dms = new AS07CoreDMSFrameworkImpl();
 			if(coreColumns.containsKey(MXFColumn.AS_07_Core_DMS_ShimName)) {
@@ -365,16 +366,18 @@ public class MXFServiceImpl implements MXFService {
 				dms.setDevices(deviceSetHelper.createDeviceListFromString(coreColumns.get(MXFColumn.AS_07_Core_DMS_Devices).toString()));
 			}
 
-			boolean success = writeFile(outputFilePath, dms);
-			return success;
+			return writeFile(outputFilePath, dms);
 		} catch(Exception ex) {
 			LOGGER.log(Level.WARNING, ex.toString(), ex);
 			ex.printStackTrace();
-			return false;
+			result.setException(ex);
+			result.setSuccess(false);
+			return result;
 		}
 	}
 
-	public boolean writeFile(String outputFilePath, AS07CoreDMSFramework updatedCore) throws IOException {
+	public MXFFileWriteResult writeFile(String outputFilePath, AS07CoreDMSFramework updatedCore) throws IOException {
+		MXFFileWriteResult result = new MXFFileWriteResult();
 		try {
 			long footerOffset = getFooterOffset(updatedCore);
 			EmbARCIdentification embarcIdent = getIdentification();
@@ -618,15 +621,20 @@ public class MXFServiceImpl implements MXFService {
 				ex.printStackTrace();
 				Path p = Paths.get(tempFilePath);
 				if(Files.exists(p)) Files.delete(p);
-				return false;
+				result.setException(ex);
+				result.setSuccess(false);
+				return result;
 			}
 			mxfFile.close();
 		} catch (Exception ex) {
 			LOGGER.log(Level.WARNING, ex.toString(), ex);
 			ex.printStackTrace();
-			return false;
+			result.setException(ex);
+			result.setSuccess(false);
+			return result;
 		}
-		return true;
+		result.setSuccess(true);
+		return result;
 	}
 	
 	public long ReadGenericStream(long offset, OutputStream outputStream) {
@@ -764,7 +772,7 @@ public class MXFServiceImpl implements MXFService {
 			}
 			else if (fd instanceof AncillaryPacketsDescriptorImpl) {
 				AncillaryPacketsDescriptorImpl desc = (AncillaryPacketsDescriptorImpl) fd;
-				result.addAncillaryPacketsDescriptors(desc);				
+				result.addAncillaryPacketsDescriptors(desc);
 			}
 			else if (fd instanceof AS07DateTimeDescriptorImpl) {
 				AS07DateTimeDescriptorImpl desc = (AS07DateTimeDescriptorImpl) fd;
@@ -1068,7 +1076,6 @@ public class MXFServiceImpl implements MXFService {
 		
 		HeaderMetadata fromTheHeader = file.getHeaderPartition().readHeaderMetadata();
 		
-//		System.out.println(fromTheHeader.getPrimerPack().toString());
 		Preface preface = fromTheHeader.getPreface();
 		
 		
@@ -1076,12 +1083,15 @@ public class MXFServiceImpl implements MXFService {
 		MXFFileDescriptorResult descriptors = getDescriptors();
 		
 		metadata.setFileDescriptors(descriptors);
-		
-		metadata.setAudioTrackCount(getAudioCount());
-		metadata.setVideoTrackCount(getVideoCount());
-		metadata.setTimecodeTrackCount(getTimecodeCount());
-		metadata.setCaptionTrackCount(getCaptionCount());
-		
+
+		int otherTrackCount = 0;
+		otherTrackCount += descriptors.getAncillaryPacketsDescriptors().size();
+		otherTrackCount += descriptors.getTimedTextDescriptor().size();
+		otherTrackCount += descriptors.getAS07DateTimeDescriptor().size();
+		metadata.setOtherTrackCount(otherTrackCount);
+
+		metadata.setSoundTrackCount(getSoundCount());
+		metadata.setPictureTrackCount(getPictureCount());
 		
 		metadata.setFileSize(tf.length());
 		metadata.setFormat("MXF");
@@ -1230,7 +1240,7 @@ public class MXFServiceImpl implements MXFService {
 			String objIdentifiers = idSetHelper.identifiersToString(identSet);
 			cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));	
 			
-			try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, textBasedObject.getTextBasedMetadataPayloadSchemeIdentifier().toString()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, textBasedObject.getTextBasedMetadataPayloadSchemeID().toString()));}catch(PropertyNotPresentException ex) {}
 
 			try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, textBasedObject.getRfc5646TextLanguageCode()));}catch(PropertyNotPresentException ex) {}
 			try {cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, textBasedObject.getMimeMediaType()));}catch(PropertyNotPresentException ex) {}
@@ -1239,19 +1249,15 @@ public class MXFServiceImpl implements MXFService {
 			try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, textBasedObject.getTextDataDescriptions()));}catch(PropertyNotPresentException ex) {}
 			try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, textBasedObject.getNote()));}catch(PropertyNotPresentException ex) {}
 			try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(textBasedObject.getGenericStreamId())));}catch(PropertyNotPresentException ex) {}
-			
-			
-			try {bdColumns.put(textBasedObject.getTextBasedMetadataPayloadSchemeIdentifier().toString(), cols);}catch(PropertyNotPresentException ex) {}
-		}
 
-		metadata.setBDCount(bds.size());
+			try {bdColumns.put(Integer.toString(textBasedObject.getGenericStreamId()), cols);}catch(PropertyNotPresentException ex) {}
+		}
+		metadata.setBDCount(bdColumns.size());
 		metadata.setBDColumns(bdColumns);
-		
 		try {
 			List<AS07GspTdDMSFrameworkImpl> tds = this.getAS07GspTdDMSFramework();
 		
 			HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>> tdColumns = new HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>>();
-
 			for(AS07GspTdDMSFrameworkImpl td : tds) {
 				LinkedHashMap<MXFColumn, MetadataColumnDef> cols = new LinkedHashMap<MXFColumn, MetadataColumnDef>();
 				try {cols.put(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, new StringMetadataColumn(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, td.getPrimaryRFC5646LanguageCode()));}catch(PropertyNotPresentException ex) {}
@@ -1262,8 +1268,7 @@ public class MXFServiceImpl implements MXFService {
 //				String objIdentifiers = StringUtils.join(identSet, ',');
 				String objIdentifiers = idSetHelper.identifiersToString(identSet);
 				
-				try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, textBasedObject.getTextBasedMetadataPayloadSchemeIdentifier().toString()));}catch(PropertyNotPresentException ex) {}
-	
+				try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, textBasedObject.getTextBasedMetadataPayloadSchemeID().toString()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, textBasedObject.getRfc5646TextLanguageCode()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, textBasedObject.getMimeMediaType()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, textBasedObject.getTextMimeMediaType()));}catch(PropertyNotPresentException ex) {}
@@ -1272,11 +1277,10 @@ public class MXFServiceImpl implements MXFService {
 				try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, textBasedObject.getNote()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(textBasedObject.getGenericStreamId())));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));}catch(PropertyNotPresentException ex) {}
-				
-				try {tdColumns.put(textBasedObject.getTextBasedMetadataPayloadSchemeIdentifier().toString(), cols);}catch(PropertyNotPresentException ex) {}
+
+				try {tdColumns.put(Integer.toString(textBasedObject.getGenericStreamId()), cols);}catch(PropertyNotPresentException ex) {}
 			}
-			metadata.setTDCount(tds.size());
-				
+			metadata.setTDCount(tdColumns.size());
 			metadata.setTDColumns(tdColumns);
 		} catch(PropertyNotPresentException ex) {
 			LOGGER.log(Level.WARNING, ex.toString(), ex);
@@ -1296,73 +1300,12 @@ public class MXFServiceImpl implements MXFService {
 //			e.printStackTrace();
 //		}
 
+		metadata.setHasAS07CoreDMSFramework(this.hasAS07CoreDMSFramework());
 		fileInformation.setFileData(metadata);
 
-		return fileInformation;		
+		return fileInformation;
 	}
-
-	public int getCaptionCount() {
-		int count = 0;
-		if(file==null) {
-			file = MXFFactory.readPartitions(filePath);
-		}
-		
-		HeaderMetadata fromTheHeader = file.getHeaderPartition().readHeaderMetadata();
-		
-		Preface preface = fromTheHeader.getPreface();
-		ContentStorage contentStorage = preface.getContentStorageObject();
-		Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
-		
-		for(tv.amwa.maj.model.Package p : packages) {
-			if(p instanceof MaterialPackage) {
-				for(Track t : p.getPackageTracks()) {
-					
-					if(t instanceof TimelineTrack) {
-						TimelineTrack st = (TimelineTrack)t;
-					
-						Segment ts = st.getTrackSegment();
-						
-						DataDefinition d = ts.getComponentDataDefinition();
-						if(d.isDescriptiveMetadataKind()) count++;
-						
-					}
-				}
-			}
-			
-		}
-		return count;
-	}
-	public int getTimecodeCount() {
-		int count = 0;
-		if(file==null) {
-			file = MXFFactory.readPartitions(filePath);
-		}
-		
-		HeaderMetadata fromTheHeader = file.getHeaderPartition().readHeaderMetadata();
-		
-		Preface preface = fromTheHeader.getPreface();
-		ContentStorage contentStorage = preface.getContentStorageObject();
-		Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
-		
-		for(tv.amwa.maj.model.Package p : packages) {
-			if(p instanceof MaterialPackage) {
-				for(Track t : p.getPackageTracks()) {
-					if(t instanceof TimelineTrack) {
-						TimelineTrack st = (TimelineTrack)t;
-					
-						Segment ts = st.getTrackSegment();
-						
-						DataDefinition d = ts.getComponentDataDefinition();
-						if(d.isTimecodeKind()) count++;
-						
-					}
-				}
-			}
-			
-		}
-		return count;
-	}
-	public int getVideoCount() {
+	public int getPictureCount() {
 		int count = 0;
 		if(file==null) {
 			file = MXFFactory.readPartitions(filePath);
@@ -1392,7 +1335,7 @@ public class MXFServiceImpl implements MXFService {
 		}
 		return count;
 	}
-	public int getAudioCount() {
+	public int getSoundCount() {
 		int count = 0;
 		if(file==null) {
 			file = MXFFactory.readPartitions(filePath);

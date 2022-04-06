@@ -35,6 +35,7 @@ public class MXFSelectedFilesSummary {
 	private HashMap<MXFColumn, MetadataColumnDef> coreData;
 	HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>> tdElements;
 	HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>> bdElements;
+	boolean filesAreMissingAS07CoreDMSFramework;
 
 	public MXFSelectedFilesSummary() {
 		columnDisplayValues = new HashMap<>();
@@ -194,11 +195,20 @@ public class MXFSelectedFilesSummary {
 		coreData = combinedData;
 	}
 
+	public boolean getFilesAreMissingAS07CoreDMSFramework() {
+		return filesAreMissingAS07CoreDMSFramework;
+	}
+
+	public void setFilesAreMissingAS07CoreDMSFramework(boolean filesAreMissingAS07CoreDMSFramework) {
+		this.filesAreMissingAS07CoreDMSFramework = filesAreMissingAS07CoreDMSFramework;
+	}
+
 	public static MXFSelectedFilesSummary create(List<MXFFileInformationViewModel> files) {
 		summary = new MXFSelectedFilesSummary();
 		summary.setFileCount(files.size());
 
 		if (files == null || files.size() == 0) return summary;
+		boolean missingAS07CoreDMSFramework = false;
 
 		for (final MXFFileInformationViewModel vm : files) {
 			summary.setCoreData(vm.getCoreData());
@@ -207,6 +217,9 @@ public class MXFSelectedFilesSummary {
 			summary.setBDElements(vm.getAllBDElements());
 			summary.setFileName(vm.getProp("name"));
 			summary.setFilePath(vm.getProp("path"));
+			if (vm.getProp("hasAS07CoreDMSFramework").equals("false")) {
+				missingAS07CoreDMSFramework = true;
+			}
 
 			@SuppressWarnings("unchecked")
 			final HashSet<MXFColumn> columnsLeft = (HashSet<MXFColumn>) summary.getPossibleColumnsLeft().clone();
@@ -227,6 +240,7 @@ public class MXFSelectedFilesSummary {
 			if (!summary.hasPossibleColumnsLeft()) break;
 		}
 
+		summary.setFilesAreMissingAS07CoreDMSFramework(missingAS07CoreDMSFramework);
 		System.currentTimeMillis();
 		return summary;
 	}

@@ -2,7 +2,25 @@
 
 All notable changes to this project will be documented in this file
 
-## 1.0.0 2021-08-01
+## 1.0.3 2022-03-24
+	Bug fixes:
+	- Fix write files button erroneously disabled bug
+
+## 1.0.2 2022-03-09
+	Feature additions:
+	- Adds file write error report on write files dialog
+	- Adds mandatory/optional indicators on AS07 Core DMS fields
+	Bug fixes:
+	- File miscounting
+	- MXF shim name edit
+	- MXF file read issues
+	- disable write files if missing AS07 Core DMS or required fields
+
+## 1.0.1 2021-10-26
+	Bug fixes:
+	- Disable write files button when required core fields are empty
+
+## 1.0.0 2021-09-01
 	Feature additions:
 	- MXF File Support
 

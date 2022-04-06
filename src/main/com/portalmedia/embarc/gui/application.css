@@ -20,10 +20,8 @@
 }
 
 .write-files-icon{
-	-fx-text-fill: #FF3D00;
-	-fx-fill: #FF3D00;
-	-fx-font-size: 25px;
-	-fx-font-family: "FontAwesome";
+	-fx-text-fill: #496879;
+	-fx-fill: #496879;
 }
 /* yellow */
 .fadgi-o-warning{

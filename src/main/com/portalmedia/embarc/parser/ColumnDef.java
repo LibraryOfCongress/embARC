@@ -28,4 +28,5 @@ public interface ColumnDef {
 
 	int getSortOrder();
 
+	boolean isRequired();
 }

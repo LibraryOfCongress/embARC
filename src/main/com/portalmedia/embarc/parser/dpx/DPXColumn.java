@@ -494,4 +494,10 @@ public enum DPXColumn implements Serializable, ColumnDef {
 	public int getSortOrder() {
 		return 0;
 	}
+
+	@Override
+	public boolean isRequired() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

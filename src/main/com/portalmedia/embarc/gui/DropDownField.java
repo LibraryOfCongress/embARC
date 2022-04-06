@@ -185,10 +185,12 @@ public class DropDownField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public boolean valueChanged() {
-		if (originalValue == null) {
+		String newValue = comboBoxField.getValue();
+		if (originalValue == null && newValue == null) {
 			return false;
-		}
-		if (originalValue.equals(comboBoxField.getValue())) {
+		} else if (originalValue == null && newValue != null) {
+			return true;
+		} else if (originalValue != null && originalValue.equals(newValue)) {
 			return false;
 		}
 

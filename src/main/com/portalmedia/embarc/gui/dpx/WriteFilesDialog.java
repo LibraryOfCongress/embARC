@@ -18,7 +18,7 @@ import com.portalmedia.embarc.report.HashReportValue;
 
 import javafx.concurrent.Task;
 import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
+import javafx.scene.text.Text;
 
 /**
  * Dialog pane that allows user to write edited files, displays results
@@ -119,7 +119,7 @@ public class WriteFilesDialog extends Dialog {
 		progressDialog.getDialogAlert().show();
 
 		final Cursor<DPXFileInformationViewModel> fileList = DPXFileListHelper.getAllFiles(writeEditedOnly);
-		final Label filesToProcess = new Label("Files to Write: " + Integer.toString(fileList.size()));
+		final Text filesToProcess = new Text("Files to Write: " + Integer.toString(fileList.size()));
 		progressDialog.setCountLabel(filesToProcess);
 
 		progressDialog.getDialogAlert().setOnCloseRequest(e -> {
@@ -132,7 +132,7 @@ public class WriteFilesDialog extends Dialog {
 		new Thread(task).start();
 
 		task.setOnSucceeded(e -> {
-			final Label filesWritten = new Label("File Writing Complete!");
+			final Text filesWritten = new Text("File Writing Complete!");
 			progressDialog.setCountLabel(filesWritten);
 			int matches = 0;
 			for (final HashReportValue hrv : report) {
@@ -140,19 +140,19 @@ public class WriteFilesDialog extends Dialog {
 				String newHash = hrv.getNewHash();
 				if (orgHash.equals(newHash)) matches++;
 			}
-			final List<Label> labels = new ArrayList<>();
-			labels.add(new Label("Total Files Written: " + success));
-			labels.add(new Label("Total Failures: " + failures));
-			labels.add(new Label("Matching Image Checksums: " + matches));
+			final List<Text> labels = new ArrayList<>();
+			labels.add(new Text("Total Files Written: " + success));
+			labels.add(new Text("Total Failures: " + failures));
+			labels.add(new Text("Matching Image Checksums: " + matches));
 			progressDialog.showLabels(labels);
 			progressDialog.showCloseButton();
 		});
 
 		task.setOnCancelled(e -> {
-			final Label filesWritten = new Label("WRITE FILES CANCELLED");
+			final Text filesWritten = new Text("WRITE FILES CANCELLED");
 			progressDialog.setCountLabel(filesWritten);
-			final List<Label> labels = new ArrayList<>();
-			labels.add(new Label("No edited files were found."));
+			final List<Text> labels = new ArrayList<>();
+			labels.add(new Text("No edited files were found."));
 			progressDialog.showLabels(labels);
 			progressDialog.cancelProgressBar();
 			progressDialog.showCloseButton();

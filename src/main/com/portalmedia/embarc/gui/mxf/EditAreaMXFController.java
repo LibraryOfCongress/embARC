@@ -4,6 +4,8 @@ import java.net.URL;
 
 import java.util.ResourceBundle;
 
+import com.portalmedia.embarc.gui.Main;
+import com.portalmedia.embarc.gui.helper.MXFFileList;
 import com.portalmedia.embarc.parser.SectionDef;
 import com.portalmedia.embarc.parser.mxf.MXFSection;
 
@@ -15,6 +17,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 
 /**
@@ -33,6 +37,8 @@ public class EditAreaMXFController implements Initializable {
 	private ScrollPane mxfEditScrollPane;
 	@FXML
 	private Button writeMXFFilesButton;
+	@FXML
+	private SplitPane writeMXFFilesControlWrapper;
 
 	CoreMXFController coreView;
 	WriteMXFController writeViewMXF;
@@ -44,13 +50,29 @@ public class EditAreaMXFController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorMXF.getInstance().registerEditAreaController(this);
-		
+
 		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener() {
 			@Override
 			public void changed(ObservableValue o, Object ov, Object nv) {
 				if (writeViewMXF == null) return;
-				else {
-					writeMXFFilesButton.setDisable((boolean) nv);
+				// if there are missing required core fields disable the button, regardless of latest change
+				if (MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
+					setWriteFilesButtonsDisabled(true);
+				} else {
+					setWriteFilesButtonsDisabled((boolean) nv);
+				}
+			}
+		});
+
+		MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().addListener(new ChangeListener() {
+			@Override
+			public void changed(ObservableValue o, Object ov, Object nv) {
+				if (writeViewMXF == null) return;
+				// if is editing is true disable the button, regardless of latest change
+				if (ControllerMediatorMXF.getInstance().isEditingProperty().get()) {
+					setWriteFilesButtonsDisabled(true);
+				} else {
+					setWriteFilesButtonsDisabled((boolean) nv);
 				}
 			}
 		});
@@ -63,6 +85,24 @@ public class EditAreaMXFController implements Initializable {
 		});
 
 		writeMXFFilesButton.setGraphicTextGap(20);
+
+		writeMXFFilesControlWrapper.hoverProperty().addListener(new ChangeListener() {
+			@Override
+			public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+				if ((boolean)newValue && ControllerMediatorMXF.getInstance().isEditingProperty().get()) {
+					writeMXFFilesControlWrapper.setTooltip(new Tooltip("Cannot write files while editing."));
+				} else if ((boolean)newValue && MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
+					writeMXFFilesControlWrapper.setTooltip(new Tooltip("Cannot write files with one or more missing required AS07 Core DMS fields."));
+				} else {
+					writeMXFFilesControlWrapper.setTooltip(null);
+				}
+			}
+		});
+	}
+
+	private void setWriteFilesButtonsDisabled(boolean isDisabled) {
+		writeMXFFilesButton.setDisable(isDisabled);
+		Main.getMXFMenuBar().getMenus().get(0).getItems().get(2).setDisable(isDisabled);
 	}
 
 	public void resetEditArea() {
