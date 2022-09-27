@@ -2,10 +2,13 @@ package com.portalmedia.embarc.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -28,10 +31,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -62,11 +65,23 @@ public class Main extends Application {
 	private static String programType = "";
 	static Handler fileHandler = null;
 	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
+	private static final String embARCVersion = "v1.1.0";
 
 	public static void main(String[] args) throws Exception {
-		setupLogger();
-		LOGGER.info("Starting embARC");
-		launch(args);
+		try {
+			RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+			List<String> arguments = runtimeMxBean.getInputArguments();
+			for(String a : arguments){
+				LOGGER.info(a);
+			}
+			setupLogger();
+			LOGGER.info("Starting embARC " + embARCVersion);
+			launch(args);
+		}
+		catch(Exception ex) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in Main.  Rethrowing", ex);
+			throw ex;
+		}
 	}
 
 	public static void setupLogger() {
@@ -108,7 +123,7 @@ public class Main extends Application {
 
 			StackPane stack = new StackPane();
 
-			Label embarcLabel = new Label("embARC v1.0.3");
+			Label embarcLabel = new Label("embARC " + embARCVersion);
 			embarcLabel.setFont(Font.font ("Verdana", 14));
 			embarcLabel.setPadding(new Insets(150,0,0,400));
 
@@ -122,8 +137,10 @@ public class Main extends Application {
 			splashLayout.setCenter(stack);
 			splashLayout.setStyle("-fx-background-color: transparent;");
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
+			
+		}catch (Exception e) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
 		}
 	}
 
@@ -187,8 +204,8 @@ public class Main extends Application {
 			dbService.dropCollection();
 			dbService.closeDB();
 			primaryStage.show();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in showMainStageDPX", ex);
 		}
 	}
 
@@ -204,7 +221,7 @@ public class Main extends Application {
 			rootLayout.setCenter(mainWindow);
 			primaryStage.show();
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in showMainStageMXF", e);
 		}
 	}
 
@@ -252,7 +269,7 @@ public class Main extends Application {
 				return null;
 			}, executor).get(60, TimeUnit.SECONDS);
 		} catch (Exception ex) {
-			System.out.println("Unable to close database");
+			LOGGER.log(java.util.logging.Level.SEVERE, "Error closing database", ex);
 		}
 		executor.shutdown();
 	}

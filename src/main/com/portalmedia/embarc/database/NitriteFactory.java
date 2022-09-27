@@ -57,8 +57,7 @@ public class NitriteFactory<T> {
 			//System.out.println("Nitrite DB already exists at path: " + filePath);
 			return nitrite;
 		}
-		
-		System.out.println("Returning nitrite: " + nitrite);
+
 		return nitrite;
 	}
 	

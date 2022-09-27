@@ -152,6 +152,7 @@ public class MXFFileList {
 			if (file.getPath().equals(fivm.getProp("path"))) {
 				file.getFileData().setCoreColumns(fivm.getCoreData());
 				file.setEdited(true);
+				file.setFileShouldBeWritten(true);
 			}
 		}
 		checkRequiredCoreDMSFields();

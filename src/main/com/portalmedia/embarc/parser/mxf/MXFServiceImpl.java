@@ -750,7 +750,6 @@ public class MXFServiceImpl implements MXFService {
 				tv.amwa.maj.model.EssenceDescriptor packageDescriptor =
 					((tv.amwa.maj.model.SourcePackage) packageItem).getEssenceDescription();
 				if (packageDescriptor instanceof AAFFileDescriptor) 
-					//fileDescriptors.add((AAFFileDescriptor)packageDescriptor);
 					addContainersForDescriptor((AAFFileDescriptor) packageDescriptor);
 			}
 		}
@@ -1117,6 +1116,7 @@ public class MXFServiceImpl implements MXFService {
 			}
 		} catch(PropertyNotPresentException ex) {
 			// optional field, ignore PNPE
+			ex.printStackTrace();
 		}
 
 		String atlValue = "";
@@ -1233,24 +1233,24 @@ public class MXFServiceImpl implements MXFService {
 		for(AS07GspBdDMSFrameworkImpl bd : bds) {
 			LinkedHashMap<MXFColumn, MetadataColumnDef> cols = new LinkedHashMap<MXFColumn, MetadataColumnDef>();
 			
-			AS07GSPDMSObject textBasedObject = bd.getTextBasedObject();
+			AS07GSPDMSObject binaryObject = bd.getTextBasedObject();
 			
-			List<AS07DMSIdentifierSetImpl> identSet = textBasedObject.getIdentifiers();
-//			String objIdentifiers = identSet == null ? "" : StringUtils.join(identSet, ',');
+			List<AS07DMSIdentifierSetImpl> identSet = binaryObject.getIdentifiers();
 			String objIdentifiers = idSetHelper.identifiersToString(identSet);
 			cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));	
 			
-			try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, textBasedObject.getTextBasedMetadataPayloadSchemeID().toString()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, binaryObject.getTextBasedMetadataPayloadSchemeID().toString()));}catch(PropertyNotPresentException ex) {}
 
-			try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, textBasedObject.getRfc5646TextLanguageCode()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, textBasedObject.getMimeMediaType()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, textBasedObject.getTextMimeMediaType()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, textBasedObject.getDataDescriptions()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, textBasedObject.getTextDataDescriptions()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, textBasedObject.getNote()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(textBasedObject.getGenericStreamId())));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, binaryObject.getRfc5646TextLanguageCode()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, binaryObject.getMimeMediaType()));}
+			catch(PropertyNotPresentException ex) {} 
+			try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, binaryObject.getTextMimeMediaType()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, binaryObject.getDataDescriptions()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, binaryObject.getTextDataDescriptions()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, binaryObject.getNote()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(binaryObject.getGenericStreamId())));}catch(PropertyNotPresentException ex) {}
 
-			try {bdColumns.put(Integer.toString(textBasedObject.getGenericStreamId()), cols);}catch(PropertyNotPresentException ex) {}
+			try {bdColumns.put(Integer.toString(binaryObject.getGenericStreamId()), cols);}catch(PropertyNotPresentException ex) {}
 		}
 		metadata.setBDCount(bdColumns.size());
 		metadata.setBDColumns(bdColumns);
@@ -1265,12 +1265,30 @@ public class MXFServiceImpl implements MXFService {
 				AS07GSPDMSObject textBasedObject = td.getTextBasedObject();
 				
 				List<AS07DMSIdentifierSetImpl> identSet = textBasedObject.getIdentifiers();
-//				String objIdentifiers = StringUtils.join(identSet, ',');
 				String objIdentifiers = idSetHelper.identifiersToString(identSet);
 				
 				try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, textBasedObject.getTextBasedMetadataPayloadSchemeID().toString()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, textBasedObject.getRfc5646TextLanguageCode()));}catch(PropertyNotPresentException ex) {}
-				try {cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, textBasedObject.getMimeMediaType()));}catch(PropertyNotPresentException ex) {}
+				try {
+					String mimeType = textBasedObject.getMimeMediaType();
+					cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, textBasedObject.getMimeMediaType()));
+					if(mimeType.equals("text/xml")) {
+						ManifestParser mfParser = new ManifestParserImpl();
+						ByteBuffer bb = GetGenericStream(textBasedObject.getGenericStreamId());
+						if (bb != null) {
+							ManifestType mfType = mfParser.isManifest(bb);
+							cols.put(MXFColumn.AS_07_Manifest, new StringMetadataColumn(MXFColumn.AS_07_Manifest, mfType == ManifestType.NOT_MANIFEST ? "false" : "true"));
+							cols.put(MXFColumn.AS_07_Manifest_Valid, new StringMetadataColumn(MXFColumn.AS_07_Manifest_Valid, mfType == ManifestType.VALID_MANIFEST ? "true" : "false"));
+						} else {
+							cols.put(MXFColumn.AS_07_Manifest, new StringMetadataColumn(MXFColumn.AS_07_Manifest, "false"));
+							cols.put(MXFColumn.AS_07_Manifest_Valid, new StringMetadataColumn(MXFColumn.AS_07_Manifest_Valid, "false"));
+						}
+					}
+				
+				}catch(PropertyNotPresentException ex) {} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, textBasedObject.getTextMimeMediaType()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, textBasedObject.getDataDescriptions()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, textBasedObject.getTextDataDescriptions()));}catch(PropertyNotPresentException ex) {}

@@ -1,6 +1,18 @@
-#  embARC Change Log
+# embARC GUI Change Log
 
 All notable changes to this project will be documented in this file
+
+## 1.1.0 2022-08-03
+	Feature Additions:
+	- MXF Manifest display and validation
+	- MXF FFV1 support
+	Bug fixes:
+	- Nested directory processing issue
+
+## 1.0.4 2022-07-29
+	Bug fixes:
+	- Fix DPX large file count processing bug
+	- DPX & MXF write files improvement
 
 ## 1.0.3 2022-03-24
 	Bug fixes:
@@ -28,7 +40,6 @@ All notable changes to this project will be documented in this file
 	Feature additions:
 	- File sorting
 	- Accessibility updates to validation icons
-
 	Bug fixes:
 	- Quit application bug
 
@@ -43,7 +54,6 @@ All notable changes to this project will be documented in this file
 	Feature additions:
 	- Added persistence for user options such as write files dialog options, report paths, etc.
 	- Added reporting feature indicating whether checksums matched when writing files
-	
 	Bug fixes:
 	- Addressed bug in number of changed fields when editing
 	- Prevent users from pasting scientific notation in float fields
