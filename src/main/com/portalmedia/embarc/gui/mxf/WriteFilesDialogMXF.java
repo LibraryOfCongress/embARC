@@ -56,7 +56,7 @@ public class WriteFilesDialogMXF extends Dialog {
 			fileListCopy = new ArrayList<FileInformation<MXFMetadata>>(originalFileList);
 		} else {
 			for (FileInformation<MXFMetadata> file : originalFileList) {
-				if (file.isEdited()) fileListCopy.add(file);
+				if (file.isEdited() && file.getFileShouldBeWritten()) fileListCopy.add(file);
 			}
 		}
 
@@ -92,6 +92,7 @@ public class WriteFilesDialogMXF extends Dialog {
 							MXFFileWriteResult result = mxfService.writeFile(outputPath, file.getFileData().getCoreColumns());
 							if (result.isSuccess()) {
 								success++;
+								file.setFileShouldBeWritten(false);
 							} else {
 								failures++;
 								exceptions.put(exceptions.size() + 1 + ". " + file.getName(), result.getException());

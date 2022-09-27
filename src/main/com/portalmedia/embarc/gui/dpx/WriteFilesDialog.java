@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.dizitart.no2.objects.Cursor;
-
 import com.portalmedia.embarc.gui.ProgressDialog;
 import com.portalmedia.embarc.gui.helper.DPXFileListHelper;
 import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
@@ -35,6 +33,7 @@ public class WriteFilesDialog extends Dialog {
 	int failures = 0;
 	DPXFileListHelper fileListHelper = new DPXFileListHelper();
 	final List<HashReportValue> report = new LinkedList<>();
+	boolean writeImageReport = false;
 
 	public WriteFilesDialog(String filePath, String csvPath, boolean writeEditedOnly) {
 		this.filePath = filePath;
@@ -44,13 +43,13 @@ public class WriteFilesDialog extends Dialog {
 	}
 
 	private void writeFiles(String filePath, String csvPath) {
+		final List<DPXFileInformationViewModel> fileList = DPXFileListHelper.getAllFilesToWrite(writeEditedOnly);
 
 		final Task<Void> task = new Task<Void>() {
 			@Override
 			public Void call() {
 				System.currentTimeMillis();
-				final Cursor<DPXFileInformationViewModel> fileList = DPXFileListHelper.getAllFiles(writeEditedOnly);
-				if (fileList.totalCount() == 0) {
+				if (fileList.size() == 0) {
 					updateProgress(100, 100);
 					cancel();
 				}
@@ -58,7 +57,7 @@ public class WriteFilesDialog extends Dialog {
 				final int fileCount = fileList.size();
 				double processed = 0;
 
-				final boolean writeImageReport = csvPath != null && !csvPath.isEmpty() && fileCount > 0;
+				writeImageReport = csvPath != null && !csvPath.isEmpty() && fileCount > 0;
 				report.clear();
 
 				for (final DPXFileInformationViewModel file : fileList) {
@@ -78,6 +77,7 @@ public class WriteFilesDialog extends Dialog {
 
 							if (DPXService.writeFile(file, inputPath, outputPath)) {
 								success++;
+								DPXFileListHelper.setFileShouldBeWritten(file, false, true);
 							} else {
 								failures++;
 							}
@@ -90,6 +90,7 @@ public class WriteFilesDialog extends Dialog {
 						} else {
 							if (DPXService.writeFile(file, inputPath, outputPath)) {
 								success++;
+								DPXFileListHelper.setFileShouldBeWritten(file, false, true);
 							} else {
 								failures++;
 							}
@@ -118,7 +119,6 @@ public class WriteFilesDialog extends Dialog {
 		progressDialog.activateProgressBar(task);
 		progressDialog.getDialogAlert().show();
 
-		final Cursor<DPXFileInformationViewModel> fileList = DPXFileListHelper.getAllFiles(writeEditedOnly);
 		final Text filesToProcess = new Text("Files to Write: " + Integer.toString(fileList.size()));
 		progressDialog.setCountLabel(filesToProcess);
 
@@ -143,7 +143,9 @@ public class WriteFilesDialog extends Dialog {
 			final List<Text> labels = new ArrayList<>();
 			labels.add(new Text("Total Files Written: " + success));
 			labels.add(new Text("Total Failures: " + failures));
-			labels.add(new Text("Matching Image Checksums: " + matches));
+			if (writeImageReport) {
+				labels.add(new Text("Matching Image Checksums: " + matches));
+			}
 			progressDialog.showLabels(labels);
 			progressDialog.showCloseButton();
 		});

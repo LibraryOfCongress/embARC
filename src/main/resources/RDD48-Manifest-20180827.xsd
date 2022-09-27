@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2013 rel. 2 sp2 (http://www.altova.com) by The Library of Congress (LIBRARY OF CONGRESS) -->
+<!-- RDD 48 Manifest -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mft="http://www.amwa.tv/as-07/1.0/manifest" targetNamespace="http://www.amwa.tv/as-07/1.0/manifest" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<!-- ManifestType -->
+	<xs:complexType name="ManifestType">
+		<xs:sequence>
+			<xs:element name="FileID" type="mft:IdType"/>
+			<xs:element name="FileIDType" type="mft:IdTypeType"/>
+			<xs:element name="ResponsibleOrgName" type="xs:string"/>
+			<xs:element name="CreationDate" type="xs:dateTime"/>
+			<xs:element name="AnnotationText" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="PartList">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Part" type="mft:PartType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<!-- PartType -->
+	<xs:complexType name="PartType">
+		<xs:sequence>
+			<xs:element name="PartID" type="mft:IdType"/>
+			<xs:element name="PartIDType" type="mft:IdTypeType"/>
+			<xs:element name="DataDescription" type="mft:DataDescription"/>
+			<xs:element name="MimeType" type="xs:string"/>
+			<xs:element name="Size" type="xs:nonNegativeInteger"/>
+			<xs:element name="Location" type="xs:anyURI" minOccurs="0"/>
+			<xs:element name="PartAnnotationText" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:anyAttribute namespace="##other" processContents="lax"/>
+	</xs:complexType>
+	<!-- IdTypeType -->
+	<xs:simpleType name="IdTypeType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="UUID"/>
+			<xs:enumeration value="UMID"/>
+			<xs:enumeration value="UL"/>
+			<xs:enumeration value="Other"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- IdType -->
+	<xs:simpleType name="IdType">
+		<xs:union memberTypes="mft:UUID mft:UMID mft:UL mft:otherID"/>
+	</xs:simpleType>
+	<!-- UUID -->
+	<xs:simpleType name="UUID">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- UMID -->
+	<xs:simpleType name="UMID">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="urn:smpte:umid:([0-9a-fA-F]{8}\.){7}[0-9a-fA-F]{8}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- UL -->
+	<xs:simpleType name="UL">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="urn:smpte:ul:([0-9a-fA-F]{8}\.){3}[0-9a-fA-F]{8}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- Other -->
+	<xs:simpleType name="otherID">
+		<xs:restriction base="xs:string">
+			<xs:pattern value=""/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- DataDescription -->
+	<xs:simpleType name="DataDescription">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="graphic/image"/>
+			<xs:enumeration value="related document"/>
+			<xs:enumeration value="associated material"/>
+			<xs:enumeration value="supplementary metadata"/>
+			<xs:enumeration value="trailer/preview"/>
+			<xs:enumeration value="quality control/review data"/>
+			<xs:enumeration value="other"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:element name="Manifest" type="mft:ManifestType"/>
+</xs:schema>

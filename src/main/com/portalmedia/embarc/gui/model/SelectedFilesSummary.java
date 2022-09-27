@@ -209,7 +209,6 @@ public class SelectedFilesSummary {
 		} else {
 			this.filePath = "{multiple values}";
 			possibleTextColumns.remove("filePath");
-
 		}
 	}
 

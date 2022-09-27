@@ -136,5 +136,5 @@ public class MXFMetadata {
 	public void setHasAS07CoreDMSFramework(boolean hasCore) {
 		this.hasAS07CoreDMSFramework = hasCore;
 	}
-	
+
 }

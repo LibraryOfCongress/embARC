@@ -48,6 +48,7 @@ public class DPXFileInformationViewModel implements Mappable {
 	private boolean fadgirError;
 	private boolean fadgisrError;
 	private int userDefinedDataOriginalLength = 0;
+	private boolean fileShouldBeWritten = true;
 
 	public DPXFileInformationViewModel() {
 		this(null, null, null);
@@ -196,6 +197,10 @@ public class DPXFileInformationViewModel implements Mappable {
 		return userDefinedDataOriginalLength;
 	}
 
+	public boolean getFileShouldBeWritten() {
+		return fileShouldBeWritten;
+	}
+
 	public boolean hasError(Set<ValidationRuleSetEnum> ruleSets) {
 		for (final ColumnDef c : invalidRules.keySet()) {
 			final HashMap<ValidationRuleSetEnum, List<IValidationRule>> ruleSetViolations = invalidRules.get(c);
@@ -258,6 +263,7 @@ public class DPXFileInformationViewModel implements Mappable {
 			setFadgirError((boolean) document.get("fadgirError"));
 			setFadgisrError((boolean) document.get("fadgisrError"));
 			setRuleSetsBroken((HashMap<ValidationRuleSetEnum, List<ColumnDef>>) document.get("ruleSetsBroken"));
+			setFileShouldBeWritten((boolean) document.get("fileShouldBeWritten"));
 		}
 	}
 
@@ -427,6 +433,10 @@ public class DPXFileInformationViewModel implements Mappable {
 		userDefinedDataOriginalLength = length;
 	}
 
+	public void setFileShouldBeWritten(boolean shouldBeWritten) {
+		fileShouldBeWritten = shouldBeWritten;
+	}
+
 	public void setUserDefinedDataSet(boolean userDefinedDataSet) {
 		this.userDefinedDataSet = userDefinedDataSet;
 	}
@@ -472,6 +482,7 @@ public class DPXFileInformationViewModel implements Mappable {
 		document.put("fadgirError", isFadgirError());
 		document.put("fadgisrError", isFadgisrError());
 		document.put("ruleSetsBroken", getRuleSetsBroken());
+		document.put("fileShouldBeWritten", getFileShouldBeWritten());
 		return document;
 	}
 

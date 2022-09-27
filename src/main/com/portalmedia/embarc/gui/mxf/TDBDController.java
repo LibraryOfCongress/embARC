@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.helper.CleanInputPathHelper;
@@ -20,6 +21,10 @@ import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.parser.mxf.MXFSection;
 import com.portalmedia.embarc.parser.mxf.MXFService;
 import com.portalmedia.embarc.parser.mxf.MXFServiceImpl;
+import com.portalmedia.embarc.parser.mxf.ManifestParser;
+import com.portalmedia.embarc.parser.mxf.ManifestParserImpl;
+import com.portalmedia.embarc.parser.mxf.ManifestType;
+
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.event.ActionEvent;
@@ -53,12 +58,11 @@ import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
  * @since 2020-07-13
  */
 public class TDBDController extends AnchorPane {
-
+	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
 	@FXML
 	private Label sectionLabel;
-    @FXML
-    private VBox tdbdVBox;
-
+	@FXML
+	private VBox tdbdVBox;
 	SectionDef section;
 
 	public TDBDController() {
@@ -76,10 +80,14 @@ public class TDBDController extends AnchorPane {
 	public void setContent(SectionDef section) {
 		if (section == MXFSection.TD) sectionLabel.setText("Text Data");
 		else sectionLabel.setText("Binary Data");
-		setContent(section == MXFSection.TD);
+		try {
+			setContent(section == MXFSection.TD);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
-	private void setContent(boolean isTD) {
+	private void setContent(boolean isTD) throws FileNotFoundException {
 		final MXFSelectedFilesSummary summary = ControllerMediatorMXF.getInstance().getSelectedFilesSummary();
 		HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>> elements;
 
@@ -114,19 +122,37 @@ public class TDBDController extends AnchorPane {
 		tdbdVBox.getChildren().add(list);
 	}
 
-	private BorderPane createElementCards(LinkedHashMap<MXFColumn, MetadataColumnDef> element, boolean isTD, int index, String filePath, String fileName) {
+	private BorderPane createElementCards(LinkedHashMap<MXFColumn, MetadataColumnDef> element, boolean isTD, int index, String filePath, String fileName) throws FileNotFoundException {
+		ByteBuffer bb = null;
+		boolean isManifest = false;
+		ManifestType mfType = null;
+		try {
+			MXFService mxfService = new MXFServiceImpl(filePath);
+			bb = mxfService.GetGenericStream(Integer.parseInt(element.get(MXFColumn.AS_07_Object_GenericStreamID).getCurrentValue()));
+			ManifestParser mfParser = new ManifestParserImpl();
+			if (bb != null) {
+				mfType = mfParser.isManifest(bb);
+				isManifest = mfType == ManifestType.VALID_MANIFEST || mfType == ManifestType.INVALID_MANIFEST;
+			}
+		} catch(Exception ex) {
+			LOGGER.info("Caught exception in createElementCards in TDBDController: " + ex.getMessage());
+		}
+
 		BorderPane bp = new BorderPane();
 		bp.setPadding(new Insets(10,0,10,0));
 		GridPane topGrid = new GridPane();
 		HBox header = new HBox();
 		header.setSpacing(20);
 		topGrid.setPadding(new Insets(10, 10, 10, 10));
-		String title = isTD ? String.format("Text Data Element #%s", index) : String.format("Binary Data Element #%s", index);
+		String titlePrefix = isManifest ? "RDD 48 Manifest - " : "";
+		String title = isTD ? String.format("%sText Data Element #%s", titlePrefix, index) : String.format("Binary Data Element #%s", index);
 		Label label = new Label(title);
 		label.setStyle("-fx-font-size: 12; -fx-font-weight: bold;");
 		header.getChildren().add(label);
-		FontAwesomeIconView downloadIcon = getDownloadIcon(element.get(MXFColumn.AS_07_Object_GenericStreamID).getCurrentValue(), filePath, fileName, isTD);
-		header.getChildren().add(downloadIcon);
+		if (bb != null) {
+			FontAwesomeIconView downloadIcon = getDownloadIcon(element.get(MXFColumn.AS_07_Object_GenericStreamID).getCurrentValue(), filePath, fileName, isTD);
+			header.getChildren().add(downloadIcon);
+		}
 		topGrid.add(header, 0, 0);
 		bp.setTop(topGrid);
 
@@ -136,11 +162,14 @@ public class TDBDController extends AnchorPane {
 		cc.setPrefWidth(205);
 		centerGrid.getColumnConstraints().add(cc);
 		int identifierCount = 0;
-		
+		int lastIndex = 0;
+
 		for (MXFColumn key : element.keySet()) {
 			if (key == MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier ||
 				key == MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode ||
-				key == MXFColumn.AS_07_BD_DMS_PrimaryRFC5646LanguageCode) continue;
+				key == MXFColumn.AS_07_BD_DMS_PrimaryRFC5646LanguageCode ||
+				key == MXFColumn.AS_07_Manifest ||
+				(!isManifest && key == MXFColumn.AS_07_Manifest_Valid)) continue;
 
 			int sortOrder = element.get(key).getColumnDef().getSortOrder();
 
@@ -149,21 +178,22 @@ public class TDBDController extends AnchorPane {
 				ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(element.get(key).toString());
 				for (int i = 0; i < identifiers.size(); i++) {
 					AS07DMSIdentifierSetImpl id = identifiers.get(i);
+
 					int row = identifierCount + sortOrder;
-					centerGrid.add(getDescriptorLabel("Identifier " + (i+1) +": ", "#e3e3e3", 400, ""), 0, row);
+					centerGrid.add(getDescriptorLabel("Identifier " + (i+1) +": ", "#e3e3e3", 400, "", "Identifier"), 0, row);
 
 					String value = id.getIdentifierValue();
 					value = value.replace("urn:uuid:", "");
-					centerGrid.add(getDescriptorLabel("Value: " + value, "#e3e3e3", 400, ""), 1, row);
+					centerGrid.add(getDescriptorLabel("Value: " + value, "#e3e3e3", 400, "", "Value"), 1, row);
 					row += 1;
-					centerGrid.add(getDescriptorLabel("", "#e3e3e3", 400, ""), 0, row);
-					centerGrid.add(getDescriptorLabel("Role: " + id.getIdentifierRole(), "#e3e3e3", 400, ""), 1, row);
+					centerGrid.add(getDescriptorLabel("", "#e3e3e3", 400, "", ""), 0, row);
+					centerGrid.add(getDescriptorLabel("Role: " + id.getIdentifierRole(), "#e3e3e3", 400, "", "Role"), 1, row);
 					row += 1;
-					centerGrid.add(getDescriptorLabel("", "#e3e3e3", 400, ""), 0, row);
-					centerGrid.add(getDescriptorLabel("Type: " + id.getIdentifierType(), "#e3e3e3", 400, ""), 1, row);
+					centerGrid.add(getDescriptorLabel("", "#e3e3e3", 400, "", ""), 0, row);
+					centerGrid.add(getDescriptorLabel("Type: " + id.getIdentifierType(), "#e3e3e3", 400, "", "Type"), 1, row);
 					row += 1;
-					centerGrid.add(getDescriptorLabel("", "#e3e3e3", 400, ""), 0, row);
-					centerGrid.add(getDescriptorLabel("Comment: " + id.getIdentifierComment(), "#e3e3e3", 400, ""), 1, row);
+					centerGrid.add(getDescriptorLabel("", "#e3e3e3", 400, "", ""), 0, row);
+					centerGrid.add(getDescriptorLabel("Comment: " + id.getIdentifierComment(), "#e3e3e3", 400, "", "Comment"), 1, row);
 					row += 1;
 				}
 				identifierCount ++;
@@ -171,22 +201,32 @@ public class TDBDController extends AnchorPane {
 			}
 
 			String val = element.get(key).toString();
-			centerGrid.add(getDescriptorLabel(key.getDisplayName() + ": ", "#e3e3e3", 400, ""), 0, sortOrder);
-			centerGrid.add(getDescriptorLabel(val, "#e3e3e3", 400, ""), 1, sortOrder);
+			String tooltip = key.getDisplayName();
+			if (key == MXFColumn.AS_07_Manifest_Valid) {
+				tooltip = "RDD 48 Manifest Valid: For this field, embARC validates the manifest found in the MXF file against the RDD 48 Manifest XML Schema Document (XSD), which can be found in Annex H of the RDD 48 Specification.";
+			}
+			centerGrid.add(getDescriptorLabel(key.getDisplayName() + ": ", "#e3e3e3", 400, "", tooltip), 0, sortOrder);
+			centerGrid.add(getDescriptorLabel(val, "#e3e3e3", 400, "", ""), 1, sortOrder);
+			if (sortOrder > lastIndex) lastIndex = sortOrder;
 		}
 
 		bp.setCenter(centerGrid);
 		return bp;
 	}
 
-	private Label getDescriptorLabel(String title, String color, int width, String borderClass) {
+	private Label getDescriptorLabel(String title, String color, int width, String borderClass, String tooltipText) {
 		Label label = new Label(title);
 		if (color != "") label.setStyle("-fx-background-color: " + color);
 		if (borderClass != "") label.getStyleClass().add(borderClass);
 		label.getStyleClass().add("descriptor-rounded");
 		label.setPrefWidth(width);
 		label.setPadding(new Insets(2,5,2,5));
-		label.setTooltip(new Tooltip(title));
+		if (!tooltipText.isEmpty()) {
+			Tooltip tt = new Tooltip(tooltipText);
+			tt.setMaxWidth(350);
+			tt.setWrapText(true);
+			label.setTooltip(tt);
+		}
 		return label;
 	}
 
@@ -260,18 +300,22 @@ public class TDBDController extends AnchorPane {
 					mxfService = new MXFServiceImpl(filePath);
 					int streamInt = Integer.parseInt(streamId);
 					try {
-						ByteBuffer bb = mxfService.GetGenericStream(Integer.parseInt(streamId));
+						ManifestParser mfParser = new ManifestParserImpl();
+						ByteBuffer bb = mxfService.GetGenericStream(streamInt);
+						ManifestType mfType = mfParser.isManifest(bb);
 						String ext = FileFormatDetection.getExtension(bb);
-						String fileType = "DATA_DOWNLOAD" + ext;
-//						String fileType = isTD ? "TEXT_DATA_DOWNLOAD.xml" : "BINARY_DATA_DOWNLOAD.tiff";
-						String outputPath = String.format("%s/%s_%s_%s", writeFilesPath.getText(), fileName, streamId, fileType);
+						String outputPath = "";
+						if (mfType == ManifestType.VALID_MANIFEST || mfType == ManifestType.INVALID_MANIFEST) {
+							outputPath = String.format("%s/%s", writeFilesPath.getText(), "manifest.xml");
+						} else {
+							String fileType = "DATA_DOWNLOAD" + ext;
+							outputPath = String.format("%s/%s_%s_%s", writeFilesPath.getText(), fileName, streamId, fileType);
+						}
 						mxfService.DownloadGenericStream(streamInt, outputPath);
 					} catch (Exception e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

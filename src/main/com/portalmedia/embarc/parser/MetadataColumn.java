@@ -87,4 +87,8 @@ public class MetadataColumn implements Serializable, MetadataColumnDef {
 	public String getCurrentValue() {
 		return BytesToStringHelper.toTypedString(type, currentValue, getByteOrder());
 	}
+	
+	public String getStandardizedValue() {
+		return BytesToStringHelper.toStandardizedTypedString(type, currentValue, getByteOrder());
+	}
 }

@@ -3,6 +3,7 @@ package MXFTests;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+//import java.io.File; // if you use File
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -14,9 +15,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 import com.portalmedia.embarc.parser.FileFormatDetection;
 import com.portalmedia.embarc.parser.FileInformation;
@@ -27,6 +41,9 @@ import com.portalmedia.embarc.parser.mxf.MXFFileDescriptorResult;
 import com.portalmedia.embarc.parser.mxf.MXFMetadata;
 import com.portalmedia.embarc.parser.mxf.MXFService;
 import com.portalmedia.embarc.parser.mxf.MXFServiceImpl;
+import com.portalmedia.embarc.parser.mxf.ManifestParser;
+import com.portalmedia.embarc.parser.mxf.ManifestParserImpl;
+import com.portalmedia.embarc.parser.mxf.ManifestType;
 
 import tv.amwa.maj.io.mxf.LocalTagEntry;
 import tv.amwa.maj.io.mxf.MXFFile;
@@ -54,13 +71,54 @@ public class MXFReadWriteTests {
         File srcFile = new File(classLoader.getResource("as07_sample1-gf-unc-3.1.mxf").getFile());
         
         filePath = srcFile.getAbsolutePath();
-        service = new MXFServiceImpl(filePath);
+        
+        service = new MXFServiceImpl(filePath); 
 	}
 	@Test
 	public void CanReadMxfFile() {
 		MXFFile mxf = service.getFile();
 		
 		Assert.assertNotNull(mxf);
+	}
+	@Test
+	public void CanValidateManifest() throws ParserConfigurationException, SAXException, IOException {
+
+		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+		File schemaFile =new File(classLoader.getResource("RDD48-Manifest-20180827.xsd").getFile());
+		
+		File f = new File(classLoader.getResource("RDD48_LakeJulianP1060231_50i_576_MKV_FFV1_422_8_ag_20220517.mxf_1003_DATA_DOWNLOAD.xml").getFile());
+		Source xmlFile = new StreamSource(f);
+		
+
+	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder db = dbf.newDocumentBuilder();
+	    Document doc = db.parse(f);
+	    
+	    Element root = doc.getDocumentElement();
+	    
+	    System.out.println(root.getNodeName());
+		
+		SchemaFactory schemaFactory = SchemaFactory
+		    .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		try {
+		  Schema schema = schemaFactory.newSchema(schemaFile);
+		  Validator validator = schema.newValidator();
+		  validator.validate(xmlFile);
+		  System.out.println(xmlFile.getSystemId() + " is valid");
+		} catch (SAXException e) {
+		  System.out.println(xmlFile.getSystemId() + " is NOT valid reason:" + e);
+		} catch (IOException e) {}
+	}
+	
+	@Test
+	public void CanValidateMxfFileManifest() throws ParserConfigurationException, SAXException, IOException {
+		ByteBuffer bb = service.GetGenericStream(2);
+
+		ManifestParser parser = new ManifestParserImpl();
+		
+		ManifestType type = parser.isManifest(bb);
+		
+		Assert.assertTrue(type==ManifestType.INVALID_MANIFEST);
 	}
 	@Test
 	public void CanDownloadTD() throws FileNotFoundException {

@@ -163,21 +163,19 @@ public class FileProcessController {
 	}
 
 
-	private List<File> getAllFilesInPath(File file, List<File> fileList) {
-		final Path folder = Paths.get(file.getAbsolutePath());
+	private List<File> getAllFilesInPath(String file, List<File> fileList) {
+		final Path folder = Paths.get(file);
 		if (!Files.isDirectory(folder)) {
-			fileList.add(file);
+			fileList.add(new File(file));
 		} else {
+			List<Path> pathsToProcess = new ArrayList<Path>();
 			try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder)) {
 				for (final Path filePath : stream) {
 					if (Files.isHidden(filePath)) {
 						continue;
 					}
-					if (Files.isDirectory(filePath)) {
-						getAllFilesInPath(file, fileList);
-					} else {
-						File newFile = new File(filePath.toString());
-						fileList.add(newFile);
+					else {
+						pathsToProcess.add(filePath);
 					}
 				}
 			} catch (final IOException ex) {
@@ -185,27 +183,36 @@ public class FileProcessController {
 				LOGGER.log(Level.SEVERE, ex.toString(), ex);
 				ex.printStackTrace();
 			}
+			for(final Path filePath : pathsToProcess) {
+				if (Files.isDirectory(filePath)) {
+					LOGGER.log(Level.WARNING, "Checking file path " + filePath);
+					getAllFilesInPath(filePath.toString(), fileList);
+				} else {
+					File newFile = new File(filePath.toString());
+					fileList.add(newFile);
+				}
+			}
 		}
 		return fileList;
 	}
 
 	private Boolean validFileFormat(List<File> files) {
 		List<File> fileList = new ArrayList<File>();
-		for (File f : files) getAllFilesInPath(f, fileList);
+		for (File f : files) getAllFilesInPath(f.toString(), fileList);
 
 		Boolean foundMXF = false;
 		Boolean foundDPX = false;
 
 		for (File file : fileList) {
-			Boolean isMXF = FileFormatDetection.isMXF(file.getAbsolutePath());
-			if (isMXF) {
-				foundMXF = true;
-				continue;
-			}
-
 			Boolean isDPX = FileFormatDetection.isDPX(file.getAbsolutePath());
 			if (isDPX) {
 				foundDPX = true;
+				continue;
+			}
+			
+			Boolean isMXF = FileFormatDetection.isMXF(file.getAbsolutePath());
+			if (isMXF) {
+				foundMXF = true;
 				continue;
 			}
 		}
@@ -246,6 +253,9 @@ public class FileProcessController {
 
 				int count = 0;
 				final int totalValidFiles = validFileList.size();
+				
+				LOGGER.info("Total DPX/MXF Files: " + totalValidFiles);
+				
 				int increment = 1;
 
 				if (totalValidFiles > 10000) {
@@ -266,9 +276,12 @@ public class FileProcessController {
 							final boolean success = DPXFileListHelper.addFileToDatabase(f);
 							count++;
 							if (!success) { // This error is most likely a duplicate file path
+								LOGGER.info("Error while adding " + fileFormat + " file to DB.");
 								System.out.println("Error while adding " + fileFormat + " file to DB.");
 								validFileFailures.add(f);
 							}
+
+							LOGGER.info("Finished adding " + count + ": " + f);
 							if (count == totalFiles || count % increment == 0) {
 								processed = (count * 100) / totalFiles;
 								updateProgress(processed, 100);

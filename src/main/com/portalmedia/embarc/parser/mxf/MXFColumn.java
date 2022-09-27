@@ -34,7 +34,9 @@ public enum MXFColumn implements ColumnDef {
 	AS_07_Object_TextDataDescription("GSP Data Description", MXFSection.OBJECT, String.class, false, DisplayType.ASCII, 5),
 	AS_07_Object_Note("RDD 48 DMS Note", MXFSection.OBJECT, String.class, false, DisplayType.ASCII, 6),
 	AS_07_Object_GenericStreamID("Generic Stream ID", MXFSection.OBJECT, String.class, false, DisplayType.ASCII, 7),
-	AS_07_Object_Identifiers("Identifiers", MXFSection.OBJECT, String.class, false, DisplayType.ASCII, 8),
+	AS_07_Manifest("Manifest", MXFSection.TD, String.class, false, DisplayType.ASCII, 8),
+	AS_07_Manifest_Valid("Manifest Valid", MXFSection.TD, String.class, false, DisplayType.ASCII, 9),
+	AS_07_Object_Identifiers("Identifiers", MXFSection.OBJECT, String.class, false, DisplayType.ASCII, 10),
 	
 	AS_07_TD_DMS_TextBasedObject("Text Based Object", MXFSection.TD, String.class, false, DisplayType.ASCII, true, false),
 	AS_07_BD_DMS_TextBasedObject("Binary Based Object", MXFSection.BD, String.class, false, DisplayType.ASCII, true, false);
