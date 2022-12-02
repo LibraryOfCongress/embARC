@@ -78,12 +78,12 @@ public class CoreMXFController extends AnchorPane {
 	@FXML
 	private VBox editableFieldsVBox;
 
-	HashSet<IEditorField> fields;
-	IntegerProperty editedFieldsCount = new SimpleIntegerProperty(0);
-	int numSelected;
+	private HashSet<IEditorField> fields;
+	private IntegerProperty editedFieldsCount = new SimpleIntegerProperty(0);
+	private int numSelected;
 
 	public CoreMXFController() {
-		ControllerMediatorMXF.getInstance().registerEditMXFCoreForm(this);
+		ControllerMediatorMXF.getInstance().registerCoreMXFController(this);
 		fields = new HashSet<>();
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CoreMXFView.fxml"));
 		fxmlLoader.setController(this);
@@ -114,14 +114,14 @@ public class CoreMXFController extends AnchorPane {
 		editedFieldsCount.addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> obs, Number ov, Number nv) {
-				if (nv.equals(0)) {
+				if (nv.intValue() == 0) {
 					editingSummary.setText("");
 					applyChangesButton.setDisable(true);
 					applyChangesButton.setStyle("-fx-background-color: #7EFFFE;");
 					return;
 				}
 				String text = "Change ";
-				if (nv.equals(1)) text += nv + " field in ";
+				if (nv.intValue() == 1) text += nv + " field in ";
 				else text += nv + " fields in ";
 				if (numSelected == 1) text += numSelected + " file?";
 				else text += numSelected + " files?";

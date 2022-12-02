@@ -141,7 +141,6 @@ public class GeneralForm extends AnchorPane {
 
 				} catch (final IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
 					logger.error(e.getStackTrace());
 				}
 
@@ -160,14 +159,12 @@ public class GeneralForm extends AnchorPane {
 					p.getOutputStream().close();
 
 				} catch (final IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					System.out.println("Error displaying DPX sequence");
 				}
 			}
 
 		} catch (final IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			System.out.println("Error displaying DPX sequence final");
 		}
 		return;
 

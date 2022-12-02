@@ -1,7 +1,6 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.gui.dpx.ValidationChangeListener;
@@ -23,7 +22,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 
@@ -36,18 +34,15 @@ import javafx.stage.Modality;
  */
 public class ASCIIArea extends AnchorPane implements IEditorField {
 	@FXML
-	private HBox ASCIIHBox;
-	@FXML
 	private TextArea editorTextArea;
 	@FXML
 	private Label editorTextAreaLabel;
 	@FXML
 	private FontAwesomeIconView popoutIcon;
 
-	DPXColumn column;
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
+	private DPXColumn column;
 	private String originalValue;
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public ASCIIArea() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ASCIIArea.fxml"));

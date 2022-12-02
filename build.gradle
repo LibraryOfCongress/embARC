@@ -22,11 +22,11 @@ apply plugin: 'launch4j'
 apply plugin: "edu.sc.seis.macAppBundle"
 
 // GUI
-version = '1.1.0'
+version = '1.1.1'
 mainClassName = "com.portalmedia.embarc.gui.Main"
 
 // CLI
-//version = '0.3.0'
+//version = '0.3.1'
 //mainClassName = "com.portalmedia.embarc.cli.Main"
 
 repositories {

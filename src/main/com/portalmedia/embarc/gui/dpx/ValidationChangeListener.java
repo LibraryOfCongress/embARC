@@ -8,7 +8,6 @@ import java.util.Set;
 import org.controlsfx.control.textfield.CustomTextField;
 
 import com.portalmedia.embarc.gui.ValidationWarningIcons;
-import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.ColumnDef;
 import com.portalmedia.embarc.validation.DPXColumnValidationRules;
 import com.portalmedia.embarc.validation.IValidationRule;

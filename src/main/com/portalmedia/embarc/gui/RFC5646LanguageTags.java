@@ -1,15 +1,11 @@
 package com.portalmedia.embarc.gui;
 
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 public class RFC5646LanguageTags {
 
-	HashMap<String, String> values = new HashMap<String, String>();
+	private HashMap<String, String> values = new HashMap<String, String>();
 
 	public RFC5646LanguageTags() {
 		values.put("", "");
@@ -246,31 +242,8 @@ public class RFC5646LanguageTags {
 		values.put("zu", "Zulu");
 		values.put("zu-ZA", "Zulu (South Africa)");
 	}
-
-	public String getValue(String key) {
-		return values.get(key);
-	}
-
-	public Collection<String> getValues(){
-		return values.values();
-	}
-	
-	public HashMap<String, String> getMap() {
-		return values;
-	}
 	
 	public TreeMap<String, String> getTreeMap() {
 		return new TreeMap<String, String>(values);
-	}
-
-	public String getKey(String description) {
-		Iterator<Entry<String, String>> hmIterator = values.entrySet().iterator();
-		while (hmIterator.hasNext()) {
-			Map.Entry mapElement = (Map.Entry)hmIterator.next();
-			if (mapElement.getValue().equals(description)) {
-				return (String) mapElement.getKey();
-			}
-		}
-		return "???";
 	}
 }

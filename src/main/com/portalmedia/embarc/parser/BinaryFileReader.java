@@ -51,16 +51,14 @@ public class BinaryFileReader {
 		try {
 			inputStream.skip(position);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error skipping to " + position);
 		}
 	}
 	public void close() {
 		try {
 			inputStream.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error closing inputstream");
 		}
 	}
 	public boolean hasMoreData() {
@@ -88,8 +86,7 @@ public class BinaryFileReader {
 			return new String(destBytes, "UTF-8");
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error reading ascii");
 		}
 		return "";
 	}
@@ -100,8 +97,7 @@ public class BinaryFileReader {
 			bytes = readBytes(2);
 			return ByteBuffer.wrap(bytes).order(byteOrder).getShort();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error reading int16");
 		}
 		return -1;
 	}
@@ -112,8 +108,7 @@ public class BinaryFileReader {
 			bytes = readBytes(1);
 			return bytes[0];
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error reading int8");
 		}
 		return -1;
 	}
@@ -125,8 +120,7 @@ public class BinaryFileReader {
 			bytes = readBytes(length);
 			return ByteBuffer.wrap(bytes).order(byteOrder).getInt();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error reading int32");
 		}
 		return -1;
 	}
@@ -138,8 +132,7 @@ public class BinaryFileReader {
 			bytes = readBytes(length);
 			return ByteBuffer.wrap(bytes).order(byteOrder).getFloat();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error reading float32");
 		}
 		return -1;
 	}
@@ -151,8 +144,7 @@ public class BinaryFileReader {
 			bytes = readBytes(length);
 			return ByteBuffer.wrap(bytes).order(byteOrder).getLong();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error reading int64");
 		}
 		return -1;
 	}
@@ -168,8 +160,7 @@ public class BinaryFileReader {
 		try {
 			date = dateFormat.parse(dateString);
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error reading date");
 		}
 		
 		return date;

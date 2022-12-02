@@ -57,6 +57,7 @@ import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
 * @version 1.0
 * @since 2020-01-20
 */
+@SuppressWarnings("ucd")
 public class Main {
 
 	static PrintStream consolePrintStream;
@@ -264,13 +265,13 @@ public class Main {
 			ColumnDef key = entry.getKey();
 			MetadataColumn value = entry.getValue();
 
-			if (currentSection != key.getSectionDisplayName()) {
+			if (!currentSection.equals(key.getSectionDisplayName())) {
 				currentSection = key.getSectionDisplayName();
 				System.out.println("\n" + currentSection);
 				System.out.println("--------------------------------------------------------------------------------");
 			}
 
-			if (currentSection == "Image Information") {
+			if ("Image Information".equals(currentSection)) {
 				String subsection = key.getSubsection().getDisplayName();
 				if (subsection != currentSubsection && subsection != "") {
 					currentSubsection = subsection;
@@ -322,7 +323,7 @@ public class Main {
 		String stripped = profileUl.replace("urn:smpte:ul:", "");
 		HashMap<String, String> profileULMap = new MXFProfileULMap().getMap();
 		String val = profileULMap.get(stripped);
-		if (val == null || val == "") return profileUl;
+		if (val == null || "".equals(val)) return profileUl;
 		return val += " (" + profileUl + ")";
 	}
 
@@ -532,7 +533,7 @@ public class Main {
 					}
 				}
 			} catch (final IOException ex) {
-				ex.printStackTrace();
+				System.out.println("Unable to connect to database");
 			}
 		}
 	}
@@ -620,7 +621,7 @@ public class Main {
 
 			toggleOutput(true);
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println("Error downloading generic stream");
 		}
 	}
 

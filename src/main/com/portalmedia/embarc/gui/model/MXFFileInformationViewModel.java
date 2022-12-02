@@ -63,7 +63,7 @@ public class MXFFileInformationViewModel {
 	}
 
 	public String getProp(String columnName) {
-		if (columnName == "profile") {
+		if ("profile".equals(columnName)) {
 			return mapProfileToControlledList(properties.get(columnName));
 		}
 
@@ -166,7 +166,7 @@ public class MXFFileInformationViewModel {
 		String stripped = profileUl.replace("urn:smpte:ul:", "");
 		HashMap<String, String> profileULMap = new MXFProfileULMap().getMap();
 		String val = profileULMap.get(stripped);
-		if (val == null || val == "") return profileUl;
+		if (val == null || "".equals(val)) return profileUl;
 		return val += "\n" + "(" + profileUl + ")";
 	}
 

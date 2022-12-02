@@ -57,12 +57,6 @@ public class ProgressSpinner {
 		dialogStage.show();
 	}
 
-	public void cancelProgressBar() {
-		if (progressIndicator.progressProperty().isBound()) {
-			progressIndicator.progressProperty().unbind();
-		}
-	}
-
 	public Stage getDialogStage() {
 		return dialogStage;
 	}

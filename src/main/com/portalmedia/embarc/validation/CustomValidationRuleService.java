@@ -37,8 +37,7 @@ public class CustomValidationRuleService {
 			JSONTokener tokener = new JSONTokener(fr);
 			object = new JSONObject(tokener);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("File not found: Rule set");
 		}
 
 		if (object == null) return;
@@ -115,8 +114,7 @@ public class CustomValidationRuleService {
 			Path outputPath = Paths.get(output);
 			System.out.println("\nConformance report location: " + outputPath.toAbsolutePath());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("IO Exception in conformance report");
 		}
 	}
 

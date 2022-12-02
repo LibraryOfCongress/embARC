@@ -2,8 +2,6 @@ package com.portalmedia.embarc.gui.mxf;
 
 import java.io.IOException;
 
-import com.portalmedia.embarc.parser.SectionDef;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -21,14 +19,11 @@ import javafx.scene.layout.VBox;
  * @since 2020-07-13
  */
 public class WriteMXFController extends AnchorPane {
-
 	@FXML
 	private AnchorPane writeFilesSummaryPane;
 
-	SectionDef section;
-
 	public WriteMXFController() {
-		ControllerMediatorMXF.getInstance().registerWriteView(this);
+		ControllerMediatorMXF.getInstance().registerWriteMXFController(this);
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("WriteMXFView.fxml"));
 		fxmlLoader.setController(this);
 		fxmlLoader.setRoot(this);

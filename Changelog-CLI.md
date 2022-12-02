@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file
 
+## 0.3.1 2022-11-28
+	Code cleanup
+
 ## 0.3.0 2022-09-31
 	Add MXF Manifest display and validation
 	Add MXF FFV1 support

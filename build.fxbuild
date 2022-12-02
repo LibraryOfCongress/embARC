@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <anttasks:AntTask xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:anttasks="http://org.eclipse.fx.ide.jdt/1.0" buildDirectory="${project}/build">
   <deploy packagingFormat="msi">
-    <application name="embARC" mainclass="com.portalmedia.embarc.gui.Main" version="1.1.0"/>
+    <application name="embARC" mainclass="com.portalmedia.embarc.gui.Main" version="1.1.1"/>
     <info title="embARC" vendor="PortalMedia"/>
   </deploy>
   <signjar/>

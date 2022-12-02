@@ -2,8 +2,6 @@ package com.portalmedia.embarc.gui;
 
 import org.controlsfx.control.textfield.CustomTextField;
 
-import com.portalmedia.embarc.gui.model.DPXMetadataColumnViewModel;
-
 /**
  * Class for validating and replacing float field data
  *
@@ -12,7 +10,6 @@ import com.portalmedia.embarc.gui.model.DPXMetadataColumnViewModel;
  * @since 2018-05-08
  */
 public class FloatInputControl extends CustomTextField {
-	DPXMetadataColumnViewModel column;
 
 	public FloatInputControl() {
 		super();
@@ -72,7 +69,7 @@ public class FloatInputControl extends CustomTextField {
 		}
 		
 		// Only '.', then valid
-		if (text.length() == 1 && text.equals(".")) {
+		if (text.length() == 1 && ".".equals(text)) {
 			return true;
 		}
 		try {
@@ -82,7 +79,7 @@ public class FloatInputControl extends CustomTextField {
 				return true;
 			}
 		} catch (final NumberFormatException exception) {
-			exception.printStackTrace();
+			System.out.println("NumberFormatException Error");
 		}
 
 		return false;

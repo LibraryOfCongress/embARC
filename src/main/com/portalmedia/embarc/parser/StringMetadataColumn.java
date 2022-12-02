@@ -1,10 +1,6 @@
 package com.portalmedia.embarc.parser;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
-import com.portalmedia.embarc.parser.dpx.DPXColumn;
 
 /**
  * Method to store all needed information about a metadata column.

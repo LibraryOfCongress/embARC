@@ -41,11 +41,11 @@ Guidelines for Embedded Metadata within DPX File Headers for Digitized Motion Pi
 SMPTE RDD 48: MXF Archive and Preservation Format
 
 #### DPX Usage
-java -jar [path/to/embARC-CLI.jar] [input] [output] [options]
+`java -jar [path/to/embARC-CLI.jar] [input] [output] [options]`
 
 [input] = path to target DPX file or DPX sequence folder [output] = -csv <filepath/newfile.csv> CSV formatted output -json <filepath/newfile.json> JSON formatted output [options] = -print -conformanceInputJSON Input validation json file -conformanceOutputCSV Output validation csv file
 
 #### MXF Usage
-java -jar [path/to/embARC-CLI.jar] [input] [options]
+`java -jar [path/to/embARC-CLI.jar] [input] [options]`
 
 [input] = path to target MXF file [options] = -print Print file metadata to console -downloadTDStream Write text data stream to local directory -downloadBDStream Write binary data stream to local directory -streamOutputPath Specify data stream output directory

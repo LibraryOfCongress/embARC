@@ -9,14 +9,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.DatePicker;
@@ -38,10 +36,9 @@ public class DatePickerField extends AnchorPane implements IEditorField {
 	@FXML
 	private Label editorTextFieldLabel;
 
-	DPXColumn column;
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
+	private DPXColumn column;
 	private LocalDate originalValue;
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public DatePickerField() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DatePickerField.fxml"));
@@ -194,7 +191,7 @@ public class DatePickerField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void setValue(String value) {
-		if (value.isEmpty() || value == "{multiple values}") {
+		if (value.isEmpty() || "{multiple values}".equals(value)) {
 			return;
 		}
 		Date input;
@@ -208,13 +205,8 @@ public class DatePickerField extends AnchorPane implements IEditorField {
 			}
 			datePicker.setValue(l);
 		} catch (final ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Parse Error");
 		}
-	}
-
-	public ObjectProperty<LocalDate> textProperty() {
-		return datePicker.valueProperty();
 	}
 
 	/*

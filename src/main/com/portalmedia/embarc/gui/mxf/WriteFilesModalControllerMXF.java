@@ -2,9 +2,9 @@ package com.portalmedia.embarc.gui.mxf;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.helper.CleanInputPathHelper;
@@ -19,14 +19,13 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 
 /**
  * Controls write files modal
@@ -36,6 +35,7 @@ import javafx.stage.FileChooser;
  * @since 2020-03-11
  */
 public class WriteFilesModalControllerMXF {
+	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
 	
 	// this is almost identical to the WriteFilesModalController in gui.dpx
 	// TODO: extract differences and combine into one to get rid of duplicate code
@@ -74,7 +74,6 @@ public class WriteFilesModalControllerMXF {
 			return data;
 		});
 
-		// Create the username and password labels and fields.
 		final GridPane grid = new GridPane();
 		grid.setHgap(10);
 		grid.setVgap(10);
@@ -153,8 +152,7 @@ public class WriteFilesModalControllerMXF {
 					d = new WriteFilesDialogMXF(tmpWriteFilesPath, writeEditedCb.isSelected());
 					d.initOwner(Main.getPrimaryStage());
 				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					LOGGER.log(Level.SEVERE, e1.toString(), e1);
 				}
 			}
 		}

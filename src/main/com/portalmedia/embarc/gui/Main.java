@@ -65,7 +65,7 @@ public class Main extends Application {
 	private static String programType = "";
 	static Handler fileHandler = null;
 	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
-	private static final String embARCVersion = "v1.1.0";
+	private static final String embARCVersion = "v1.1.1";
 
 	public static void main(String[] args) throws Exception {
 		try {
@@ -107,7 +107,7 @@ public class Main extends Application {
 			fileHandler.setFormatter(simple);
 			LOGGER.addHandler(fileHandler);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("IO Exception Error");
 		}
 	}
 
@@ -185,10 +185,6 @@ public class Main extends Application {
 		setSplashScreenCloseRequest();
 	}
 
-	public static void hideSplash() {
-		if (splashStage.isShowing()) splashStage.hide();
-	}
-
 	public static void showMainStageDPX(Boolean refresh) {
 		LOGGER.info("Begin DPX GUI");
 		programType = "DPX";
@@ -240,7 +236,7 @@ public class Main extends Application {
 				Optional<ButtonType> result = alert.showAndWait();
 				if (result.get() == ButtonType.OK) {
 					LOGGER.info("Closing embARC");
-					if (programType == "DPX") closeDatabase();
+					if ("DPX".equals(programType)) closeDatabase();
 				} else {
 					e.consume();
 				}
@@ -252,7 +248,7 @@ public class Main extends Application {
 		splashStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
 			public void handle(WindowEvent e) {
-				if (!primaryStage.isShowing() || programType == "DPX") closeDatabase();
+				if (!primaryStage.isShowing() || "DPX".equals(programType)) closeDatabase();
 			}
 		});
 	}

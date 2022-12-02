@@ -1,23 +1,15 @@
 package com.portalmedia.embarc.cli;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.portalmedia.embarc.parser.ColumnDef;
 import com.portalmedia.embarc.parser.MetadataColumn;
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.dpx.DPXFileInformation;
-import com.portalmedia.embarc.parser.dpx.DPXMetadata;
 
 /**
  * Process dpx batches
@@ -214,15 +206,15 @@ public class BatchProcessorDpx {
     		ColumnDef key = entry.getKey();
     		String value = entry.getValue();
 
-    		if (section != key.getSectionDisplayName()) {
+    		if (!section.equals(key.getSectionDisplayName())) {
     			section = key.getSectionDisplayName();
     			System.out.println("\n" + section);
     			System.out.println("--------------------------------------------------------------------------------");
     		}
 
-    		if (section == "Image Information") {
+    		if ("Image Information".equals(section)) {
     			String sub = key.getSubsection().getDisplayName();
-    			if (sub != subsection && sub != "") {
+    			if (!sub.equals(subsection) && !"".equals(sub)) {
     				subsection = sub;
     				System.out.println("  --- " + subsection + " ---");
     			}

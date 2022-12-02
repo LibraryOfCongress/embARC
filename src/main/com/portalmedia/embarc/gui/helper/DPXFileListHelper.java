@@ -72,7 +72,6 @@ public class DPXFileListHelper {
 			fileInfo.setFileData(service.readFile());
 		} catch (final Exception e) {
 			System.out.println("Failed to parse file metadata");
-			e.printStackTrace();
 		}
 
 		return fileInfo;
@@ -116,7 +115,6 @@ public class DPXFileListHelper {
 			dbService.delete(id);
 		} catch (final Exception e) {
 			System.out.println("Failed to delete file");
-			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -164,8 +162,7 @@ public class DPXFileListHelper {
 			c.update(bytes, 0, bytes.length);
 			return String.format("%02x", c.getValue());
 		} catch (final Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error getting crc32");
 		}
 		return "";
 	}

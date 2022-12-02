@@ -23,7 +23,7 @@ public class IsValidShortRule extends ValidationRuleBase implements IValidationR
 				return true;
 			}
 		} catch (final NumberFormatException ex) {
-			ex.printStackTrace();
+			System.out.println("Invalid number in IsValidShortRule");
 		}
 		return false;
 	}

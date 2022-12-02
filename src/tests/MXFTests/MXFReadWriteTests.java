@@ -7,8 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -52,12 +50,9 @@ import tv.amwa.maj.model.AS07CoreDMSFramework;
 import tv.amwa.maj.model.AS07GSPDMSObject;
 import tv.amwa.maj.model.Identification;
 import tv.amwa.maj.model.Preface;
-import tv.amwa.maj.model.impl.AS07CoreDMSDeviceObjectsImpl;
 import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
 import tv.amwa.maj.model.impl.AS07GspBdDMSFrameworkImpl;
 import tv.amwa.maj.model.impl.AS07GspTdDMSFrameworkImpl;
-import tv.amwa.maj.record.AUID;
-import tv.amwa.maj.record.impl.AUIDImpl;
 
 public class MXFReadWriteTests {
 
@@ -91,6 +86,7 @@ public class MXFReadWriteTests {
 		
 
 	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
 	    DocumentBuilder db = dbf.newDocumentBuilder();
 	    Document doc = db.parse(f);
 	    
@@ -126,8 +122,9 @@ public class MXFReadWriteTests {
 		Assert.assertNotNull(bb);
 		
 		File file = new File("stream_test.xml");
-		
-		FileChannel channel = new FileOutputStream(file, false).getChannel();
+
+		FileOutputStream fileOutputStream = new FileOutputStream(file, false);
+		FileChannel channel = fileOutputStream.getChannel();
 		 
         // Flips this buffer.  The limit is set to the current position and then
         // the position is set to zero.  If the mark is defined then it is discarded.
@@ -137,10 +134,8 @@ public class MXFReadWriteTests {
         try {
 			channel.write(bb);
 	        // close the channel
-	        channel.close();
+			fileOutputStream.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	@Test
@@ -149,8 +144,9 @@ public class MXFReadWriteTests {
 		Assert.assertNotNull(bb);
 		
 		File file = new File("stream_test.tiff");
-		
-		FileChannel channel = new FileOutputStream(file, false).getChannel();
+
+		FileOutputStream fileOutputStream = new FileOutputStream(file, false);
+		FileChannel channel = fileOutputStream.getChannel();
 		 
         // Flips this buffer.  The limit is set to the current position and then
         // the position is set to zero.  If the mark is defined then it is discarded.
@@ -160,12 +156,10 @@ public class MXFReadWriteTests {
         try {
 			channel.write(bb);
 	        // close the channel
-	        channel.close();
+			fileOutputStream.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
+
 	}
 	@Test
 	public void CanGetExtension() throws Exception {
@@ -184,10 +178,10 @@ public class MXFReadWriteTests {
 		String responsibleOrganizationCode = "test org code";
 		String pictureFormat = "test picture format";
 		String captions = "test captions";
-		AUID audioTrackLayout = new AUIDImpl();// TODO
+		//AUID audioTrackLayout = new AUIDImpl();// TODO
 		String intendedAFD = "test AFD";
-		List<AS07DMSIdentifierSetImpl> identifiers = new ArrayList<AS07DMSIdentifierSetImpl>(); // TODO
-		List<AS07CoreDMSDeviceObjectsImpl> devices = Collections.synchronizedList(new ArrayList<AS07CoreDMSDeviceObjectsImpl>()); // TODO
+		//List<AS07DMSIdentifierSetImpl> identifiers = new ArrayList<AS07DMSIdentifierSetImpl>(); // TODO
+		//List<AS07CoreDMSDeviceObjectsImpl> devices = Collections.synchronizedList(new ArrayList<AS07CoreDMSDeviceObjectsImpl>()); // TODO
 		String audioTrackLayoutComment = "test audio track layout comment";
 		String audioTrackSecondaryLanguage = "test audio track secondary language";
 		String audioTrackPrimaryLanguage = "test audio track primary languag";

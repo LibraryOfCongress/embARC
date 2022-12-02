@@ -152,7 +152,7 @@ public class MXFFormatDetectionTests {
 				System.out.println("FOUND IT");
 				List<? extends Track> tracks = p.getPackageTracks();
 				
-				for(Track t : tracks) {
+				for(@SuppressWarnings("unused") Track t : tracks) {
 					//System.out.println(t.toString());
 					
 				}

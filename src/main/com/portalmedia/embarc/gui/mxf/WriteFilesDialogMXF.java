@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -19,7 +18,6 @@ import com.portalmedia.embarc.parser.mxf.MXFFileWriteResult;
 import com.portalmedia.embarc.parser.mxf.MXFMetadata;
 import com.portalmedia.embarc.parser.mxf.MXFService;
 import com.portalmedia.embarc.parser.mxf.MXFServiceImpl;
-import com.portalmedia.embarc.report.HashReportValue;
 
 import javafx.concurrent.Task;
 import javafx.scene.control.Dialog;
@@ -33,18 +31,14 @@ import javafx.scene.text.Text;
  * @since 2018-05-08
  */
 public class WriteFilesDialogMXF extends Dialog {
-	String filePath;
-	String csvPath;
-	boolean writeEditedOnly = false;
-	int success = 0;
-	int failures = 0;
-	Map<String, Exception> exceptions = new LinkedHashMap<String, Exception>();
-	final List<HashReportValue> report = new LinkedList<>();
-	List<FileInformation<MXFMetadata>> fileListCopy = new ArrayList<FileInformation<MXFMetadata>>();
+	private boolean writeEditedOnly = false;
+	private int success = 0;
+	private int failures = 0;
+	private Map<String, Exception> exceptions = new LinkedHashMap<String, Exception>();
+	private List<FileInformation<MXFMetadata>> fileListCopy = new ArrayList<FileInformation<MXFMetadata>>();
 	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
 
 	public WriteFilesDialogMXF(String filePath, boolean writeEditedOnly) throws FileNotFoundException {
-		this.filePath = filePath;
 		this.writeEditedOnly = writeEditedOnly;
 		writeFiles(filePath);
 	}
@@ -99,11 +93,9 @@ public class WriteFilesDialogMXF extends Dialog {
 							}
 						} catch (IOException e) {
 							LOGGER.log(Level.SEVERE, e.toString(), e);
-							e.printStackTrace();
 						}
 					} catch (Exception e) {
 						LOGGER.log(Level.SEVERE, e.toString(), e);
-						e.printStackTrace();
 					}
 
 					count++;

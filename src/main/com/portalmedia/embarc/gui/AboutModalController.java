@@ -4,6 +4,7 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Level;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -76,7 +77,7 @@ public class AboutModalController {
 						uri = new URI(fadgiLink.getText());
 						openUrl(uri);
 					} catch (final URISyntaxException e) {
-						e.printStackTrace();
+						System.out.println("URI Syntax Error");
 					}
 				}
 			});
@@ -116,7 +117,7 @@ public class AboutModalController {
 		try {
 			Desktop.getDesktop().browse(uri);
 		} catch (final IOException e) {
-			e.printStackTrace();
+			System.out.println("URI IO Error");
 		}
 	}
 

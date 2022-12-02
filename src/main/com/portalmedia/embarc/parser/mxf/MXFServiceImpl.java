@@ -177,19 +177,22 @@ public class MXFServiceImpl implements MXFService {
 		int headerSize = (int) (headerPartitionPack.getEncodedSize());
 		headerSize = headerSize < 65536 ? 65546 : headerSize;
 		
-		ByteArrayOutputStream headerBytes = new ByteArrayOutputStream(headerSize);
-		ByteArrayOutputStream metadataBytes = new ByteArrayOutputStream(headerSize);
+		try(ByteArrayOutputStream headerBytes = new ByteArrayOutputStream(headerSize)){
+			try(ByteArrayOutputStream metadataBytes = new ByteArrayOutputStream(headerSize)){
 
-		MXFStream.writeHeaderMetadata(metadataBytes, preface);
+				MXFStream.writeHeaderMetadata(metadataBytes, preface);
 
-		headerPartitionPack.setHeaderByteCount(metadataBytes.size() + klvFillLength);
-		
-		MXFStream.writeFill(metadataBytes, klvFillLength);
-		
-		MXFStream.writePartitionPack(headerBytes, headerPartitionPack);
-		
-		totalBytes += headerBytes.size();
-		totalBytes += metadataBytes.size();
+				headerPartitionPack.setHeaderByteCount(metadataBytes.size() + klvFillLength);
+				
+				MXFStream.writeFill(metadataBytes, klvFillLength);
+				
+				MXFStream.writePartitionPack(headerBytes, headerPartitionPack);
+				
+				totalBytes += headerBytes.size();
+				totalBytes += metadataBytes.size();
+			}
+		}
+
 		
 		RandomIndexItem hRipItem = new RandomIndexItemImpl(headerPartitionPack.getBodySID(), thisPartition);
 		ripItems.add(hRipItem);
@@ -205,11 +208,11 @@ public class MXFServiceImpl implements MXFService {
 				ByteBuffer bb = element.getData();
 				byte[] elementByteArray = bb.array();
 				
-				ByteArrayOutputStream elementBytes = new ByteArrayOutputStream(elementByteArray.length);
+				try(ByteArrayOutputStream elementBytes = new ByteArrayOutputStream(elementByteArray.length)){
+					MXFStream.writeEssenceElement(elementBytes, element.getEssenceTrackIdentifier(), bb.array());
+					totalBytes += elementBytes.size();
+				}
 				
-				MXFStream.writeEssenceElement(elementBytes, element.getEssenceTrackIdentifier(), bb.array());
-				totalBytes += elementBytes.size();
-			    
 			}
 		}
 		
@@ -223,7 +226,6 @@ public class MXFServiceImpl implements MXFService {
 				previousPartition = thisPartition;
 				thisPartition = totalBytes;
 				
-				ByteArrayOutputStream partitionBytes;
 				BodyPartitionPack opp = originalPartition.getPartitionPack().clone();
 				BodyPartitionPack partitionPack = partition.getPartitionPack().clone();
 				
@@ -238,23 +240,22 @@ public class MXFServiceImpl implements MXFService {
 					
 					int partitionSize = (int) gsp.getEncodedSize();
 					partitionSize = partitionSize < 65536 ? 65546 : partitionSize;
-					
-					partitionBytes = new ByteArrayOutputStream(partitionSize);
 
-					MXFStream.writePartitionPack(partitionBytes, gsp);
-					try {
+					try (ByteArrayOutputStream partitionBytes = new ByteArrayOutputStream(partitionSize)) {
+						MXFStream.writePartitionPack(partitionBytes, gsp);
 						IndexTableSegment it = partition.readIndexTableSegment();
 						if(it!=null) {
 							MXFStream.writeIndexTableSegment(partitionBytes, it);
 						}
+						totalBytes += partitionBytes.size();
+						@SuppressWarnings("unused")
+						long bytesAdded = ReadGenericStream(opp.getThisPartition() + opp.getEncodedSize() + 20, partitionBytes);
 					} catch(Exception ex) {
 						LOGGER.log(Level.WARNING, ex.toString(), ex);
 					}
 					
-					long bytesAdded = ReadGenericStream(opp.getThisPartition() + opp.getEncodedSize() + 20, partitionBytes);
 					
-				}
-				else {
+				} else {
 					partitionPack.setThisPartition(thisPartition);
 					partitionPack.setPreviousPartition(previousPartition);
 					partitionPack.setFooterPartition(0l);
@@ -263,25 +264,22 @@ public class MXFServiceImpl implements MXFService {
 					
 					int partitionSize = (int) partitionPack.getEncodedSize();
 					partitionSize = partitionSize < 65536 ? 65546 : partitionSize;
-					
-					partitionBytes = new ByteArrayOutputStream(partitionSize);
-					
 
-					MXFStream.writePartitionPack(partitionBytes, partitionPack);
+					try (ByteArrayOutputStream partitionBytes = new ByteArrayOutputStream(partitionSize)) {
+
+						MXFStream.writePartitionPack(partitionBytes, partitionPack);
 					
-					try {
 						IndexTableSegment it = partition.readIndexTableSegment();
 						if(it!=null) {
 							MXFStream.writeIndexTableSegment(partitionBytes, it);
 						}
+						totalBytes += partitionBytes.size();
 					} catch(Exception ex) {
 						LOGGER.log(Level.WARNING, ex.toString(), ex);
-						ex.printStackTrace();
 					}
 					
 				}
 				
-				totalBytes += partitionBytes.size();
 									
 				EssencePartition containerPartition = (EssencePartition) originalPartition;
 				if(containerPartition!=null) {
@@ -369,7 +367,6 @@ public class MXFServiceImpl implements MXFService {
 			return writeFile(outputFilePath, dms);
 		} catch(Exception ex) {
 			LOGGER.log(Level.WARNING, ex.toString(), ex);
-			ex.printStackTrace();
 			result.setException(ex);
 			result.setSuccess(false);
 			return result;
@@ -446,25 +443,25 @@ public class MXFServiceImpl implements MXFService {
 				
 				int headerSize = (int) (headerPartitionPack.getEncodedSize());
 				headerSize = headerSize < 65536 ? 65546 : headerSize;
-				
-				ByteArrayOutputStream headerBytes = new ByteArrayOutputStream(headerSize);
-				ByteArrayOutputStream metadataBytes = new ByteArrayOutputStream(headerSize);
+				try(ByteArrayOutputStream headerBytes = new ByteArrayOutputStream(headerSize)){
+					try(ByteArrayOutputStream metadataBytes = new ByteArrayOutputStream(headerSize)){
+
+						MXFStream.writeHeaderMetadata(metadataBytes, preface);
+			
+						headerPartitionPack.setHeaderByteCount(metadataBytes.size() + klvFillLength);
+						
+						MXFStream.writeFill(metadataBytes, klvFillLength);
+						
+						MXFStream.writePartitionPack(headerBytes, headerPartitionPack);
+						
+						
+						headerBytes.writeTo(outputStream);
+						metadataBytes.writeTo(outputStream);
+						totalBytes += headerBytes.size();
+						totalBytes += metadataBytes.size();
+					}
+				}
 	
-				
-				
-				MXFStream.writeHeaderMetadata(metadataBytes, preface);
-	
-				headerPartitionPack.setHeaderByteCount(metadataBytes.size() + klvFillLength);
-				
-				MXFStream.writeFill(metadataBytes, klvFillLength);
-				
-				MXFStream.writePartitionPack(headerBytes, headerPartitionPack);
-				
-				
-				headerBytes.writeTo(outputStream);
-				metadataBytes.writeTo(outputStream);
-				totalBytes += headerBytes.size();
-				totalBytes += metadataBytes.size();
 				
 				RandomIndexItem hRipItem = new RandomIndexItemImpl(headerPartitionPack.getBodySID(), thisPartition);
 				ripItems.add(hRipItem);
@@ -500,7 +497,6 @@ public class MXFServiceImpl implements MXFService {
 						previousPartition = thisPartition;
 						thisPartition = totalBytes;
 						
-						ByteArrayOutputStream partitionBytes;
 						BodyPartitionPack opp = originalPartition.getPartitionPack().clone();
 						BodyPartitionPack partitionPack = partition.getPartitionPack().clone();
 						
@@ -516,11 +512,15 @@ public class MXFServiceImpl implements MXFService {
 							int partitionSize = (int) gsp.getEncodedSize();
 							partitionSize = partitionSize < 65536 ? 65546 : partitionSize;
 							
-							partitionBytes = new ByteArrayOutputStream(partitionSize);
-	
-							MXFStream.writePartitionPack(partitionBytes, gsp);
-							long bytesAdded = ReadGenericStream(opp.getThisPartition() + opp.getEncodedSize() + 20, partitionBytes);
-							
+							try(ByteArrayOutputStream partitionBytes = new ByteArrayOutputStream(partitionSize)){
+
+								MXFStream.writePartitionPack(partitionBytes, gsp);
+								@SuppressWarnings("unused")
+								long bytesAdded = ReadGenericStream(opp.getThisPartition() + opp.getEncodedSize() + 20, partitionBytes);
+
+								partitionBytes.writeTo(outputStream);
+								totalBytes += partitionBytes.size();
+							}
 						}
 						else {
 							partitionPack.setThisPartition(thisPartition);
@@ -531,23 +531,23 @@ public class MXFServiceImpl implements MXFService {
 							
 							int partitionSize = (int) partitionPack.getEncodedSize();
 							partitionSize = partitionSize < 65536 ? 65546 : partitionSize;
-							
-							partitionBytes = new ByteArrayOutputStream(partitionSize);
-							
-	
-							MXFStream.writePartitionPack(partitionBytes, partitionPack);
-							
-							IndexTableSegment it = partition.readIndexTableSegment();
-							if(it!=null) {
-								MXFStream.writeIndexTableSegment(partitionBytes, it);
+
+							try(ByteArrayOutputStream partitionBytes = new ByteArrayOutputStream(partitionSize)){
+		
+								MXFStream.writePartitionPack(partitionBytes, partitionPack);
+								
+								IndexTableSegment it = partition.readIndexTableSegment();
+								if(it!=null) {
+									MXFStream.writeIndexTableSegment(partitionBytes, it);
+								}
+								partitionBytes.writeTo(outputStream);
+								totalBytes += partitionBytes.size();
 							}
 							
 						}
 											
-						partitionBytes.writeTo(outputStream);
 						//sids.put(partitionPack.getPreviousPartition(), totalBytes);
 						
-						totalBytes += partitionBytes.size();
 											
 						EssencePartition containerPartition = (EssencePartition) originalPartition;
 						
@@ -589,10 +589,10 @@ public class MXFServiceImpl implements MXFService {
 					
 					int footerSize = (int) footerPartitionPack.getEncodedSize();
 					footerSize = footerSize < 65536 ? 65546 : footerSize;
-					ByteArrayOutputStream footerBytes = new ByteArrayOutputStream(footerSize);
-					MXFStream.writePartitionPack(footerBytes, footerPartitionPack);
-					
-					footerBytes.writeTo(outputStream);
+					try(ByteArrayOutputStream footerBytes = new ByteArrayOutputStream(footerSize)){
+						MXFStream.writePartitionPack(footerBytes, footerPartitionPack);
+						footerBytes.writeTo(outputStream);
+					}
 				}
 				
 				RandomIndexPackImpl ripOriginal = (RandomIndexPackImpl)mxfFile.getRandomIndexPack();
@@ -615,10 +615,9 @@ public class MXFServiceImpl implements MXFService {
 				
 	
 				if(Files.exists(p2)) Files.delete(p2);
-			}
-			catch(Exception ex) {
+				outputStream.close();
+			} catch(Exception ex) {
 				LOGGER.log(Level.WARNING, ex.toString(), ex);
-				ex.printStackTrace();
 				Path p = Paths.get(tempFilePath);
 				if(Files.exists(p)) Files.delete(p);
 				result.setException(ex);
@@ -628,7 +627,6 @@ public class MXFServiceImpl implements MXFService {
 			mxfFile.close();
 		} catch (Exception ex) {
 			LOGGER.log(Level.WARNING, ex.toString(), ex);
-			ex.printStackTrace();
 			result.setException(ex);
 			result.setSuccess(false);
 			return result;
@@ -639,13 +637,12 @@ public class MXFServiceImpl implements MXFService {
 	
 	public long ReadGenericStream(long offset, OutputStream outputStream) {
 		// Read length
-		InputStream is;
-		try {
-			is = new FileInputStream(filePath);
+		try (InputStream is = new FileInputStream(filePath)){
 			MXFStream.skipForward(is, offset);
 			KeyAndConsumed key = MXFStream.readKey(is);
 			LengthAndConsumed length = MXFStream.readBERLength(is);
 			ByteBuffer bb = MXFStream.readValue(is, length.getLength());
+			is.close();
 			
 			MXFStream.writeKey(outputStream, key.getKey());
 			MXFStream.writeBERLength(outputStream, length.getLength(), (int)length.getConsumed());
@@ -655,10 +652,8 @@ public class MXFServiceImpl implements MXFService {
 			
 		} catch (FileNotFoundException e) {
 			LOGGER.log(Level.WARNING, e.toString(), e);
-			e.printStackTrace();
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, e.toString(), e);
-			e.printStackTrace();
 		}
 		return 0;
 	}
@@ -669,15 +664,13 @@ public class MXFServiceImpl implements MXFService {
 		// TODO:  Figure out extension type
 		try {
 			File file = new File(outputFile);
-			FileChannel channel = new FileOutputStream(file, false).getChannel();
-        
-			channel.write(bb);
-	        // close the channel
-	        channel.close();
+			try(FileOutputStream fileOutputStream = new FileOutputStream(file, false)){
+				FileChannel channel = fileOutputStream.getChannel();
+				channel.write(bb);
+			}
 	        return true;
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, e.toString(), e);
-			e.printStackTrace();
 		}
 		return false;
 	}
@@ -694,7 +687,6 @@ public class MXFServiceImpl implements MXFService {
 				if (partition instanceof FooterPartitionImpl) continue;
 				if (partition instanceof HeaderPartitionImpl) continue;
 				
-				ByteArrayOutputStream partitionBytes;
 				BodyPartitionPack opp = originalPartition.getPartitionPack().clone();
 				if(opp.getBodySID()==streamId) {
 					ByteBuffer bb = GetGenericStream(opp.getThisPartition() + opp.getEncodedSize() + 20);
@@ -706,21 +698,17 @@ public class MXFServiceImpl implements MXFService {
 	}
 	private ByteBuffer GetGenericStream(long offset) {
 		// Read length
-		InputStream is;
-		try {
-			is = new FileInputStream(filePath);
+		try (InputStream is = new FileInputStream(filePath)){
 			MXFStream.skipForward(is, offset);
+			@SuppressWarnings("unused")
 			KeyAndConsumed key = MXFStream.readKey(is);
 			LengthAndConsumed length = MXFStream.readBERLength(is);
 			ByteBuffer bb = MXFStream.readValue(is, length.getLength());
-			
-			return bb;		
+			return bb;
 		} catch (FileNotFoundException e) {
 			LOGGER.log(Level.WARNING, e.toString(), e);
-			e.printStackTrace();
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, e.toString(), e);
-			e.printStackTrace();
 		}
 		return null;
 	}
@@ -1115,8 +1103,7 @@ public class MXFServiceImpl implements MXFService {
 				devices = deviceSetHelper.devicesToString(devicesList);
 			}
 		} catch(PropertyNotPresentException ex) {
-			// optional field, ignore PNPE
-			ex.printStackTrace();
+			LOGGER.log(Level.WARNING, ex.toString(), ex);
 		}
 
 		String atlValue = "";
@@ -1286,8 +1273,7 @@ public class MXFServiceImpl implements MXFService {
 					}
 				
 				}catch(PropertyNotPresentException ex) {} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOGGER.log(Level.WARNING, e.toString(), e);
 				}
 				try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, textBasedObject.getTextMimeMediaType()));}catch(PropertyNotPresentException ex) {}
 				try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, textBasedObject.getDataDescriptions()));}catch(PropertyNotPresentException ex) {}
@@ -1307,17 +1293,6 @@ public class MXFServiceImpl implements MXFService {
 		
 		fileInformation.setName(tf.getName());
 		fileInformation.setPath(filePath);
-
-//		byte[] imageData;
-//		try {
-//			imageData = DPXFileListHelper.getBytesFromFile(filePath, 0);
-//			// Get the CRC32 of the image
-//			final String hash = DPXFileListHelper.getCrc32Hash(imageData);
-//			fileInformation.setHash(hash);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-
 		metadata.setHasAS07CoreDMSFramework(this.hasAS07CoreDMSFramework());
 		fileInformation.setFileData(metadata);
 

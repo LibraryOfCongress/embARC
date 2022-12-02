@@ -20,6 +20,19 @@ import javafx.collections.ObservableList;
  * @since 2018-05-08
  */
 public class ControllerMediatorMXF {
+	private TabAreaMXFController tabAreaMXFController;
+	private EditAreaMXFController editAreaMXFController;
+	private SessionSummaryController sessionSummaryController;
+	@SuppressWarnings("unused")
+	private CoreMXFController coreMXFController;
+	@SuppressWarnings("unused")
+	private WriteMXFController writeMXFController;
+	@SuppressWarnings("unused")
+	private DescriptorMXFController descriptorMXFController;
+	@SuppressWarnings("unused")
+	private TDBDController tdbdController;
+	@SuppressWarnings("unused")
+	private FileInfoController fileInfoController;
 
 	private static class ControllerMediatorHolder {
 		private static final ControllerMediatorMXF INSTANCE = new ControllerMediatorMXF();
@@ -28,22 +41,6 @@ public class ControllerMediatorMXF {
 	public static ControllerMediatorMXF getInstance() {
 		return ControllerMediatorHolder.INSTANCE;
 	}
-
-	private TabAreaMXFController tabAreaMXFController;
-
-	private EditAreaMXFController editAreaMXFController;
-	
-	private SessionSummaryController sessionSummaryController;
-
-	private CoreMXFController editMXFController;
-
-	private WriteMXFController writeMXFController;
-
-	private DescriptorMXFController descriptorMXFController;
-
-	private TDBDController tdbdController;
-
-	private FileInfoController fileInfoController;
 
 	private final BooleanProperty isEditing = new SimpleBooleanProperty();
 
@@ -61,23 +58,23 @@ public class ControllerMediatorMXF {
 		sessionSummaryController = controller;
 	}
 
-	public void registerEditMXFCoreForm(CoreMXFController controller) {
-		editMXFController = controller;
+	public void registerCoreMXFController(CoreMXFController controller) {
+		coreMXFController = controller;
 	}
 	
-	public void registerWriteView(WriteMXFController controller) {
+	public void registerWriteMXFController(WriteMXFController controller) {
 		writeMXFController = controller;
 	}
 
-	public void registerGeneralMXF(DescriptorMXFController controller) {
+	public void registerDescriptorMXFController(DescriptorMXFController controller) {
 		descriptorMXFController = controller;
 	}
 
-	public void registerTDBDView(TDBDController controller) {
+	public void registerTDBDController(TDBDController controller) {
 		tdbdController = controller;
 	}
 
-	public void registerFileInfoView(FileInfoController controller) {
+	public void registerFileInfoController(FileInfoController controller) {
 		fileInfoController = controller;
 	}
 

@@ -24,7 +24,7 @@ public class IsValidByteRule extends ValidationRuleBase implements IValidationRu
 				return true;
 			}
 		} catch (final NumberFormatException ex) {
-			ex.printStackTrace();
+			System.out.println("Invalid number in IsValidByteRule");
 		}
 		return false;
 	}

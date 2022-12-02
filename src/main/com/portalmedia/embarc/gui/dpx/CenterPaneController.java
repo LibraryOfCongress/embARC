@@ -66,7 +66,6 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -83,36 +82,21 @@ import javafx.util.Callback;
  */
 public class CenterPaneController implements Initializable {
 	@FXML
-	private AnchorPane centerPane;
-	@FXML
 	private TableView<DPXFileInformationViewModel> table;
 	@FXML
 	private TabPane tabPane;
 	@FXML
-	private Tab generalTab;
-	@FXML
-	private Tab fileInformationTab;
-	@FXML
-	private Tab imageInformationTab;
-	@FXML
-	private Tab imageSourceInformationTab;
-	@FXML
-	private Tab motionPictureFilmTab;
-	@FXML
-	private Tab televisionTab;
-	@FXML
-	private Tab userDefinedTab;
-	@FXML
 	private SectionDef selectedSection;
+
 	private SelectedFilesSummary selectedFilesSummary;
-	TableViewSelectionModel<DPXFileInformationViewModel> tableSelectionModel;
-	Boolean columnsHaveBeenSet = false;
-	List<String> hiddenImageElements;
-	List<String> shownImageElements;
-	List<TableColumn<DPXFileInformationViewModel, ?>> userHiddenColumns = new ArrayList<>();
-	TabSummary tabSummary;
-	boolean filteredByError = false;
-	boolean userPreferencesSet = false;
+	private TableViewSelectionModel<DPXFileInformationViewModel> tableSelectionModel;
+	private Boolean columnsHaveBeenSet = false;
+	private List<String> hiddenImageElements;
+	private List<String> shownImageElements;
+	private List<TableColumn<DPXFileInformationViewModel, ?>> userHiddenColumns = new ArrayList<>();
+	private TabSummary tabSummary;
+	private boolean filteredByError = false;
+	private boolean userPreferencesSet = false;
 
 	public void autoPopulateNames() {
 		final Alert alert = new Alert(AlertType.CONFIRMATION);
@@ -142,14 +126,14 @@ public class CenterPaneController implements Initializable {
 								final DPXFileInformationViewModel fivm = table.getItems().get(i);
 								DPXFileListHelper.updateName(fivm);
 							} catch (final Exception e) {
-								e.printStackTrace();
+								System.out.println("Error updating file names");
 							}
 						}));
 					}
 					try {
 						executor.invokeAll(futures);
 					} catch (final InterruptedException e) {
-						e.printStackTrace();
+						System.out.println("Thread error");
 					}
 
 					setSelectedRuleSets(ControllerMediatorDPX.getInstance().getCurrentRuleSets());
@@ -1066,14 +1050,14 @@ public class CenterPaneController implements Initializable {
 							final DPXFileInformationViewModel fivm = table.getItems().get(i);
 							DPXFileListHelper.updateValues(changedValues, fivm);
 						} catch (final Exception e) {
-							e.printStackTrace();
+							System.out.println("Update values error");
 						}
 					}));
 				}
 				try {
 					executor.invokeAll(futures);
 				} catch (final InterruptedException e) {
-					e.printStackTrace();
+					System.out.println("Update values thread error");
 				}
 
 				if (TableState.isSelectAll()) {
@@ -1118,14 +1102,14 @@ public class CenterPaneController implements Initializable {
 							final DPXFileInformationViewModel fivm = table.getItems().get(i);
 							DPXFileListHelper.updateValues(changedValues, fivm);
 						} catch (final Exception e) {
-							e.printStackTrace();
+							System.out.println("Update values error");
 						}
 					}));
 				}
 				try {
 					executor.invokeAll(futures);
 				} catch (final InterruptedException e) {
-					e.printStackTrace();
+					System.out.println("Update values thread error");
 				}
 
 				if (TableState.isSelectAll()) {

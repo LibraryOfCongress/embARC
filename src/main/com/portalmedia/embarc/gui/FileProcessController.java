@@ -155,7 +155,6 @@ public class FileProcessController {
 		} else if (fileFormat == FileFormat.MXF) {
 			ControllerMediatorMXF.getInstance().setFileList();
 		}
-		System.gc();
 
 		if (event != null) {
 			event.consume();
@@ -181,7 +180,6 @@ public class FileProcessController {
 			} catch (final IOException ex) {
 				// An I/O problem has occurred
 				LOGGER.log(Level.SEVERE, ex.toString(), ex);
-				ex.printStackTrace();
 			}
 			for(final Path filePath : pathsToProcess) {
 				if (Files.isDirectory(filePath)) {
@@ -303,14 +301,11 @@ public class FileProcessController {
 					}
 				} catch (final Exception ex) {
 					LOGGER.log(Level.SEVERE, ex.toString(), ex);
-					ex.printStackTrace();
 				}
 				count += notValidFileList.size();
 				processed = (count * 100) / totalFiles;
 				updateProgress(processed, 100);
 
-				Runtime.getRuntime().gc();
-				System.gc();
 				return null;
 			}
 		};
@@ -336,7 +331,6 @@ public class FileProcessController {
 			} catch (final IOException ex) {
 				// An I/O problem has occurred
 				LOGGER.log(Level.SEVERE, ex.toString(), ex);
-				ex.printStackTrace();
 			}
 		}
 	}

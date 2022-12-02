@@ -34,7 +34,7 @@ public class NitriteFactory<T> {
 				Files.createDirectory(fullPath);
 			}
 		} catch (IOException ex) {
-			ex.printStackTrace();
+			System.out.println("Create path error");
 		}
 
 		return path;
