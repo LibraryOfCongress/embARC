@@ -25,6 +25,14 @@ import javafx.scene.control.TableView;
  * @since 2018-05-08
  */
 public class ControllerMediatorDPX implements IMediateControllers {
+	private MainViewController mainViewController;
+	private CenterPaneController centerPaneController;
+	private MetadataEditorController metadataEditorController;
+	private WorkingSummaryController workingSummaryController;
+	private EditorForm editorForm;
+	private WriteFilesView writeFilesView;
+	private HashSet<ValidationRuleSetEnum> validationRulesSelected;
+	private final BooleanProperty isEditing = new SimpleBooleanProperty();
 
 	private static class ControllerMediatorHolder {
 		private static final ControllerMediatorDPX INSTANCE = new ControllerMediatorDPX();
@@ -33,17 +41,6 @@ public class ControllerMediatorDPX implements IMediateControllers {
 	public static ControllerMediatorDPX getInstance() {
 		return ControllerMediatorHolder.INSTANCE;
 	}
-
-	private MainViewController mainViewController;
-	private CenterPaneController centerPaneController;
-	private MetadataEditorController metadataEditorController;
-	private WorkingSummaryController workingSummaryController;
-	private EditorForm editorForm;
-	private WriteFilesView writeFilesView;
-
-	private HashSet<ValidationRuleSetEnum> validationRulesSelected;
-
-	private final BooleanProperty isEditing = new SimpleBooleanProperty();
 
 	private ControllerMediatorDPX() {
 		initUserPreferences();
@@ -223,7 +220,6 @@ public class ControllerMediatorDPX implements IMediateControllers {
 		centerPaneController.refreshValidation();
 		metadataEditorController.refreshValidation();
 		workingSummaryController.resetErrorCount();
-		System.gc();
 	}
 
 	public void updateChangedValues(HashMap<DPXColumn, String> changedValues) {

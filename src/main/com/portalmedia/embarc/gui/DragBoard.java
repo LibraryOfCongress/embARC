@@ -20,18 +20,12 @@ import javafx.scene.layout.BorderPane;
  */
 public class DragBoard extends BorderPane {
 
-	boolean greyDragOver = false;
-
 	public DragBoard() {
 		DragBoard self = this;
 
 		this.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent t) {
-				if (greyDragOver) {
-					self.setMouseTransparent(true);
-					greyDragOver = false;
-				}
 			}
 		});
 		
@@ -45,7 +39,6 @@ public class DragBoard extends BorderPane {
 		this.setOnDragEntered(new EventHandler<DragEvent>() {
 			public void handle(DragEvent event) {
 				self.setMouseTransparent(false);
-				greyDragOver = true;
 				event.consume();
 			}
 		});
@@ -53,7 +46,6 @@ public class DragBoard extends BorderPane {
 		this.setOnDragExited(new EventHandler<DragEvent>() {
 			public void handle(DragEvent event) {
 				event.consume();
-				greyDragOver = false;
 			}
 		});
 

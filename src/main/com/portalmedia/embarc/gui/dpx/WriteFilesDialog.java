@@ -26,18 +26,13 @@ import javafx.scene.text.Text;
  * @since 2018-05-08
  */
 public class WriteFilesDialog extends Dialog {
-	String filePath;
-	String csvPath;
-	boolean writeEditedOnly = false;
-	int success = 0;
-	int failures = 0;
-	DPXFileListHelper fileListHelper = new DPXFileListHelper();
-	final List<HashReportValue> report = new LinkedList<>();
-	boolean writeImageReport = false;
+	private boolean writeEditedOnly = false;
+	private int success = 0;
+	private int failures = 0;
+	private final List<HashReportValue> report = new LinkedList<>();
+	private boolean writeImageReport = false;
 
 	public WriteFilesDialog(String filePath, String csvPath, boolean writeEditedOnly) {
-		this.filePath = filePath;
-		this.csvPath = csvPath;
 		this.writeEditedOnly = writeEditedOnly;
 		writeFiles(filePath, csvPath);
 	}
@@ -97,7 +92,7 @@ public class WriteFilesDialog extends Dialog {
 						}
 
 					} catch (final Exception e) {
-						e.printStackTrace();
+						System.out.println("Error writing file");
 					}
 
 					count++;
@@ -109,7 +104,7 @@ public class WriteFilesDialog extends Dialog {
 						DPXReportService.WriteImageHashCsv(report, csvPath);
 					}
 				} catch (final IOException e) {
-					e.printStackTrace();
+					System.out.println("Error writing hash report");
 				}
 				return null;
 			}

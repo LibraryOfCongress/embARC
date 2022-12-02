@@ -3,16 +3,11 @@ package com.portalmedia.embarc.gui.mxf;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import com.portalmedia.embarc.gui.dpx.ControllerMediatorDPX;
-import com.portalmedia.embarc.gui.helper.DPXFileListHelper;
 import com.portalmedia.embarc.gui.helper.MXFFileList;
-import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
-import com.portalmedia.embarc.gui.model.MXFFileInformationViewModel;
 import com.portalmedia.embarc.gui.model.MXFSelectedFilesSummary;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -31,45 +26,48 @@ public class SessionSummaryController implements Initializable {
 	@FXML
 	private AnchorPane sessionSummaryContainer;
 	@FXML
-	private Label totalNumberOfFiles;
+	private Label totalNumberOfFilesLabel;
 	@FXML
-	private Label totalFilesText;
+	private Label totalFilesLabel;
 	@FXML
-	private Label numberOfSelectedFiles;
+	private Label numberOfSelectedFilesLabel;
 	@FXML
-	private Label filesSelectedText;
+	private Label filesSelectedLabel;
 	@FXML
-	private Label selectAllFiles;
+	private Label selectAllFilesLabel;
 	@FXML
-	private Label deselectAllFiles;
+	private Label deselectAllFilesLabel;
 	@FXML
-	private Label removeSelectedFiles;
+	private Label removeSelectedFilesLabel;
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorMXF.getInstance().registerSessionSummaryController(this);
-		removeSelectedFiles.setVisible(false);
+		removeSelectedFilesLabel.setVisible(false);
 		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener() {
 			@Override
 			public void changed(ObservableValue o, Object ov, Object nv) {
-				selectAllFiles.setDisable((Boolean) nv);
-				deselectAllFiles.setDisable((Boolean) nv);
-				removeSelectedFiles.setDisable((Boolean) nv);
+				selectAllFilesLabel.setDisable((Boolean) nv);
+				deselectAllFilesLabel.setDisable((Boolean) nv);
+				removeSelectedFilesLabel.setDisable((Boolean) nv);
 			}
 		});
 		setFiles();
 	}
 
+	@SuppressWarnings("ucd") // referenced in SessionSummary.fxml
 	public void removeSelectedFiles() {
 		ControllerMediatorMXF.getInstance().deleteSelectedFiles();
 		setFiles();
 	}
 
+	@SuppressWarnings("ucd") // referenced in SessionSummary.fxml
 	public void selectAllFiles() {
 		ControllerMediatorMXF.getInstance().selectAllFiles();
 	}
 
+	@SuppressWarnings("ucd") // referenced in SessionSummary.fxml
 	public void deselectAllFiles() {
 		ControllerMediatorMXF.getInstance().deselectAllFiles();
 	}
@@ -77,30 +75,30 @@ public class SessionSummaryController implements Initializable {
 	public <T> void setFiles() {
 		MXFFileList.getInstance();
 		final long size = MXFFileList.getList().size();
-		selectAllFiles.setVisible(true);
-		deselectAllFiles.setVisible(true);
+		selectAllFilesLabel.setVisible(true);
+		deselectAllFilesLabel.setVisible(true);
 		if (size > 1) {
-			totalFilesText.setText("files imported");
+			totalFilesLabel.setText("files imported");
 		} else if (size == 1) {
-			totalFilesText.setText("file imported");
+			totalFilesLabel.setText("file imported");
 		} else if (size == 0) {
-			selectAllFiles.setVisible(false);
-			deselectAllFiles.setVisible(false);
+			selectAllFilesLabel.setVisible(false);
+			deselectAllFilesLabel.setVisible(false);
 		}
-		totalNumberOfFiles.setText(Long.toString(size));
+		totalNumberOfFilesLabel.setText(Long.toString(size));
 	}
 
 	public <T> void setSelectedFileList(MXFSelectedFilesSummary list) {
-		deselectAllFiles.setVisible(true);
-		removeSelectedFiles.setVisible(true);
-		filesSelectedText.setText("files selected");
+		deselectAllFilesLabel.setVisible(true);
+		removeSelectedFilesLabel.setVisible(true);
+		filesSelectedLabel.setText("files selected");
 		if (list.getFileCount() == 1) {
-			filesSelectedText.setText("file selected");
+			filesSelectedLabel.setText("file selected");
 		} else if (list.getFileCount() == 0) {
-			selectAllFiles.setVisible(true);
-			deselectAllFiles.setVisible(false);
-			removeSelectedFiles.setVisible(false);
+			selectAllFilesLabel.setVisible(true);
+			deselectAllFilesLabel.setVisible(false);
+			removeSelectedFilesLabel.setVisible(false);
 		}
-		numberOfSelectedFiles.setText(Long.toString(list.getFileCount()));
+		numberOfSelectedFilesLabel.setText(Long.toString(list.getFileCount()));
 	}
 }

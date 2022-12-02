@@ -84,10 +84,10 @@ public class EditorForm extends AnchorPane {
 	@FXML
 	private Label editingSummary;
 
-	SectionDef section;
-	ImageElementDef selectedSubsection;
-	HashSet<IEditorField> textFields;
-	IntegerProperty editedFieldsCount = new SimpleIntegerProperty(0);
+	private SectionDef section;
+	private ImageElementDef selectedSubsection;
+	private HashSet<IEditorField> textFields;
+	private IntegerProperty editedFieldsCount = new SimpleIntegerProperty(0);
 
 	public EditorForm() {
 		ControllerMediatorDPX.getInstance().registerEditorForm(this);
@@ -140,11 +140,11 @@ public class EditorForm extends AnchorPane {
 			@Override
 			public void changed(ObservableValue<? extends Number> obs, Number ov, Number nv) {
 				final String[] numFiles = selectedFilesLabel.getText().split(" ");
-				if (nv.equals(0)) {
+				if (nv.intValue() == 0) {
 					editingSummary.setText("");
 					applyChangesButton.setDisable(true);
 					applyChangesButton.setStyle("-fx-background-color: #7EFFFE;");
-				} else if (nv.equals(1)) {
+				} else if (nv.intValue() == 1) {
 					editingSummary.setText("Change " + nv + " field in " + numFiles[0] + " files?");
 					applyChangesButton.setDisable(false);
 					applyChangesButton.setStyle("-fx-background-color: #AED581");
@@ -262,7 +262,6 @@ public class EditorForm extends AnchorPane {
 
 			boolean subsectionVisible = true;
 			if (c.hasSubsection() && !selectedSubsection.getDisplayName().equals(c.getSubsection().getDisplayName())) {
-				subsectionVisible = false;
 				continue;
 			}
 
@@ -290,10 +289,10 @@ public class EditorForm extends AnchorPane {
 					AnchorPane.setLeftAnchor(area, 0.00);
 					AnchorPane.setRightAnchor(area, 0.00);
 
-					if (c.getEditable() && subsectionVisible) {
+					if (c.getEditable()) {
 						sectionEditableFields.getChildren().add(area);
 						editableCount++;
-					} else if (subsectionVisible) {
+					} else {
 						sectionNotEditableFields.getChildren().add(area);
 						notEditableCount++;
 					}
@@ -323,10 +322,10 @@ public class EditorForm extends AnchorPane {
 					AnchorPane.setLeftAnchor(field, 0.00);
 					AnchorPane.setRightAnchor(field, 0.00);
 
-					if (c.getEditable() && subsectionVisible) {
+					if (c.getEditable()) {
 						sectionEditableFields.getChildren().add(field);
 						editableCount++;
-					} else if (subsectionVisible) {
+					} else {
 						sectionNotEditableFields.getChildren().add(field);
 						notEditableCount++;
 					}
@@ -353,10 +352,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(field, 0.00);
 				AnchorPane.setRightAnchor(field, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(field);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(field);
 					notEditableCount++;
 				}
@@ -382,10 +381,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}
@@ -404,10 +403,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}
@@ -426,10 +425,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}
@@ -479,7 +478,6 @@ public class EditorForm extends AnchorPane {
 
 			boolean subsectionVisible = true;
 			if (!selectedSubsection.getDisplayName().equals(c.getSubsection().getDisplayName())) {
-				subsectionVisible = false;
 				continue;
 			}
 
@@ -498,10 +496,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(field, 0.00);
 				AnchorPane.setRightAnchor(field, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(field);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(field);
 					notEditableCount++;
 				}
@@ -519,10 +517,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(field, 0.00);
 				AnchorPane.setRightAnchor(field, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(field);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(field);
 					notEditableCount++;
 				}
@@ -540,10 +538,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}
@@ -561,10 +559,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}
@@ -582,10 +580,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}
@@ -603,10 +601,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}
@@ -624,10 +622,10 @@ public class EditorForm extends AnchorPane {
 				AnchorPane.setLeftAnchor(textField, 0.00);
 				AnchorPane.setRightAnchor(textField, 0.00);
 
-				if (c.getEditable() && subsectionVisible) {
+				if (c.getEditable()) {
 					sectionEditableFields.getChildren().add(textField);
 					editableCount++;
-				} else if (subsectionVisible) {
+				} else  {
 					sectionNotEditableFields.getChildren().add(textField);
 					notEditableCount++;
 				}

@@ -21,7 +21,6 @@ import javafx.scene.layout.GridPane;
  * @since 2020-07-13
  */
 public class FileInfoController extends AnchorPane {
-
 	@FXML
 	private Label fileInfoAreaLabel;
 	@FXML
@@ -29,10 +28,8 @@ public class FileInfoController extends AnchorPane {
 	@FXML
 	private AnchorPane fileInfoAnchorPane;
 
-	int numSelected;
-
 	public FileInfoController() {
-		ControllerMediatorMXF.getInstance().registerFileInfoView(this);
+		ControllerMediatorMXF.getInstance().registerFileInfoController(this);
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("FileInfoView.fxml"));
 		fxmlLoader.setController(this);
 		fxmlLoader.setRoot(this);
@@ -44,7 +41,6 @@ public class FileInfoController extends AnchorPane {
 	}
 
 	private void setNumberOfSelectedFiles(int num) {
-		numSelected = num;
 		if (num == 1) {
 			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
 		} else {

@@ -37,7 +37,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -113,7 +112,7 @@ public class DataTemplateDialog extends Dialog {
 			dataTemplateStage.setScene(scene);
 			dataTemplateStage.show();
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Error creating data template stage");
 		}
 	}
 	

@@ -4,14 +4,19 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.portalmedia.embarc.gui.model.AS07TimecodeLabelSubdescriptor;
 import com.portalmedia.embarc.gui.model.MXFSelectedFilesSummary;
@@ -71,7 +76,7 @@ public class DescriptorMXFController extends AnchorPane {
 	private Accordion descriptorsAccordion;
 
 	public DescriptorMXFController() {
-		ControllerMediatorMXF.getInstance().registerGeneralMXF(this);
+		ControllerMediatorMXF.getInstance().registerDescriptorMXFController(this);
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DescriptorMXF.fxml"));
 		fxmlLoader.setController(this);
 		fxmlLoader.setRoot(this);
@@ -289,7 +294,7 @@ public class DescriptorMXFController extends AnchorPane {
 			String stripped = picEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
 			HashMap<String, String> picEncodingMap = new MXFPictureEncodingMap().getMap();
 			String value = picEncodingMap.get(stripped);
-			if (value == null || value == "") {
+			if (value == null || "".equals(value)) {
 				value = picEncodingStr;
 				centerGrid.add(getDescriptorLabel(value, "#e3e3e3", 400, ""), 2, row);
 			} else {
@@ -301,7 +306,8 @@ public class DescriptorMXFController extends AnchorPane {
 		} catch(PropertyNotPresentException e) {
 			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+
+			System.out.println("Error getting crc32");
 		}
 		row += 1;
 
@@ -724,7 +730,7 @@ public class DescriptorMXFController extends AnchorPane {
 			String stripped = soundEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
 			HashMap<String, String> soundEncodingMap = new MXFSoundEncodingMap().getMap();
 			String value = soundEncodingMap.get(stripped);
-			if (value == null || value == "") {
+			if (value == null || "".equals(value)) {
 				value = soundEncodingStr;
 				centerGrid.add(getDescriptorLabel(value, "#e3e3e3", 400, ""), 2, row);
 			} else {
@@ -736,7 +742,7 @@ public class DescriptorMXFController extends AnchorPane {
 		} catch(PropertyNotPresentException e) {
 			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			System.out.println("Error adding sound encoding");
 		}
 		row += 1;
 
@@ -892,6 +898,10 @@ public class DescriptorMXFController extends AnchorPane {
 				centerGrid.add(getCellPane("Subdescriptor"), 0, row);
 				AS07TimecodeLabelSubdescriptor parsedSub = parseDateTimeSubDescriptor(sub.toString());
 
+				if (parsedSub == null) {
+					continue;
+				}
+
 				centerGrid.add(getDescriptorLabel("DateTime Symbol: ", "#e3e3e3", 200, ""), 1, row);
 				centerGrid.add(getDescriptorLabel("" + parsedSub.getDateTimeSymbol(), "#e3e3e3", 400, ""), 2, row);
 				row += 1;
@@ -980,7 +990,6 @@ public class DescriptorMXFController extends AnchorPane {
 		centerGrid.add(getDescriptorLabel("Data Essence Coding: ", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
 //		centerGrid.add(getDescriptorLabel("" + ancillary.???, "#e3e3e3", 400, ""), 2, row); // data essence coding ??
-		row += 1;
 
 		bp.setCenter(centerGrid);
 		return bp;
@@ -1116,13 +1125,23 @@ public class DescriptorMXFController extends AnchorPane {
 
 	private AS07TimecodeLabelSubdescriptor parseDateTimeSubDescriptor(String sub) {
 		try {
-			String d = sub.replace("aaf:", "");
 			JAXBContext jaxbContext = JAXBContext.newInstance(AS07TimecodeLabelSubdescriptor.class);
-			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-			AS07TimecodeLabelSubdescriptor subdescriptor = (AS07TimecodeLabelSubdescriptor)jaxbUnmarshaller.unmarshal(new StringReader(d));
-			return subdescriptor;
+		    Unmarshaller u = jaxbContext.createUnmarshaller();
+			String d = sub.replace("aaf:", "");
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			Document document = db.parse(new InputSource(new StringReader(d)));
+			AS07TimecodeLabelSubdescriptor subdescriptor = (AS07TimecodeLabelSubdescriptor)u.unmarshal(document);
+		    return subdescriptor;
 		} catch (JAXBException e)  {
-			e.printStackTrace();
+			System.out.println("Error parsing date time subdescriptor");
+		} catch (ParserConfigurationException e) {
+			System.out.println("Error parsing date time subdescriptor");
+		} catch (SAXException e) {
+			System.out.println("Error parsing date time subdescriptor");
+		} catch (IOException e) {
+			System.out.println("Error parsing date time subdescriptor");
 		}
 		return null;
 	}

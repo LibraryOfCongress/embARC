@@ -28,10 +28,11 @@ import com.portalmedia.embarc.parser.dpx.DPXMetadata;
  * @since 2020-01-20
  */
 public class CsvWriterDpx {
-	static String[] headers = null;
+	private static String[] headers = null;
 
 	public static void writeCsvDPXFiles(String outputPath, TreeMap<String, DPXFileInformation> dpxFileList) throws IOException {
-    	ICsvMapWriter csvWriter = csvDPXHeader(outputPath);
+		ICsvMapWriter csvWriter = new CsvMapWriter(new FileWriter(outputPath), CsvPreference.STANDARD_PREFERENCE);
+    	csvWriter.writeHeader(getHeaderColumns());
     	
     	for (DPXFileInformation fileInfo : dpxFileList.values()) {
         	csvDPXMetadata(fileInfo, csvWriter);
@@ -48,11 +49,11 @@ public class CsvWriterDpx {
     	for (DPXColumn c : DPXColumn.values()) {
     		String printName = c.getDisplayName();
     		String currentSection = "";
-    		if (currentSection != c.getSectionDisplayName()) {
+    		if (!currentSection.equals(c.getSectionDisplayName())) {
     			currentSection = c.getSectionDisplayName();
     		}
 
-    		if (currentSection == "Image Information") {
+    		if ("Image Information".equals(currentSection)) {
     			String subsection = c.getSubsection().getDisplayName();
     			if (subsection != "") {
     				printName = subsection += " - " + printName;
@@ -67,12 +68,6 @@ public class CsvWriterDpx {
     private static String[] getHeaderColumns() {
     	if (headers == null) setHeaderColumns();
     	return headers;
-    }
-
-    private static ICsvMapWriter csvDPXHeader(String outputPath) throws IOException {
-    	ICsvMapWriter csvWriter = new CsvMapWriter(new FileWriter(outputPath), CsvPreference.STANDARD_PREFERENCE);
-    	csvWriter.writeHeader(getHeaderColumns());
-    	return csvWriter;
     }
 
     private static void csvDPXMetadata(DPXFileInformation dpxFileInfo, ICsvMapWriter csvWriter) throws IOException {

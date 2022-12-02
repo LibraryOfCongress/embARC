@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  **/
 
 @XmlRootElement(name="AS07CoreDMSDeviceObjects")
+@SuppressWarnings("ucd")
 public class AS07CoreDMSDeviceObjects {
 
 	private String DeviceType;

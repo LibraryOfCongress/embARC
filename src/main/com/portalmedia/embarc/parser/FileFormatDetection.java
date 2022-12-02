@@ -35,9 +35,7 @@ public class FileFormatDetection {
 			else if(firstFourBytes.equals("XPDS") && nextSequence.matches("[vV][1-9][.][0-9]"))
 				return true;
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
+			System.out.println("File not found checking is dpx");
 		}
 		
 		return false;
@@ -50,7 +48,6 @@ public class FileFormatDetection {
 		try {
 			droidFormats = MXFFileFormats.getInstance().getFormatMatches(file);
 		} catch (Exception e) {
-			e.printStackTrace();
 			return false;
 		}
 

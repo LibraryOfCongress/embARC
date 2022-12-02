@@ -120,15 +120,12 @@ public class MXFFileList {
 		} catch (PropertyNotPresentException pnpe) {
 			LOGGER.log(Level.SEVERE, pnpe.toString(), pnpe);
 			System.out.println("property not present exception: " + pnpe);
-			pnpe.printStackTrace();
 		} catch (FileNotFoundException e) {
 			LOGGER.log(Level.SEVERE, e.toString(), e);
 			System.out.println("File not found exception in getFileInfo");
-			e.printStackTrace();
 		} catch (Exception ex) {
 			LOGGER.log(Level.SEVERE, ex.toString(), ex);
 			System.out.println("mxf file info exception: " + ex);
-			ex.printStackTrace();
 		}
 
 		return fileInfo;

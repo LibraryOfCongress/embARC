@@ -63,10 +63,9 @@ public class TDBDController extends AnchorPane {
 	private Label sectionLabel;
 	@FXML
 	private VBox tdbdVBox;
-	SectionDef section;
 
 	public TDBDController() {
-		ControllerMediatorMXF.getInstance().registerTDBDView(this);
+		ControllerMediatorMXF.getInstance().registerTDBDController(this);
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("TDBDView.fxml"));
 		fxmlLoader.setController(this);
 		fxmlLoader.setRoot(this);
@@ -83,7 +82,7 @@ public class TDBDController extends AnchorPane {
 		try {
 			setContent(section == MXFSection.TD);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			System.out.println("File not found error");
 		}
 	}
 
@@ -313,10 +312,10 @@ public class TDBDController extends AnchorPane {
 						}
 						mxfService.DownloadGenericStream(streamInt, outputPath);
 					} catch (Exception e1) {
-						e1.printStackTrace();
+						System.out.println("Error parsing manifest");
 					}
 				} catch (FileNotFoundException e) {
-					e.printStackTrace();
+					System.out.println("File not found error");
 				}
 			}
 		}

@@ -18,21 +18,19 @@ public class EmbARCIdentification {
 	  
     // variable of type String 
     public IdentificationImpl identification; 
-  
     private String applicationName = "embARC";
     private String supplierName = "Federal Agencies Digital Guidelines Initiative";
-    private short majorVersion = 0;// TODO: Lookup actual version -- or move this to an external file
+    private short majorVersion = 1; // TODO: Lookup actual version -- or move this to an external file
     private short minorVersion = 1;
-    private short tertiaryVersion = 6;
+    private short tertiaryVersion = 1;
     private short patchVersion = 0;
-    private AUID embarcProductId = null;
+    //private AUID embarcProductId = null;
     private ProductReleaseType releaseType = ProductReleaseType.Released;
     
     
     // What is applicationProductId
     
-    private EmbARCIdentification() 
-    { 
+    private EmbARCIdentification() { 
     	identification = new IdentificationImpl();
     	ProductVersion version = new ProductVersionImpl(majorVersion, minorVersion, tertiaryVersion, patchVersion, releaseType);
     	
@@ -60,12 +58,13 @@ public class EmbARCIdentification {
         identification.setApplicationProductID(auid); //TODO: Supply a consistent value for embARC
         
         
-    } 
+    }
+
     public Identification getIdentification() {
     	return identification;
     }
-    public static EmbARCIdentification getInstance() 
-    { 
+
+    public static EmbARCIdentification getInstance() { 
         if (instance == null) 
         	instance = new EmbARCIdentification(); 
   

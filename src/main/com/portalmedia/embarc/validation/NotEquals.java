@@ -17,10 +17,10 @@ public class NotEquals implements ICustomValidationRule {
 		if (column.getType() == int.class) {
 			Integer i = new Integer(actualValue);
 			Integer expectedInt = new Integer(expectedValue);
-			return i != expectedInt;
+			return !expectedInt.equals(i);
 		}
 
-		return !actualValue.equals(expectedValue);
+		return !expectedValue.equals(actualValue);
 	}
 	
 	@Override

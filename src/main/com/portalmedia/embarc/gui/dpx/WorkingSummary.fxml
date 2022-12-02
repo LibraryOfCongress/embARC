@@ -27,7 +27,7 @@
 							<children>
 								<Pane maxWidth="1.7976931348623157E308" prefHeight="30.0">
 									<children>
-										<Label fx:id="totalNumberOfFiles" layoutX="0.0"
+										<Label fx:id="totalNumberOfFilesLabel" layoutX="0.0"
 											layoutY="7.0" prefHeight="20.0" text="0"
 											textAlignment="CENTER" textFill="#f8f5f5" wrapText="true" />
 									</children>
@@ -35,7 +35,7 @@
 								<Pane maxWidth="-Infinity" prefHeight="30.0"
 									prefWidth="100.0">
 									<children>
-										<Label fx:id="totalFilesText" layoutX="6.0"
+										<Label fx:id="totalFilesLabel" layoutX="6.0"
 											layoutY="7.0" prefHeight="20.0" prefWidth="100.0"
 											text="files imported" textFill="#f8f5f5" />
 									</children>
@@ -50,13 +50,13 @@
 							<children>
 								<Pane prefHeight="20.0">
 									<children>
-										<Label fx:id="numberOfSelectedFiles" prefHeight="20.0"
+										<Label fx:id="numberOfSelectedFilesLabel" prefHeight="20.0"
 											text="0" textFill="#f8f5f5" />
 									</children>
 								</Pane>
 								<Pane prefHeight="20.0" prefWidth="88.0">
 									<children>
-										<Label fx:id="filesSelectedText" layoutX="4.0"
+										<Label fx:id="filesSelectedLabel" layoutX="4.0"
 											prefHeight="20.0" prefWidth="92.0" text="files selected"
 											textFill="#f8f5f5" />
 									</children>
@@ -67,11 +67,11 @@
 				</Pane>
 				<Pane prefHeight="200.0" prefWidth="200.0">
 					<children>
-						<Label fx:id="selectAllFiles" layoutX="18.0"
+						<Label fx:id="selectAllFilesLabel" layoutX="18.0"
 							onMouseClicked="#selectAllFiles" prefHeight="20.0"
 							prefWidth="66.0" text="Select All" textFill="#f8f5f5"
 							underline="true" />
-						<Label fx:id="deselectAllFiles" layoutX="97.0"
+						<Label fx:id="deselectAllFilesLabel" layoutX="97.0"
 							onMouseClicked="#deselectAllFiles" prefHeight="20.0"
 							prefWidth="107.0" text="Deselect All" textFill="#f8f5f5"
 							underline="true" />
@@ -79,7 +79,7 @@
 				</Pane>
 				<Pane prefHeight="200.0" prefWidth="200.0">
 					<children>
-						<Label fx:id="removeSelectedFiles" layoutX="25.0"
+						<Label fx:id="removeSelectedFilesLabel" layoutX="25.0"
 							onMouseClicked="#removeSelectedFiles" prefHeight="20.0"
 							prefWidth="144.0" text="Remove Selected" textFill="#f8f5f5"
 							underline="true" />

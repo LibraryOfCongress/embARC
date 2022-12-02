@@ -2,7 +2,6 @@ package com.portalmedia.embarc.gui;
 
 import org.controlsfx.control.textfield.CustomTextField;
 
-import com.portalmedia.embarc.gui.model.DPXMetadataColumnViewModel;
 import com.portalmedia.embarc.validation.IsValidIntRule;
 
 /**
@@ -13,7 +12,6 @@ import com.portalmedia.embarc.validation.IsValidIntRule;
  * @since 2018-05-08
  */
 public class IntegerInputControl extends CustomTextField {
-	DPXMetadataColumnViewModel column;
 
 	public IntegerInputControl() {
 		super();
@@ -53,7 +51,7 @@ public class IntegerInputControl extends CustomTextField {
 		try {
 			return new IsValidIntRule().isValid(text);
 		} catch (final NumberFormatException exception) {
-			exception.printStackTrace();
+			System.out.println("NumberFormatException Error");
 		}
 
 		return false;

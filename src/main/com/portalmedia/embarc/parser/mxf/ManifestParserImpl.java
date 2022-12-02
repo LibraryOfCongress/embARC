@@ -32,8 +32,7 @@ public class ManifestParserImpl implements ManifestParser {
 	private String manifestFileResource = "resources/RDD48-Manifest-20180827.xsd";
 
 	public ManifestParserImpl() throws FileNotFoundException {
-		try {
-			InputStream in = Project.class.getClassLoader().getResourceAsStream(manifestFileResource);
+		try (InputStream in = Project.class.getClassLoader().getResourceAsStream(manifestFileResource)) {
 			if (in == null) {
 				throw new FileNotFoundException("Unable to find manifest schema file");
 			}
@@ -47,6 +46,7 @@ public class ManifestParserImpl implements ManifestParser {
 				while ((bytesRead = in.read(buffer)) != -1) {
 					out.write(buffer, 0, bytesRead);
 				}
+				out.close();
 			}
 
 			schemaFile = tempFile;
@@ -66,23 +66,21 @@ public class ManifestParserImpl implements ManifestParser {
 	public ManifestType isManifest(ByteBuffer bb) {
 		
 		File xmlFile = null;
-		FileOutputStream fos = null;
 		FileChannel channel = null;
 		ManifestType type = ManifestType.INVALID_MANIFEST;
 		try {
 			xmlFile = File.createTempFile("mxf_manifest", null);
-			fos = new FileOutputStream(xmlFile, false);
-			channel = fos.getChannel();
-			channel.write(bb);
-			fos.close();
-	        if(channel.isOpen()) channel.close();
-		} catch (IOException e) {
-			if(fos!=null) {
-				try {
-					fos.close();
-				} catch (IOException e1) {
-				}
+			try(FileOutputStream fos = new FileOutputStream(xmlFile, false)){
+
+				channel = fos.getChannel();
+				channel.write(bb);
+				fos.close();
+		        if(channel.isOpen()) channel.close();
 			}
+			catch(FileNotFoundException fnf) {
+				System.out.println("Manifest not found");
+			}
+		} catch (IOException e) {
 			if(channel!=null && channel.isOpen()) {
 				try {
 					channel.close();
@@ -116,10 +114,12 @@ public class ManifestParserImpl implements ManifestParser {
 	 * @param file
 	 * @return Boolean indicating if xml root node is Manifest
 	 */
+	
 	private boolean isManifestRoot(File file) {
 	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder db;
 		try {
+			dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
+		    DocumentBuilder db;
 			db = dbf.newDocumentBuilder();
 		    Document doc = db.parse(file);
 		    Element root = doc.getDocumentElement();

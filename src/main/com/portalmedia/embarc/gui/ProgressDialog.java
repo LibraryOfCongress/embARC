@@ -136,7 +136,7 @@ public class ProgressDialog {
 					uri = new URI(part2.getText());
 					openUrl(uri);
 				} catch (final URISyntaxException e) {
-					e.printStackTrace();
+					System.out.println("URISyntaxException Error");
 				}
 			}
 		});
@@ -158,7 +158,7 @@ public class ProgressDialog {
 		try {
 			Desktop.getDesktop().browse(uri);
 		} catch (final IOException e) {
-			e.printStackTrace();
+			System.out.println("openUrl Error");
 		}
 	}
 }

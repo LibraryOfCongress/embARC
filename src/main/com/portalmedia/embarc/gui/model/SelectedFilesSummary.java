@@ -104,19 +104,9 @@ public class SelectedFilesSummary {
 
 			}
 			if (!summary.hasPossibleColumnsLeft()) {
-				break; // executor.shutdown();
-				// });
-				// futures.add(future);
+				break; 
 			}
 		}
-		// try {
-		// for (Future<?> future : futures) {
-		// future.get(); // do anything you need, e.g. isDone(), ...
-		// }
-		// } catch (InterruptedException | ExecutionException e) {
-		// e.printStackTrace();
-		// }
-
 		System.currentTimeMillis();
 		return summary;
 	}

@@ -69,7 +69,6 @@ public class WriteFilesModalController {
 			return data;
 		});
 
-		// Create the username and password labels and fields.
 		final GridPane grid = new GridPane();
 		grid.setHgap(10);
 		grid.setVgap(10);

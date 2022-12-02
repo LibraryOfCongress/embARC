@@ -1,14 +1,12 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
@@ -30,13 +28,9 @@ public class PixelAspectRatioField extends AnchorPane implements IEditorField {
 	@FXML
 	private Label editorTextFieldLabel;
 
-	DPXColumn column;
-
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
-
+	private DPXColumn column;
 	private String originalValue;
-
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public PixelAspectRatioField() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PixelAspectRatioField.fxml"));
@@ -181,14 +175,6 @@ public class PixelAspectRatioField extends AnchorPane implements IEditorField {
 			editorArrayValue1.setText(list[0]);
 			editorArrayValue2.setText(list[1]);
 		}
-	}
-
-	public StringProperty textProperty1() {
-		return editorArrayValue1.textProperty();
-	}
-
-	public StringProperty textProperty2() {
-		return editorArrayValue2.textProperty();
 	}
 
 	/*

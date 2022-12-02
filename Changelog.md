@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file
 
+## 1.1.1 2022-11-28
+	Improvements:
+	- code cleanup
+
 ## 1.1.0 2022-08-03
 	Feature Additions:
 	- MXF Manifest display and validation

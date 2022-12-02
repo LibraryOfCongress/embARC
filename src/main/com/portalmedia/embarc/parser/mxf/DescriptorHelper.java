@@ -1,5 +1,6 @@
 package com.portalmedia.embarc.parser.mxf;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +10,13 @@ import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.portalmedia.embarc.gui.model.AS07TimecodeLabelSubdescriptor;
 import com.portalmedia.embarc.gui.mxf.MXFPictureEncodingMap;
@@ -124,7 +132,7 @@ public class DescriptorHelper {
 			String stripped = picEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
 			HashMap<String, String> picEncodingMap = new MXFPictureEncodingMap().getMap();
 			String value = picEncodingMap.get(stripped);
-			if (value == null || value == "") {
+			if (value == null || "".equals(value)) {
 				pictureEncoding = picEncodingStr;
 			} else {
 				pictureEncoding = value + " (" + stripped + ")";
@@ -464,7 +472,7 @@ public class DescriptorHelper {
 			String stripped = soundEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
 			HashMap<String, String> soundEncodingMap = new MXFSoundEncodingMap().getMap();
 			String value = soundEncodingMap.get(stripped);
-			if (value == null || value == "") {
+			if (value == null || "".equals(value)) {
 				soundEncoding = soundEncodingStr;
 			} else {
 				soundEncoding = value + " (" + stripped + ")";
@@ -737,13 +745,23 @@ public class DescriptorHelper {
 
 	private AS07TimecodeLabelSubdescriptor parseDateTimeSubDescriptor(String sub) {
 		try {
-			String d = sub.replace("aaf:", "");
 			JAXBContext jaxbContext = JAXBContext.newInstance(AS07TimecodeLabelSubdescriptor.class);
-		    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-		    AS07TimecodeLabelSubdescriptor subdescriptor = (AS07TimecodeLabelSubdescriptor)jaxbUnmarshaller.unmarshal(new StringReader(d));
+		    Unmarshaller u = jaxbContext.createUnmarshaller();
+			String d = sub.replace("aaf:", "");
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			Document document = db.parse(new InputSource(new StringReader(d)));
+			AS07TimecodeLabelSubdescriptor subdescriptor = (AS07TimecodeLabelSubdescriptor)u.unmarshal(document);
 		    return subdescriptor;
 		} catch (JAXBException e)  {
-		    e.printStackTrace();
+			System.out.println("Error parsing date time subdescriptor");
+		} catch (ParserConfigurationException e) {
+			System.out.println("Error parsing date time subdescriptor");
+		} catch (SAXException e) {
+			System.out.println("Error parsing date time subdescriptor");
+		} catch (IOException e) {
+			System.out.println("Error parsing date time subdescriptor");
 		}
 		return null;
 	}

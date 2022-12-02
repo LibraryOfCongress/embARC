@@ -38,7 +38,6 @@ public class DBService<T> {
 			System.out.println("DBService.add failed with exception: " + ex);
 			return false;
 		} catch (final Exception ex) {
-			ex.printStackTrace();
 			System.out.println("DBService.add failed with exception: " + ex);
 			return false;
 		}

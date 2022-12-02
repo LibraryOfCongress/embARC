@@ -13,7 +13,6 @@ import java.nio.file.StandardCopyOption;
 import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
 import com.portalmedia.embarc.parser.BinaryFileReader;
 import com.portalmedia.embarc.parser.ByteOrderEnum;
-import com.portalmedia.embarc.parser.ColumnDef;
 import com.portalmedia.embarc.parser.MetadataColumn;
 import com.portalmedia.embarc.parser.ValueToBytesHelper;
 
@@ -26,7 +25,6 @@ import com.portalmedia.embarc.parser.ValueToBytesHelper;
 public class DPXService {
 	public static boolean writeFile(DPXFileInformationViewModel file, String inputPath, String outputPath)
 			throws Exception {
-		InputStream is = null;
 		// Original value of offset to image data - needed for checksum
 		final String imageDataStartString = file.getProp(DPXColumn.OFFSET_TO_IMAGE_DATA);
 		final int imageDataStart = Integer.parseInt(imageDataStartString);
@@ -146,32 +144,34 @@ public class DPXService {
 				}
 
 				// Read the image data from the original file
-				is = new FileInputStream(inputPath);
-				final byte[] buffer = new byte[1024];
-				int length;
-				is.skip(imageDataStart);
-
-				// Write the image data to the temp file
-				while ((length = is.read(buffer)) > 0) {
-					fos.write(buffer, 0, length);
+				try(InputStream is = new FileInputStream(inputPath)){
+					final byte[] buffer = new byte[1024];
+					int length;
+					is.skip(imageDataStart);
+	
+					// Write the image data to the temp file
+					while ((length = is.read(buffer)) > 0) {
+						fos.write(buffer, 0, length);
+					}
+					is.close();
+					fos.close();
+	
+					// Copy the temp file to the final destination
+					final Path tempFile = new File(tempPath).toPath();
+					try {
+						Files.copy(tempFile, new File(outputPath).toPath(), StandardCopyOption.REPLACE_EXISTING);
+					} catch (final Exception ex) {
+						System.out.println("Error copying files");
+					}
+					try {
+						// cleanup temp file
+						Files.delete(tempFile);
+						return true;
+					} catch (final Exception ex) {
+						System.out.println("Error deleting temp file");
+					}
 				}
-				is.close();
-				fos.close();
-
-				// Copy the temp file to the final destination
-				final Path tempFile = new File(tempPath).toPath();
-				try {
-					Files.copy(tempFile, new File(outputPath).toPath(), StandardCopyOption.REPLACE_EXISTING);
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-				try {
-					// cleanup temp file
-					Files.delete(tempFile);
-					return true;
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
+				
 
 			} catch (final Exception ex) {
 				// Cleanup on error
@@ -179,18 +179,14 @@ public class DPXService {
 				if (Files.exists(tempFile)) {
 					Files.delete(tempFile);
 				}
-				ex.printStackTrace();
+				System.out.println("Error writing file - inner");
 				return false;
 			}
 
 		} catch (final Exception ex) {
-			ex.printStackTrace();
+			System.out.println("Error writing file");
 			return false;
-		} finally {
-			if(is!=null) {
-				is.close();
-			}
-		}
+		} 
 		return false;
 	}
 

@@ -45,7 +45,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -74,17 +73,8 @@ public class TabAreaMXFController implements Initializable {
 	private TableView<MXFFileInformationViewModel> mxfTable;
 	@FXML
 	private TabPane mxfTabPane;
-	@FXML
-	private Tab fileInfoTab;
-	@FXML
-	private Tab descriptorsTab;
-	@FXML
-	private Tab coreTab;
-	@FXML
-	private Tab tdTab;
-	@FXML
-	private Tab bdTab;
-	TableViewSelectionModel<MXFFileInformationViewModel> tableSelectionModel;
+
+	private TableViewSelectionModel<MXFFileInformationViewModel> tableSelectionModel;
 	private SectionDef selectedSection;
 	private MXFSelectedFilesSummary selectedFilesSummary;
 	private int selectedTDIndex = 0;
@@ -282,7 +272,7 @@ public class TabAreaMXFController implements Initializable {
 				String colName = mcvm.getDisplayName();
 				final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(colName);
 
-				if (colName == "Identifiers") {
+				if ("Identifiers".equals(colName)) {
 					col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
 						public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
 							MXFColumn currentCol = mcvm.getMXFColumn();
@@ -291,7 +281,7 @@ public class TabAreaMXFController implements Initializable {
 							return getIdentifierString(identifiers);
 						}
 					});
-				} else if (colName == "Devices") {
+				} else if ("Devices".equals(colName)) {
 					col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
 						public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
 							MXFColumn currentCol = mcvm.getMXFColumn();
@@ -313,7 +303,7 @@ public class TabAreaMXFController implements Initializable {
 							return new ReadOnlyStringWrapper("No Devices");
 						}
 					});
-				} else if (section == "CORE") {
+				} else if ("CORE".equals(section)) {
 					col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
 						public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
 							MXFColumn currentCol = mcvm.getMXFColumn();
@@ -351,7 +341,7 @@ public class TabAreaMXFController implements Initializable {
 				MXFColumn mxfCol = mcvm.getMXFColumn();
 				final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(colName);
 
-				if (headerCol.getUserData() == "TD") {
+				if ("TD".equals(headerCol.getUserData().toString())) {
 					if (colName == "Identifiers") {
 						col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
 							public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
@@ -365,7 +355,7 @@ public class TabAreaMXFController implements Initializable {
 					}
 				}
 
-				if (headerCol.getUserData() == "BD") {
+				if ("BD".equals(headerCol.getUserData().toString())) {
 					if (colName == "Identifiers") {
 						col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
 							public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
@@ -413,7 +403,7 @@ public class TabAreaMXFController implements Initializable {
 	}
 
 	private void setSubsectionContextMenu(TableColumn<MXFFileInformationViewModel, String> headerCol) {
-		boolean isTD = (String)headerCol.getUserData() == "TD";
+		boolean isTD = "TD".equals(headerCol.getUserData().toString());
 		int max = 0;
 		if (isTD) max = MXFFileList.getInstance().getMaxTD();
 		else max = MXFFileList.getInstance().getMaxBD();
@@ -435,8 +425,8 @@ public class TabAreaMXFController implements Initializable {
 				@Override
 				public void handle(ActionEvent event) {
 					for (final TableColumn<MXFFileInformationViewModel, ?> column : mxfTable.getColumns()) {
-						if (column.getUserData().toString() == "TD" && isTD) selectedTDIndex = index;
-						else if (column.getUserData().toString() == "BD" && !isTD) selectedBDIndex = index;
+						if ("TD".equals(column.getUserData().toString()) && isTD) selectedTDIndex = index;
+						else if ("BD".equals(column.getUserData().toString()) && !isTD) selectedBDIndex = index;
 					}
 					mxfTable.refresh();
 				}
@@ -453,7 +443,7 @@ public class TabAreaMXFController implements Initializable {
 		col.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(cellData.getValue().getProp(propName)));
 		col.setId(name);
 		col.setUserData(userData);
-		if (userData == "FileInfo") col.setVisible(false);
+		if ("FileInfo".equals(userData)) col.setVisible(false);
 		else col.setVisible(true);
 		setColumnWidth(col);
 		//setColumnToolTip(col, ""); <- need tooltip data
@@ -501,14 +491,14 @@ public class TabAreaMXFController implements Initializable {
 							final MXFFileInformationViewModel fivm = mxfTable.getItems().get(i);
 							MXFFileList.updateValues(changedValues, fivm);
 						} catch (final Exception e) {
-							e.printStackTrace();
+							System.out.println("Update changed values error");
 						}
 					}));
 				}
 				try {
 					executor.invokeAll(futures);
 				} catch (final InterruptedException e) {
-					e.printStackTrace();
+					System.out.println("Update changed values thread error");
 				}
 				selectedFilesSummary = MXFSelectedFilesSummary.create(tableSelectionModel.getSelectedItems());
 				return null;
