@@ -90,7 +90,7 @@
 											<Pane prefHeight="50.0">
 												<children>
 													<Label
-														text="Version: 1.1.1"
+														text="Version: 1.2.0"
 													/>
 													<Hyperlink
 														fx:id="fadgiLink"

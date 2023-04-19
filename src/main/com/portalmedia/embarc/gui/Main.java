@@ -65,7 +65,7 @@ public class Main extends Application {
 	private static String programType = "";
 	static Handler fileHandler = null;
 	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
-	private static final String embARCVersion = "v1.1.1";
+	private static final String embARCVersion = "v1.2.0";
 
 	public static void main(String[] args) throws Exception {
 		try {

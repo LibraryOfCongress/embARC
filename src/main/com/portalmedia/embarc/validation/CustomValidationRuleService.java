@@ -32,12 +32,13 @@ public class CustomValidationRuleService {
 
 	public static void readRuleSet(String input, String output, TreeMap<String, DPXFileInformation> dpxFileList) {
 		JSONObject object = null;
-		try {
-			FileReader fr = new FileReader(input);
+		try (FileReader fr = new FileReader(input)){
 			JSONTokener tokener = new JSONTokener(fr);
 			object = new JSONObject(tokener);
 		} catch (FileNotFoundException e) {
 			System.out.println("File not found: Rule set");
+		} catch (IOException e1) {
+			System.out.println("IO Exception");
 		}
 
 		if (object == null) return;
@@ -72,34 +73,34 @@ public class CustomValidationRuleService {
 			output = FilenameUtils.getFullPath(input) + "embarc_cli_conformance_report_" + formatted + ".csv";
 		}
 		try {
-			ICsvMapWriter csvWriter = new CsvMapWriter(new FileWriter(output), CsvPreference.STANDARD_PREFERENCE);
-			csvWriter.writeHeader(getHeader());
-
-			for (DPXFileInformation fileInfo : dpxFileList.values()) {
-				fileCount += 1;
-				List<CustomValidationRuleResult> validationResults = validation.Validate(fileInfo);
-	        	fileInfo.setValidationResults(validationResults);
-	        	final Map<String, Object> result = new HashMap<String, Object>();
-				for (CustomValidationRuleResult ruleResult : fileInfo.getValidationResults()) {
-		        	if (!ruleResult.isPass()) {
-		        		if (!failedFileNames.contains(fileInfo.getName())) {
-		        			failedFileNames.add(fileInfo.getName());
-		        		}
-		        		result.put("Result", "Fail");
-		        	} else {
-		        		result.put("Result", "Pass");
-		        	}
-	        		result.put("Filename", fileInfo.getName());
-	        		result.put("Field", ruleResult.getColumn());
-	        		result.put("Operator", ruleResult.getOperator().name());
-	        		result.put("Expected Value", ruleResult.getExpectedValue());
-	        		result.put("Actual Value", ruleResult.getActualValue());
-	        		csvWriter.write(result, getHeader());
+			try(ICsvMapWriter csvWriter = new CsvMapWriter(new FileWriter(output), CsvPreference.STANDARD_PREFERENCE)){
+				csvWriter.writeHeader(getHeader());
+	
+				for (DPXFileInformation fileInfo : dpxFileList.values()) {
+					fileCount += 1;
+					List<CustomValidationRuleResult> validationResults = validation.Validate(fileInfo);
+		        	fileInfo.setValidationResults(validationResults);
+		        	final Map<String, Object> result = new HashMap<String, Object>();
+					for (CustomValidationRuleResult ruleResult : fileInfo.getValidationResults()) {
+			        	if (!ruleResult.isPass()) {
+			        		if (!failedFileNames.contains(fileInfo.getName())) {
+			        			failedFileNames.add(fileInfo.getName());
+			        		}
+			        		result.put("Result", "Fail");
+			        	} else {
+			        		result.put("Result", "Pass");
+			        	}
+		        		result.put("Filename", fileInfo.getName());
+		        		result.put("Field", ruleResult.getColumn());
+		        		result.put("Operator", ruleResult.getOperator().name());
+		        		result.put("Expected Value", ruleResult.getExpectedValue());
+		        		result.put("Actual Value", ruleResult.getActualValue());
+		        		csvWriter.write(result, getHeader());
+					}
 				}
+	
+				csvWriter.close();
 			}
-
-			csvWriter.close();
-
 			String numFilesLine = "Number of Files Tested: " + fileCount;
 			String numFailsLine = "Number of Failed Files: " + failedFileNames.size();
 

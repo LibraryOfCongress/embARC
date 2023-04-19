@@ -15,11 +15,14 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Modality;
 
 /**
  * 
@@ -51,32 +54,6 @@ public class EditAreaMXFController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorMXF.getInstance().registerEditAreaController(this);
 
-		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener() {
-			@Override
-			public void changed(ObservableValue o, Object ov, Object nv) {
-				if (writeViewMXF == null) return;
-				// if there are missing required core fields disable the button, regardless of latest change
-				if (MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
-					setWriteFilesButtonsDisabled(true);
-				} else {
-					setWriteFilesButtonsDisabled((boolean) nv);
-				}
-			}
-		});
-
-		MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().addListener(new ChangeListener() {
-			@Override
-			public void changed(ObservableValue o, Object ov, Object nv) {
-				if (writeViewMXF == null) return;
-				// if is editing is true disable the button, regardless of latest change
-				if (ControllerMediatorMXF.getInstance().isEditingProperty().get()) {
-					setWriteFilesButtonsDisabled(true);
-				} else {
-					setWriteFilesButtonsDisabled((boolean) nv);
-				}
-			}
-		});
-
 		writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
@@ -86,15 +63,39 @@ public class EditAreaMXFController implements Initializable {
 
 		writeMXFFilesButton.setGraphicTextGap(20);
 
-		writeMXFFilesControlWrapper.hoverProperty().addListener(new ChangeListener() {
+		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener<Boolean>() {
 			@Override
-			public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-				if ((boolean)newValue && ControllerMediatorMXF.getInstance().isEditingProperty().get()) {
-					writeMXFFilesControlWrapper.setTooltip(new Tooltip("Cannot write files while editing."));
-				} else if ((boolean)newValue && MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
-					writeMXFFilesControlWrapper.setTooltip(new Tooltip("Cannot write files with one or more missing required AS07 Core DMS fields."));
+			public void changed(ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) {
+				if (writeViewMXF == null) return;
+				setWriteFilesButtonsDisabled(nv);
+			}
+		});
+
+		MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) {
+				if (writeViewMXF == null) return;
+				if (nv) {
+					writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
+						@Override
+						public void handle(ActionEvent e) {
+							final Alert alert = new Alert(AlertType.NONE, "Fix missing required Core DMS fields marked with icon in Core DMS tab.", ButtonType.OK);
+							alert.initModality(Modality.APPLICATION_MODAL);
+							alert.initOwner(Main.getPrimaryStage());
+							alert.setHeaderText("Cannot Write Files");
+							alert.showAndWait();
+							if (alert.getResult() == ButtonType.OK) {
+								alert.close();
+							}
+						}
+					});
 				} else {
-					writeMXFFilesControlWrapper.setTooltip(null);
+					writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
+						@Override
+						public void handle(ActionEvent e) {
+							WriteFilesModalControllerMXF.getInstance().showWriteFilesDialog();
+						}
+					});
 				}
 			}
 		});
@@ -127,7 +128,7 @@ public class EditAreaMXFController implements Initializable {
 		if (editAreaContainer.getChildren().size() > 0) {
 			editAreaContainer.getChildren().removeAll(editAreaContainer.getChildren());
 		}
-		coreView.setSection(false);
+		coreView.setSection();
 		coreView.setTitle("Core DMS");
 		coreView.setMaxWidth(Double.MAX_VALUE);
 		AnchorPane.setTopAnchor(coreView, 0.0);

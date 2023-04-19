@@ -35,7 +35,6 @@
 				<children>
 					<VBox
 						styleClass="editor-header-box"
-						prefHeight="70.00"
 						AnchorPane.bottomAnchor="0.0"
 						AnchorPane.leftAnchor="0.0"
 						AnchorPane.rightAnchor="0.0"
@@ -45,14 +44,12 @@
 							<Label
 								fx:id="fileInfoAreaLabel"
 								alignment="TOP_LEFT"
-								prefHeight="25.00"
 								styleClass="editor-header"
 								VBox.vgrow="ALWAYS"
 							/>
 							<Label
 								fx:id="selectedFilesLabel"
 								alignment="TOP_LEFT"
-								prefHeight="25.0"
 								styleClass="editor-header"
 								VBox.vgrow="ALWAYS"
 							/>

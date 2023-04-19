@@ -31,14 +31,15 @@ public class CsvWriterDpx {
 	private static String[] headers = null;
 
 	public static void writeCsvDPXFiles(String outputPath, TreeMap<String, DPXFileInformation> dpxFileList) throws IOException {
-		ICsvMapWriter csvWriter = new CsvMapWriter(new FileWriter(outputPath), CsvPreference.STANDARD_PREFERENCE);
-    	csvWriter.writeHeader(getHeaderColumns());
-    	
-    	for (DPXFileInformation fileInfo : dpxFileList.values()) {
-        	csvDPXMetadata(fileInfo, csvWriter);
-    	}
-
-    	csvWriter.close();
+		try(ICsvMapWriter csvWriter = new CsvMapWriter(new FileWriter(outputPath), CsvPreference.STANDARD_PREFERENCE)){
+	    	csvWriter.writeHeader(getHeaderColumns());
+	    	
+	    	for (DPXFileInformation fileInfo : dpxFileList.values()) {
+	        	csvDPXMetadata(fileInfo, csvWriter);
+	    	}
+	
+	    	csvWriter.close();
+		}
     }
 
     private static void setHeaderColumns() {

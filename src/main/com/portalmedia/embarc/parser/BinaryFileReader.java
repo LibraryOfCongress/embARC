@@ -19,7 +19,7 @@ import java.util.Locale;
  * @author PortalMedia
  * @since 2019-05-01
  **/
-public class BinaryFileReader {
+public class BinaryFileReader implements AutoCloseable{
 	private InputStream inputStream;
 	public long fileSizeBytes;
 	public long bytesRead;

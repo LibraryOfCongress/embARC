@@ -82,72 +82,77 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 
 		consolePrintStream = System.out;
-		nullPrintStream = new PrintStream(new NullOutputStream());
-
-		CommandLineParser parser = new DefaultParser();
-
-		options = new Options();
-		Option printHelpOption = Option.builder("help").desc("Print this list of options").build();
-		Option printMetadataOption = Option.builder("print").desc("Print all metadata").build();
-		Option outputCSVOption = Option.builder("csv").desc("DPX: CSV formatted output").hasArg().build();
-		Option outputJSONOption = Option.builder("json").desc("DPX: JSON formatted output").hasArg().build();
-		Option conformanceInputJSON = Option.builder("conformanceInputJSON").desc("DPX: Input validation json file").hasArg().build();
-		Option conformanceOutputCSV = Option.builder("conformanceOutputCSV").desc("DPX: Output validation report csv file").hasArg().build();
-		Option downloadTDStream = Option.builder("downloadTDStream").desc("MXF: Select a text stream to download").hasArg().build();
-		Option downloadBDStream = Option.builder("downloadBDStream").desc("MXF: Select a binary stream to download").hasArg().build();
-		Option downloadStreamOutputPath = Option.builder("streamOutputPath").desc("MXF: Output directory for selected stream").hasArg().build();
-
-		options.addOption(printHelpOption);
-		options.addOption(printMetadataOption);
-		options.addOption(outputCSVOption);
-		options.addOption(outputJSONOption);
-		options.addOption(conformanceInputJSON);
-		options.addOption(conformanceOutputCSV);
-		options.addOption(downloadTDStream);
-		options.addOption(downloadBDStream);
-		options.addOption(downloadStreamOutputPath);
-
-		formatter = new HelpFormatter();
-		formatter.setOptionComparator(null);
-
 		try {
-			final CommandLine line = parser.parse(options, args);
-
-			List<String> otherArgs = line.getArgList();
-
-			if (line.hasOption("help")) {
-				formatter.printHelp("embARC CLI", options);
-				return;
-			}
-
-			if (otherArgs.size() > 1) {
-				System.out.println("\nToo many arguments\n");
-				return;
-			} else if (otherArgs.size() == 0) {
-				System.out.println("\nInput path is missing\n");
-				return;
-			}
-
-			String inputPath = otherArgs.get(0);
-			System.out.println("\nInput Path: " + inputPath);
-
-			// determine what type of files were submitted and populate file lists
-			processInput(inputPath);
-
-			// if DPX or MXF identified, process accordingly
-			if (isDPX || isMXF) {
-				if (isDPX) processDPXInput(line);
-				if (isMXF) processMXFInput(line);
-
+			nullPrintStream = new PrintStream(new NullOutputStream());
+			
+			CommandLineParser parser = new DefaultParser();
+	
+			options = new Options();
+			Option printHelpOption = Option.builder("help").desc("Print this list of options").build();
+			Option printMetadataOption = Option.builder("print").desc("Print all metadata").build();
+			Option outputCSVOption = Option.builder("csv").desc("DPX: CSV formatted output").hasArg().build();
+			Option outputJSONOption = Option.builder("json").desc("DPX: JSON formatted output").hasArg().build();
+			Option conformanceInputJSON = Option.builder("conformanceInputJSON").desc("DPX: Input validation json file").hasArg().build();
+			Option conformanceOutputCSV = Option.builder("conformanceOutputCSV").desc("DPX: Output validation report csv file").hasArg().build();
+			Option downloadTDStream = Option.builder("downloadTDStream").desc("MXF: Select a text stream to download").hasArg().build();
+			Option downloadBDStream = Option.builder("downloadBDStream").desc("MXF: Select a binary stream to download").hasArg().build();
+			Option downloadStreamOutputPath = Option.builder("streamOutputPath").desc("MXF: Output directory for selected stream").hasArg().build();
+	
+			options.addOption(printHelpOption);
+			options.addOption(printMetadataOption);
+			options.addOption(outputCSVOption);
+			options.addOption(outputJSONOption);
+			options.addOption(conformanceInputJSON);
+			options.addOption(conformanceOutputCSV);
+			options.addOption(downloadTDStream);
+			options.addOption(downloadBDStream);
+			options.addOption(downloadStreamOutputPath);
+	
+			formatter = new HelpFormatter();
+			formatter.setOptionComparator(null);
+	
+			try {
+				final CommandLine line = parser.parse(options, args);
+	
+				List<String> otherArgs = line.getArgList();
+	
+				if (line.hasOption("help")) {
+					formatter.printHelp("embARC CLI", options);
+					return;
+				}
+	
+				if (otherArgs.size() > 1) {
+					System.out.println("\nToo many arguments\n");
+					return;
+				} else if (otherArgs.size() == 0) {
+					System.out.println("\nInput path is missing\n");
+					return;
+				}
+	
+				String inputPath = otherArgs.get(0);
+				System.out.println("\nInput Path: " + inputPath);
+	
+				// determine what type of files were submitted and populate file lists
+				processInput(inputPath);
+	
+				// if DPX or MXF identified, process accordingly
+				if (isDPX || isMXF) {
+					if (isDPX) processDPXInput(line);
+					if (isMXF) processMXFInput(line);
+	
+					System.out.println("\n-- END --\n");
+					return;
+				}
+	
+				// if no valid files are identified, print message and end program
+				System.out.println("\nNo valid DPX or MXF files were found.");
 				System.out.println("\n-- END --\n");
-				return;
+			} catch(ParseException exp) {
+				System.out.println("Unexpected exception:" + exp.getMessage());
 			}
-
-			// if no valid files are identified, print message and end program
-			System.out.println("\nNo valid DPX or MXF files were found.");
-			System.out.println("\n-- END --\n");
-		} catch(ParseException exp) {
-			System.out.println("Unexpected exception:" + exp.getMessage());
+		}
+		finally {
+			if (nullPrintStream != null) nullPrintStream.close();
 		}
 	}
 
