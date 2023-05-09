@@ -62,9 +62,10 @@ public class JsonWriterDpx {
     	}
 
     	j.put("Files", jsonObs);
-        FileWriter writer = new FileWriter(outputPath);
-        j.write(writer);
-        writer.close();
+        try(FileWriter writer = new FileWriter(outputPath)){
+        	j.write(writer);
+        	writer.close();
+        }
     }
 
     private static HashMap<String, String> createJsonFileInfo(DPXFileInformation dpxFileInfo) {

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file
 
+## 1.2.0 2023-03-23
+	Improvements:
+	- Add Text DMS manifest validation
+	- Allow custom file naming for Text DMS download
+	- Highlight mandatory properties with asterisk
+	- Validate mandatory properties, display warning icon when absent
+	- Add cancel button on scalar property modal
+	- Read second AS07 Core DMS from footer when present
+	- Write AS07 Core DMS to both header and footer
+	- Fix RFC5646 Language Tag alphabetization
+	- Sort Text DMS display by GSPID ascending
+
 ## 1.1.1 2022-11-28
 	Improvements:
 	- code cleanup

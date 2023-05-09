@@ -31,6 +31,7 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -45,6 +46,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -86,13 +88,18 @@ public class TabAreaMXFController implements Initializable {
 		setTabClickListener();
 		setDescriptorColumns();
 		setFileInfoColumns();
-
 		tableSelectionModel = mxfTable.getSelectionModel();
 		tableSelectionModel.setSelectionMode(SelectionMode.MULTIPLE);
 		tableSelectionModel.getSelectedItems().addListener((ListChangeListener.Change<? extends MXFFileInformationViewModel> change) -> {
 			selectedFilesSummary = MXFSelectedFilesSummary.create(tableSelectionModel.getSelectedItems());
 			ControllerMediatorMXF.getInstance().setSelectedFileList(selectedFilesSummary);
 			refreshEditor(false);
+		});
+		MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) {
+				setTabWarnings();
+			}
 		});
 		refreshEditor(false);
 		setColumnVisibility("FileInfo");
@@ -103,18 +110,18 @@ public class TabAreaMXFController implements Initializable {
 	public ObservableList<MXFFileInformationViewModel> getSelectedFiles() {
 		return mxfTable.getSelectionModel().getSelectedItems();
 	}
-	
+
 	public void deleteSelectedFiles() {
 		List<MXFFileInformationViewModel> filesToDelete = tableSelectionModel.getSelectedItems();
 		MXFFileList.deleteSelectedRows(filesToDelete);
 		setFiles();
 	}
-	
+
 	public void selectAllFiles() {
 		tableSelectionModel.selectAll();
 		refreshEditor(false);
 	}
-	
+
 	public void deselectAllFiles() {
 		tableSelectionModel.clearSelection();
 		refreshEditor(false);
@@ -127,16 +134,16 @@ public class TabAreaMXFController implements Initializable {
 	public int getTableSize() {
 		return mxfTable.getItems().size();
 	}
-	
+
 	public MXFSelectedFilesSummary getSelectedFilesSummary() {
 		return selectedFilesSummary;
 	}
-	
+
 	public void setFiles() {
 		mxfTable.setItems(MXFFileList.getInstance().getObservableList());
 		setDataColumns();
 	}
-	
+
 	public void refreshEditor(boolean updateSummary) {
 		if (updateSummary) {
 			selectedFilesSummary = MXFSelectedFilesSummary.create(tableSelectionModel.getSelectedItems());
@@ -170,7 +177,7 @@ public class TabAreaMXFController implements Initializable {
 			}
 		}
 	}
-	
+
 	public void setTabClickListener() {
 		mxfTabPane.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
 			if (mxfTable.getItems().size() > 0) {
@@ -207,7 +214,7 @@ public class TabAreaMXFController implements Initializable {
 			}
 		});
 	}
-	
+
 	private void setColumnVisibility(String tabName) {
 		for (final TableColumn<MXFFileInformationViewModel, ?> col : mxfTable.getColumns()) {
 			if (!col.getUserData().toString().equals(tabName) && !col.getUserData().toString().equals("Descriptors")) {
@@ -268,6 +275,13 @@ public class TabAreaMXFController implements Initializable {
 			final MXFMetadataColumnViewModelList columnList = MXFMetadataColumnViewModelList.getInstance();
 			String section = "";
 			for (final MXFMetadataColumnViewModel mcvm : columnList.getColumns()) {
+				if (mcvm.getMXFColumn() == MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier ||
+					mcvm.getMXFColumn() == MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode ||
+					mcvm.getMXFColumn() == MXFColumn.AS_07_BD_DMS_PrimaryRFC5646LanguageCode ||
+					mcvm.getMXFColumn() == MXFColumn.AS_07_Manifest ||
+					mcvm.getMXFColumn() == MXFColumn.AS_07_Manifest_Valid) {
+					continue;
+				}
 				section = mcvm.getColumn().getSection().toString();
 				String colName = mcvm.getDisplayName();
 				final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(colName);
@@ -307,13 +321,23 @@ public class TabAreaMXFController implements Initializable {
 					col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
 						public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
 							MXFColumn currentCol = mcvm.getMXFColumn();
-							MetadataColumnDef currentValue = c.getValue().getCoreData().get(currentCol);
-							if (currentValue != null) {
-								return new ReadOnlyStringWrapper(currentValue.getCurrentValue());
-							} else {
-								return new ReadOnlyStringWrapper("");
+							if (c != null) {
+								MXFFileInformationViewModel fivm = c.getValue();
+								if (fivm != null) {
+									HashMap<MXFColumn, MetadataColumnDef> coreData = fivm.getCoreData();
+									if (coreData != null) {
+										MetadataColumnDef currentValue = coreData.get(currentCol);
+										if (currentValue != null) {
+											return new ReadOnlyStringWrapper(currentValue.getCurrentValue());
+										}
+									}
+								}
 							}
+							return new ReadOnlyStringWrapper("");
 						}
+					});
+					col.setCellFactory(column -> {
+						return new ValidationCellFactoryMXF(column, mcvm);
 					});
 				} else {
 					col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().getProp(colName)));
@@ -531,4 +555,22 @@ public class TabAreaMXFController implements Initializable {
 //		ControllerMediatorMXF.getInstance().setEditedFieldsCount(0);
 	}
 
+	private void setTabWarnings() {
+		final ObservableList<Tab> tabs = mxfTabPane.getTabs();
+		for (final Tab tab : tabs) {
+			final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
+			icon.setStyleClass("fadgi-sr-warning");
+			switch (tab.getId()) {
+				case "coreTab":
+					if (MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
+						Platform.runLater(() -> tab.setGraphic(icon));
+					} else {
+						Platform.runLater(() -> tab.setGraphic(null));
+					}
+					break;
+				default:
+					break;
+			}
+		}
+	}
 }

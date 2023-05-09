@@ -72,8 +72,10 @@ public class DescriptorMXFController extends AnchorPane {
 	private Label sectionLabel;
 	@FXML
 	private VBox descriptorsVBox;
-
+	@FXML
 	private Accordion descriptorsAccordion;
+	@FXML
+	private Label selectedFilesLabel;
 
 	public DescriptorMXFController() {
 		ControllerMediatorMXF.getInstance().registerDescriptorMXFController(this);
@@ -86,12 +88,24 @@ public class DescriptorMXFController extends AnchorPane {
 			throw new RuntimeException(exception);
 		}
 		descriptorsAccordion = new Accordion();
+		Label requiredFieldsLabel = new Label("* = required field");
+		requiredFieldsLabel.styleProperty().set("-fx-padding: 0 0 10 0;");
+		descriptorsVBox.getChildren().add(requiredFieldsLabel);
 		descriptorsVBox.getChildren().add(descriptorsAccordion);
 		descriptorsVBox.getStyleClass().add("descriptors-vbox");
 		descriptorsAccordion.setMaxHeight(1000);
 		descriptorsAccordion.setPrefHeight(700);
 		final MXFSelectedFilesSummary summary = ControllerMediatorMXF.getInstance().getSelectedFilesSummary();
 		setFileDescriptors(summary);
+		setNumberOfSelectedFiles(summary.getFileCount());
+	}
+
+	private void setNumberOfSelectedFiles(int num) {
+		if (num == 1) {
+			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
+		} else {
+			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
+		}
 	}
 
 	public void setTitle(String title) {
@@ -240,7 +254,7 @@ public class DescriptorMXFController extends AnchorPane {
 		// File Descriptors Section
 		centerGrid.add(getCellPane("File Descriptors"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Instance UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID instanceUID = cdci.getOriginalAUID();
 			centerGrid.add(getDescriptorLabel("" + instanceUID, "#e3e3e3", 400, ""), 2, row);
@@ -249,7 +263,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Generation UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID generation = cdci.getLinkedGenerationID();
 			centerGrid.add(getDescriptorLabel("" + generation, "#e3e3e3", 400, ""), 2, row);
@@ -258,12 +272,12 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Linked Track ID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
 		try {
-			centerGrid.add(getDescriptorLabel("Essence Length: ", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("Essence Length", "#e3e3e3", 200, ""), 1, row);
 			centerGrid.add(getDescriptorLabel("" + cdci.getEssenceLength(), "#e3e3e3", 400, ""), 2, row);
 			row += 1;
 		}
@@ -271,15 +285,24 @@ public class DescriptorMXFController extends AnchorPane {
 			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
 		}
 
-		centerGrid.add(getDescriptorLabel("Sample Rate: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getSampleRateString(), "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("" + cdci.getSampleRateString(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
+		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("" + cdci.getEssenceLength(), "#e3e3e3", 400, ""), 2, row);
+		row += 1;
+
+		/* TODO: essence container
+			centerGrid.add(getDescriptorLabel("Essence Container *", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+			centerGrid.add(getDescriptorLabel("" + cdci.??, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			row += 1;
+		*/
 
 		// Picture Essence Descriptor Section
 		centerGrid.add(getCellPane("Picture Essence Descriptors"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Signal Standard: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Signal Standard", "#e3e3e3", 200, ""), 1, row);
 		try {
 			SignalStandardType signalStandard = cdci.getSignalStandard();
 			centerGrid.add(getDescriptorLabel("" + signalStandard, "#e3e3e3", 400, ""), 2, row);
@@ -288,7 +311,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Picture Encoding: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Picture Encoding", "#e3e3e3", 200, ""), 1, row);
 		try {
 			String picEncodingStr = cdci.getPictureCompression().toString();
 			String stripped = picEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
@@ -311,23 +334,23 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Stored Height: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Stored Height", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getStoredHeight(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Stored Width: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Stored Width", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getStoredWidth(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled Height: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sampled Height", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getSampledHeight(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled Width: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sampled Width", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getSampledWidth(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled X Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sampled X Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int sampledXOffset = cdci.getSampledXOffset();
 			centerGrid.add(getDescriptorLabel("" + sampledXOffset, "#e3e3e3", 400, ""), 2, row);
@@ -336,7 +359,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled Y Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sampled Y Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int sampledYOffset = cdci.getSampledYOffset();
 			centerGrid.add(getDescriptorLabel("" + sampledYOffset, "#e3e3e3", 400, ""), 2, row);
@@ -345,15 +368,15 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display Height: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Display Height", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getDisplayHeight(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display Width: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Display Width", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getDisplayWidth(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display X Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Display X Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int displayXOffset = cdci.getDisplayXOffset();
 			centerGrid.add(getDescriptorLabel("" + displayXOffset, "#e3e3e3", 400, ""), 2, row);
@@ -362,7 +385,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display Y Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Display Y Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int displayYOffset = cdci.getDisplayYOffset();
 			centerGrid.add(getDescriptorLabel("" + displayYOffset, "#e3e3e3", 400, ""), 2, row);
@@ -371,7 +394,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Frame Layout: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Frame Layout", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getFrameLayout(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
@@ -384,15 +407,15 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 		}
 
-		centerGrid.add(getDescriptorLabel("Video Line Map: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Video Line Map", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + videoLineMap, "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image Aspect Ratio: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Image Aspect Ratio", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getImageAspectRatioString(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Alpha Transparency: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Alpha Transparency", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AlphaTransparencyType alphaTransparency = cdci.getAlphaTransparency();
 			centerGrid.add(getDescriptorLabel("" + alphaTransparency, "#e3e3e3", 400, ""), 2, row);
@@ -401,7 +424,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image Alignment Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Image Alignment Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int alignmentFactor = cdci.getImageAlignmentFactor();
 			centerGrid.add(getDescriptorLabel("" + alignmentFactor, "#e3e3e3", 400, ""), 2, row);
@@ -410,7 +433,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image Start Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Image Start Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int imageStartOffset = cdci.getImageStartOffset();
 			centerGrid.add(getDescriptorLabel("" + imageStartOffset, "#e3e3e3", 400, ""), 2, row);
@@ -419,7 +442,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image End Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Image End Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int imageEndOffset = cdci.getImageEndOffset();
 			centerGrid.add(getDescriptorLabel("" + imageEndOffset, "#e3e3e3", 400, ""), 2, row);
@@ -428,7 +451,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Field Dominance: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Field Dominance", "#e3e3e3", 200, ""), 1, row);
 		try {
 			FieldNumber fieldDominance = cdci.getFieldDominance();
 			centerGrid.add(getDescriptorLabel("" + fieldDominance.value(), "#e3e3e3", 400, ""), 2, row);
@@ -437,7 +460,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display F2 Offset: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Display F2 Offset", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int displayOffset = cdci.getDisplayF2Offset();
 			centerGrid.add(getDescriptorLabel("" + displayOffset, "#e3e3e3", 400, ""), 2, row);
@@ -446,7 +469,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Stored F2 Offset: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		centerGrid.add(getDescriptorLabel("Stored F2 Offset", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 		try {
 			int storedOffset = cdci.getStoredF2Offset();
 			centerGrid.add(getDescriptorLabel("" + storedOffset, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
@@ -459,7 +482,7 @@ public class DescriptorMXFController extends AnchorPane {
 		// CDCI Descriptor Section
 		centerGrid.add(getCellPane("CDCI Descriptors"), 0, row);
 		
-		centerGrid.add(getDescriptorLabel("Active Format Descriptor: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Active Format Descriptor", "#e3e3e3", 200, ""), 1, row);
 		try {
 			byte activeFormatDescriptor = cdci.getActiveFormatDescriptor();
 			centerGrid.add(getDescriptorLabel("" + activeFormatDescriptor, "#e3e3e3", 400, ""), 2, row);
@@ -468,7 +491,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Alpha Sample Depth: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Alpha Sample Depth", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int alphaSampleDepth = cdci.getAlphaSampleDepth();
 			centerGrid.add(getDescriptorLabel("" + alphaSampleDepth, "#e3e3e3", 400, ""), 2, row);
@@ -477,7 +500,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Black Reference Level: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Black Reference Level", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int blackRefLevel = cdci.getBlackRefLevel();
 			centerGrid.add(getDescriptorLabel("" + blackRefLevel, "#e3e3e3", 400, ""), 2, row);
@@ -486,7 +509,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Color Range: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Color Range", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int colorRange = cdci.getColorRange();
 			centerGrid.add(getDescriptorLabel("" + colorRange, "#e3e3e3", 400, ""), 2, row);
@@ -495,7 +518,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Color Siting: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Color Siting", "#e3e3e3", 200, ""), 1, row);
 		try {
 			ColorSitingType colorSiting = cdci.getColorSiting();
 			centerGrid.add(getDescriptorLabel("" + colorSiting, "#e3e3e3", 400, ""), 2, row);
@@ -504,7 +527,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Component Depth: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Component Depth", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int componentDepth = cdci.getComponentDepth();
 			centerGrid.add(getDescriptorLabel("" + componentDepth, "#e3e3e3", 400, ""), 2, row);
@@ -513,7 +536,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Horizontal Subsampling: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Horizontal Subsampling", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int horizontalSubsampling = cdci.getHorizontalSubsampling();
 			centerGrid.add(getDescriptorLabel("" + horizontalSubsampling, "#e3e3e3", 400, ""), 2, row);
@@ -522,7 +545,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Padding Bits: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Padding Bits", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int paddingBits = cdci.getPaddingBits();
 			centerGrid.add(getDescriptorLabel("" + paddingBits, "#e3e3e3", 400, ""), 2, row);
@@ -531,15 +554,15 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Reversed Byte Order: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Reversed Byte Order", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getReversedByteOrder(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Vertical Subsampling: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Vertical Subsampling", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getVerticalSubsampling(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("White Reference Level: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		centerGrid.add(getDescriptorLabel("White Reference Level", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 		try {
 			int whiteRefLevel = cdci.getWhiteRefLevel();
 			centerGrid.add(getDescriptorLabel("" + whiteRefLevel, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
@@ -557,7 +580,7 @@ public class DescriptorMXFController extends AnchorPane {
 		if (ffv1 != null) {
 			centerGrid.add(getCellPane("FFV1"), 0, row);
 
-			centerGrid.add(getDescriptorLabel("FFV1 Initialization Metadata: ", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("FFV1 Initialization Metadata *", "#e3e3e3", 200, ""), 1, row);
 			try {
 				byte[] initMetadata = ffv1.getFFV1InitializationMetadata();
 				List<String> intMetadataUnsigned = new ArrayList<String>();
@@ -571,7 +594,7 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Identical GOP: ", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("FFV1 Identical GOP", "#e3e3e3", 200, ""), 1, row);
 			try {
 				boolean isIdenticalGOP = ffv1.getFFV1IdenticalGOP();
 				centerGrid.add(getDescriptorLabel("" + isIdenticalGOP, "#e3e3e3", 400, ""), 2, row);
@@ -580,7 +603,7 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Max GOP: ", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("FFV1 Max GOP", "#e3e3e3", 200, ""), 1, row);
 			try {
 				short maxGOP = ffv1.getFFV1MaxGOP();
 				centerGrid.add(getDescriptorLabel("" + maxGOP, "#e3e3e3", 400, ""), 2, row);
@@ -590,7 +613,7 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Maximum Bit Rate: ", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("FFV1 Maximum Bit Rate", "#e3e3e3", 200, ""), 1, row);
 			try {
 				int maxBitRate = ffv1.getFFV1MaximumBitRate();
 				centerGrid.add(getDescriptorLabel("" + maxBitRate, "#e3e3e3", 400, ""), 2, row);
@@ -600,7 +623,7 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Version: ", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("FFV1 Version", "#e3e3e3", 200, ""), 1, row);
 			try {
 				short version = ffv1.getFFV1Version();
 				centerGrid.add(getDescriptorLabel("" + version, "#e3e3e3", 400, ""), 2, row);
@@ -610,7 +633,7 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Micro Version: ", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("FFV1 Micro Version", "#e3e3e3", 200, ""), 1, row);
 			try {
 				short microVersion = ffv1.getFFV1MicroVersion();
 				centerGrid.add(getDescriptorLabel("" + microVersion, "#e3e3e3", 400, ""), 2, row);
@@ -626,7 +649,7 @@ public class DescriptorMXFController extends AnchorPane {
 		row += 1;
 		centerGrid.add(getCellPane("Calculated Values"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Duration (seconds): ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Duration (seconds)", "#e3e3e3", 200, ""), 1, row);
 		try {
 			long essenceLength = cdci.getEssenceLength();
 			Rational sampleRate = cdci.getSampleRate();
@@ -636,7 +659,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Samples Per Second: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Samples Per Second", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + cdci.getSampleRate().doubleValue(), "#e3e3e3", 400, ""), 2, row);
 
 		bp.setCenter(centerGrid);
@@ -664,7 +687,7 @@ public class DescriptorMXFController extends AnchorPane {
 		// File Descriptors Section
 		centerGrid.add(getCellPane("File Descriptors"), 0, row);
 		
-		centerGrid.add(getDescriptorLabel("Instance UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Instance UID", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID instanceUID = wave.getOriginalAUID();
 			centerGrid.add(getDescriptorLabel("" + instanceUID, "#e3e3e3", 400, ""), 2, row);
@@ -673,7 +696,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Generation UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID generation = wave.getLinkedGenerationID();
 			centerGrid.add(getDescriptorLabel("" + generation, "#e3e3e3", 400, ""), 2, row);
@@ -682,7 +705,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Linked Track ID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
 		try {
 			int linkedTrackID = wave.getLinkedTrackID();
 			centerGrid.add(getDescriptorLabel("" + linkedTrackID, "#e3e3e3", 400, ""), 2, row);
@@ -691,11 +714,11 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sample Rate: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + wave.getSampleRateString(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Container Duration: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
 		try {
 			long essenceLength = wave.getEssenceLength();
 			centerGrid.add(getDescriptorLabel("" + essenceLength, "#e3e3e3", 400, ""), 2, row);
@@ -704,7 +727,13 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Codec: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		/* TODO: essence container
+			centerGrid.add(getDescriptorLabel("Essence Container *", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("" + wave.??, "#e3e3e3", 400, ""), 2, row);
+			row += 1;
+		 */
+
+		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 		try {
 			ContainerDefinition containerFormat = wave.getContainerFormat();
 			centerGrid.add(getDescriptorLabel("" + containerFormat.getDescription(), "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
@@ -716,15 +745,15 @@ public class DescriptorMXFController extends AnchorPane {
 		// Sound Descriptors Section
 		centerGrid.add(getCellPane("Sound Descriptors"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Audio Sample Rate: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Audio Sample Rate", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + wave.getAudioSampleRateString(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Channel Count: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Channel Count", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + wave.getChannelCount(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sound Encoding: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sound Encoding", "#e3e3e3", 200, ""), 1, row);
 		try {
 			String soundEncodingStr = wave.getSoundCompression().toString();
 			String stripped = soundEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
@@ -746,15 +775,15 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Bit Depth: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Bit Depth", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + wave.getQuantizationBits(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Locked: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Locked *", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + wave.getLocked(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Audio Reference Level: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Audio Reference Level", "#e3e3e3", 200, ""), 1, row);
 		try {
 			byte audioRefLevel = wave.getAudioReferenceLevel();
 			centerGrid.add(getDescriptorLabel("" + audioRefLevel, "#e3e3e3", 400, ""), 2, row);
@@ -763,7 +792,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Electro-Spatial Formulation: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Electro-Spatial Formulation", "#e3e3e3", 200, ""), 1, row);
 		try {
 			ElectroSpatialFormulation electroForm = wave.getElectrospatialFormulation();
 			centerGrid.add(getDescriptorLabel("" + electroForm, "#e3e3e3", 400, ""), 2, row);
@@ -772,7 +801,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Dial Norm: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		centerGrid.add(getDescriptorLabel("Dial Norm", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 		try {
 			byte dialNorm = wave.getDialNorm();
 			centerGrid.add(getDescriptorLabel("" + dialNorm, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
@@ -784,11 +813,11 @@ public class DescriptorMXFController extends AnchorPane {
 		// WAVE Descriptors Section
 		centerGrid.add(getCellPane("WAVE Descriptors"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Average Bytes Per Second: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Average Bytes Per Second", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + wave.getAverageBytesPerSecond(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Block Align: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Block Align", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + wave.getBlockAlign(), "#e3e3e3", 400, ""), 2, row);
 
 		bp.setCenter(centerGrid);
@@ -815,7 +844,7 @@ public class DescriptorMXFController extends AnchorPane {
 		// File Descriptor Section
 		centerGrid.add(getCellPane("File Descriptors"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Instance UID", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID originalAUID = dateTime.getOriginalAUID();
 			centerGrid.add(getDescriptorLabel("" + originalAUID, "#e3e3e3", 400, ""), 2, row);
@@ -837,7 +866,7 @@ public class DescriptorMXFController extends AnchorPane {
 		centerGrid.add(getDescriptorLabel("" + dateTime.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sample Rate", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + dateTime.getSampleRateString(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 		
@@ -850,9 +879,11 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Essence Container", "#e3e3e3", 200, ""), 1, row);
+		/*
+		centerGrid.add(getDescriptorLabel("Essence Container *", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + dateTime.getEssenceContainer(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
+		*/
 
 		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, ""), 1, row);
 		try {
@@ -876,19 +907,19 @@ public class DescriptorMXFController extends AnchorPane {
 		// DateTime Descriptor Section
 		centerGrid.add(getCellPane("DateTime Descriptors"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("DateTime Rate: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("DateTime Rate", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeRate(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("DateTime Drop Frame: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("DateTime Drop Frame", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeDropFrame(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("DateTime Embedded: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("DateTime Embedded", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeEmbedded(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("DateTime Kind: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		centerGrid.add(getDescriptorLabel("DateTime Kind *", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeKind(), "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
 		row += 1;
 
@@ -902,11 +933,11 @@ public class DescriptorMXFController extends AnchorPane {
 					continue;
 				}
 
-				centerGrid.add(getDescriptorLabel("DateTime Symbol: ", "#e3e3e3", 200, ""), 1, row);
+				centerGrid.add(getDescriptorLabel("DateTime Symbol *", "#e3e3e3", 200, ""), 1, row);
 				centerGrid.add(getDescriptorLabel("" + parsedSub.getDateTimeSymbol(), "#e3e3e3", 400, ""), 2, row);
 				row += 1;
 				
-				centerGrid.add(getDescriptorLabel("DateTime Essence Track ID: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+				centerGrid.add(getDescriptorLabel("DateTime Essence Track ID", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 				centerGrid.add(getDescriptorLabel("" + parsedSub.getDateTimeEssenceTrackID(), "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
 				row += 1;
 			}
@@ -936,7 +967,7 @@ public class DescriptorMXFController extends AnchorPane {
 		// File Descriptors Section
 		centerGrid.add(getCellPane("File Descriptors"), 0, row);
 		
-		centerGrid.add(getDescriptorLabel("Instance UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID originalAUID = ancillary.getOriginalAUID();
 			centerGrid.add(getDescriptorLabel("" + originalAUID, "#e3e3e3", 400, ""), 2, row);
@@ -945,7 +976,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Generation UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID generationID = ancillary.getLinkedGenerationID();
 			centerGrid.add(getDescriptorLabel("" + generationID, "#e3e3e3", 400, ""), 2, row);
@@ -954,15 +985,15 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Linked Track ID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + ancillary.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Sample Rate: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + ancillary.getSampleRate(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Container Duration: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
 		try {
 			long essenceLength = ancillary.getEssenceLength();
 			centerGrid.add(getDescriptorLabel("" + essenceLength, "#e3e3e3", 400, ""), 2, row);
@@ -971,11 +1002,13 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-//		centerGrid.add(getDescriptorLabel("Essence Container: ", "#e3e3e3", 200, ""), 1, row);
-//		centerGrid.add(getDescriptorLabel("" + ancillary.getContainerFormat(), "#e3e3e3", 400, ""), 2, row); // essence container??
-//		row += 1;
+		/* TODO: essence container
+			centerGrid.add(getDescriptorLabel("Essence Container *", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("" + ancillary.??, "#e3e3e3", 400, ""), 2, row);
+			row += 1;
+		 */
 
-		centerGrid.add(getDescriptorLabel("Codec: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 		try {
 			CodecDefinition codec = ancillary.getCodec();
 			centerGrid.add(getDescriptorLabel("" + codec, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
@@ -987,7 +1020,7 @@ public class DescriptorMXFController extends AnchorPane {
 		// Ancillary Descriptors Section
 		centerGrid.add(getCellPane("Generic Data Essence Descriptor"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Data Essence Coding: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Data Essence Coding", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
 //		centerGrid.add(getDescriptorLabel("" + ancillary.???, "#e3e3e3", 400, ""), 2, row); // data essence coding ??
 
@@ -1016,7 +1049,7 @@ public class DescriptorMXFController extends AnchorPane {
 		centerGrid.add(getCellPane("File Descriptors"), 0, row);
 		
 
-		centerGrid.add(getDescriptorLabel("Instance UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID originalAUID = timedText.getOriginalAUID();
 			centerGrid.add(getDescriptorLabel("" + originalAUID, "#e3e3e3", 400, ""), 2, row);
@@ -1025,25 +1058,29 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Generation UID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + timedText.getLinkedGenerationID(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Linked Track ID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + timedText.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sample Rate: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + timedText.getSampleRate(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Container Duration: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
 		centerGrid.add(getDescriptorLabel("" + timedText.getEssenceLength(), "#e3e3e3", 400, ""), 2, row);
 		row += 1;
-		
-		// missing EssenceContainer?
 
-		centerGrid.add(getDescriptorLabel("Codec: ", "#e3e3e3", 200, ""), 1, row);
+		/* TODO: essence container
+			centerGrid.add(getDescriptorLabel("Essence Container *", "#e3e3e3", 200, ""), 1, row);
+			centerGrid.add(getDescriptorLabel("" + timedText.??, "#e3e3e3", 400, ""), 2, row);
+			row += 1;
+		 */
+
+		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, ""), 1, row);
 		try {
 			ContainerDefinition containerFormat = timedText.getContainerFormat();
 			centerGrid.add(getDescriptorLabel("" + containerFormat.getDescription(), "#e3e3e3", 400, ""), 2, row);
@@ -1053,7 +1090,7 @@ public class DescriptorMXFController extends AnchorPane {
 		row += 1;
 
 		// need to iterate locators array
-		centerGrid.add(getDescriptorLabel("Locators: ", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		centerGrid.add(getDescriptorLabel("Locators", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
 		try {
 			List<Locator> locators = timedText.getLocators();
 			centerGrid.add(getDescriptorLabel("" + locators, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
@@ -1066,7 +1103,7 @@ public class DescriptorMXFController extends AnchorPane {
 		// Timed Text Descriptors Section
 		centerGrid.add(getCellPane("Timed Text Descriptors"), 0, row);
 
-		centerGrid.add(getDescriptorLabel("Text Encoding Format: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Text Encoding Format", "#e3e3e3", 200, ""), 1, row);
 		try {
 			String ucsEncoding = timedText.getUcsEncoding();
 			centerGrid.add(getDescriptorLabel("" + ucsEncoding, "#e3e3e3", 400, ""), 2, row);
@@ -1075,7 +1112,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Namespace URI: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Namespace URI", "#e3e3e3", 200, ""), 1, row);
 		try {
 			String namespaceURI = timedText.getNamespaceURI();
 			centerGrid.add(getDescriptorLabel("" + namespaceURI, "#e3e3e3", 400, ""), 2, row);
@@ -1084,7 +1121,7 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Resource ID: ", "#e3e3e3", 200, ""), 1, row);
+		centerGrid.add(getDescriptorLabel("Resource ID", "#e3e3e3", 200, ""), 1, row);
 		try {
 			AUID resourceID = timedText.getResourceId();
 			centerGrid.add(getDescriptorLabel("" + resourceID, "#e3e3e3", 400, ""), 2, row);

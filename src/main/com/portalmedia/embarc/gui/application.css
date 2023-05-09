@@ -217,6 +217,15 @@
     -fx-cursor: hand;
 }
 
+.combo-box .list-view .list-cell {
+	-fx-text-fill: #000000;
+	-fx-padding: 2 0 2 10;
+}
+
+.combo-box .list-view .list-cell:hover {
+	-fx-background-color: #FFFFFF;
+}
+
 
 /* TEST */
 

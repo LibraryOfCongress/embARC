@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.portalmedia.embarc.gui.ASCIIArea;
+import com.portalmedia.embarc.gui.ASCIIField;
 import com.portalmedia.embarc.gui.DropDownField;
 import com.portalmedia.embarc.gui.IEditorField;
 import com.portalmedia.embarc.gui.LabelField;
@@ -176,14 +176,16 @@ public class CoreMXFController extends AnchorPane {
 		}
 	}
 
-	public void setSection(Boolean resetValues) {
-		if (resetValues) {}
-
+	public void setSection() {
 		final MXFSelectedFilesSummary summary = ControllerMediatorMXF.getInstance().getSelectedFilesSummary();
 
 		if (summary.getFilesAreMissingAS07CoreDMSFramework()) {
 			toggleEditButton.setDisable(true);
 		}
+
+		Label requiredFieldsLabel = new Label("* = required field");
+		requiredFieldsLabel.styleProperty().set("-fx-padding: 0 0 10 0;");
+		editableFieldsVBox.getChildren().add(requiredFieldsLabel);
 
 		for (final MXFColumn col : MXFColumn.values()) {
 			if (col.getSection() != MXFSection.CORE) continue;
@@ -228,33 +230,34 @@ public class CoreMXFController extends AnchorPane {
 				continue;
 			}
 
-			// Default to ascii area
-			final ASCIIArea area = new ASCIIArea();
-			area.setMXFColumn(col);
-			area.setVisible(true);
+			// Default to ascii field
+			final ASCIIField field = new ASCIIField();
+			field.setMXFColumn(col);
+			field.setVisible(true);
 			String label = col.getDisplayName();
 			if (col.isRequired()) label += " *";
-			area.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col));
+			field.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col));
 			MetadataColumnDef columnDef = summary.getCoreData().get(col);
 			if (columnDef != null && columnDef.getCurrentValue() != null) {
-				area.setValue(columnDef.getCurrentValue());
+				field.setValue(columnDef.getCurrentValue());
 			} else {
-				area.setValue("");
+				field.setValue("");
 			}
-			area.setEditable(col.getEditable());
-			area.managedProperty().bind(area.visibleProperty());
-			area.setPopoutIcon();
-			area.setMaxHeight(50);
-			area.textProperty().addListener(new ChangeListener<String>() {
+			field.setEditable(col.getEditable());
+			field.managedProperty().bind(field.visibleProperty());
+			field.setPopoutIcon();
+			field.setMXFMissingRequiredFieldRules();
+			field.setMaxHeight(50);
+			field.textProperty().addListener(new ChangeListener<String>() {
 				@Override
 				public void changed(ObservableValue<? extends String> obs, String ov, String nv) {
 					calculateEditedFields();
 				}
 			});
-			fields.add(area);
-			AnchorPane.setLeftAnchor(area, 0.00);
-			AnchorPane.setRightAnchor(area, 0.00);
-			editableFieldsVBox.getChildren().add(area);
+			fields.add(field);
+			AnchorPane.setLeftAnchor(field, 0.00);
+			AnchorPane.setRightAnchor(field, 0.00);
+			editableFieldsVBox.getChildren().add(field);
 		}
 
 		setNumberOfSelectedFiles(summary.getFileCount());
@@ -314,10 +317,10 @@ public class CoreMXFController extends AnchorPane {
 		devicesLabel.setLayoutX(14.0);
 		devicesLabel.setLayoutY(14.0);
 		devicesLabel.setPrefHeight(26.0);
-		devicesLabel.setPrefWidth(225.0);
+		devicesLabel.setPrefWidth(231.0);
 		devicesLabel.setMinWidth(100.0);
-		devicesLabel.setMaxWidth(225.0);
-		HBox.setHgrow(devicesLabel, Priority.ALWAYS);
+		devicesLabel.setMaxWidth(231.0);
+		HBox.setHgrow(devicesLabel, Priority.NEVER);
 		hbox.getChildren().add(devicesLabel);
 		editableFieldsVBox.getChildren().add(hbox);
 		GridPane grid = new GridPane();
@@ -530,10 +533,10 @@ public class CoreMXFController extends AnchorPane {
 		identifierLabel.setLayoutX(14.0);
 		identifierLabel.setLayoutY(14.0);
 		identifierLabel.setPrefHeight(26.0);
-		identifierLabel.setPrefWidth(225.0);
+		identifierLabel.setPrefWidth(231.0);
 		identifierLabel.setMinWidth(100.0);
-		identifierLabel.setMaxWidth(225.0);
-		HBox.setHgrow(identifierLabel, Priority.ALWAYS);
+		identifierLabel.setMaxWidth(231.0);
+		HBox.setHgrow(identifierLabel, Priority.NEVER);
 		hbox.getChildren().add(identifierLabel);
 		editableFieldsVBox.getChildren().add(hbox);
 		GridPane grid = new GridPane();

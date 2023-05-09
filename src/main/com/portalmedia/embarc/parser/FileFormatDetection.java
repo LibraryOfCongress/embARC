@@ -20,23 +20,25 @@ public class FileFormatDetection {
 	}
 	
 	public static boolean isDPX(String file) {
-		BinaryFileReader f;
 		try {
-			f = new BinaryFileReader(file);
-			String firstFourBytes = f.readAscii(4);
 			
-			f.skip(4);
-			
-			String nextSequence = f.readAscii(4);
+			try (BinaryFileReader f = new BinaryFileReader(file)){
 
-			f.close();
-			if(firstFourBytes.equals("SDPX") && nextSequence.matches("[vV][1-9][.][0-9]"))
-				return true;
-			else if(firstFourBytes.equals("XPDS") && nextSequence.matches("[vV][1-9][.][0-9]"))
-				return true;
+				String firstFourBytes = f.readAscii(4);
+				
+				f.skip(4);
+				
+				String nextSequence = f.readAscii(4);
+
+				if(firstFourBytes.equals("SDPX") && nextSequence.matches("[vV][1-9][.][0-9]"))
+					return true;
+				else if(firstFourBytes.equals("XPDS") && nextSequence.matches("[vV][1-9][.][0-9]"))
+					return true;
+			} 
+			
 		} catch (FileNotFoundException e) {
 			System.out.println("File not found checking is dpx");
-		}
+		} 
 		
 		return false;
 	}

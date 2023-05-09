@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import com.portalmedia.embarc.gui.Main;
@@ -47,7 +49,9 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
 
 /**
@@ -63,6 +67,8 @@ public class TDBDController extends AnchorPane {
 	private Label sectionLabel;
 	@FXML
 	private VBox tdbdVBox;
+	@FXML
+	private Label selectedFilesLabel;
 
 	public TDBDController() {
 		ControllerMediatorMXF.getInstance().registerTDBDController(this);
@@ -77,8 +83,11 @@ public class TDBDController extends AnchorPane {
 	}
 
 	public void setContent(SectionDef section) {
-		if (section == MXFSection.TD) sectionLabel.setText("Text Data");
-		else sectionLabel.setText("Binary Data");
+		if (section == MXFSection.TD) {
+			sectionLabel.setText("Text Data");
+		} else {
+			sectionLabel.setText("Binary Data");
+		}
 		try {
 			setContent(section == MXFSection.TD);
 		} catch (FileNotFoundException e) {
@@ -107,7 +116,8 @@ public class TDBDController extends AnchorPane {
 
 		ListView<BorderPane> list = new ListView<BorderPane>();
 		int index = 1;
-		for (final String key : elements.keySet()) {
+		SortedSet<String> keys = new TreeSet<>(elements.keySet());
+		for (String key : keys) {
 			final LinkedHashMap<MXFColumn, MetadataColumnDef> element = elements.get(key);
 			BorderPane bp = createElementCards(element, isTD, index, summary.getFilePath(), summary.getFileName());
 			list.getItems().add(bp);
@@ -119,41 +129,22 @@ public class TDBDController extends AnchorPane {
 			public void handle(MouseEvent event) { event.consume(); }
 		});
 		tdbdVBox.getChildren().add(list);
+		setNumberOfSelectedFiles(summary.getFileCount());
+	}
+
+	private void setNumberOfSelectedFiles(int num) {
+		if (num == 1) {
+			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
+		} else {
+			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
+		}
 	}
 
 	private BorderPane createElementCards(LinkedHashMap<MXFColumn, MetadataColumnDef> element, boolean isTD, int index, String filePath, String fileName) throws FileNotFoundException {
-		ByteBuffer bb = null;
-		boolean isManifest = false;
-		ManifestType mfType = null;
-		try {
-			MXFService mxfService = new MXFServiceImpl(filePath);
-			bb = mxfService.GetGenericStream(Integer.parseInt(element.get(MXFColumn.AS_07_Object_GenericStreamID).getCurrentValue()));
-			ManifestParser mfParser = new ManifestParserImpl();
-			if (bb != null) {
-				mfType = mfParser.isManifest(bb);
-				isManifest = mfType == ManifestType.VALID_MANIFEST || mfType == ManifestType.INVALID_MANIFEST;
-			}
-		} catch(Exception ex) {
-			LOGGER.info("Caught exception in createElementCards in TDBDController: " + ex.getMessage());
-		}
-
-		BorderPane bp = new BorderPane();
-		bp.setPadding(new Insets(10,0,10,0));
-		GridPane topGrid = new GridPane();
-		HBox header = new HBox();
-		header.setSpacing(20);
-		topGrid.setPadding(new Insets(10, 10, 10, 10));
-		String titlePrefix = isManifest ? "RDD 48 Manifest - " : "";
-		String title = isTD ? String.format("%sText Data Element #%s", titlePrefix, index) : String.format("Binary Data Element #%s", index);
-		Label label = new Label(title);
-		label.setStyle("-fx-font-size: 12; -fx-font-weight: bold;");
-		header.getChildren().add(label);
-		if (bb != null) {
-			FontAwesomeIconView downloadIcon = getDownloadIcon(element.get(MXFColumn.AS_07_Object_GenericStreamID).getCurrentValue(), filePath, fileName, isTD);
-			header.getChildren().add(downloadIcon);
-		}
-		topGrid.add(header, 0, 0);
-		bp.setTop(topGrid);
+		String streamId = element.get(MXFColumn.AS_07_Object_GenericStreamID).getCurrentValue();
+		int streamIdInt = Integer.parseInt(streamId);
+		ManifestType mfType = getMfType(streamIdInt, filePath);
+		boolean isManifest = mfType == ManifestType.VALID_MANIFEST || mfType == ManifestType.INVALID_MANIFEST;
 
 		GridPane centerGrid = new GridPane();
 		centerGrid.setPadding(new Insets(0,10,10,10));
@@ -162,13 +153,18 @@ public class TDBDController extends AnchorPane {
 		centerGrid.getColumnConstraints().add(cc);
 		int identifierCount = 0;
 		int lastIndex = 0;
+		String isManifestValid = "";
 
 		for (MXFColumn key : element.keySet()) {
+			if (isManifest && key == MXFColumn.AS_07_Manifest_Valid) {
+				isManifestValid = element.get(key).toString();
+			}
+
 			if (key == MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier ||
 				key == MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode ||
 				key == MXFColumn.AS_07_BD_DMS_PrimaryRFC5646LanguageCode ||
 				key == MXFColumn.AS_07_Manifest ||
-				(!isManifest && key == MXFColumn.AS_07_Manifest_Valid)) continue;
+				key == MXFColumn.AS_07_Manifest_Valid) continue;
 
 			int sortOrder = element.get(key).getColumnDef().getSortOrder();
 
@@ -179,7 +175,7 @@ public class TDBDController extends AnchorPane {
 					AS07DMSIdentifierSetImpl id = identifiers.get(i);
 
 					int row = identifierCount + sortOrder;
-					centerGrid.add(getDescriptorLabel("Identifier " + (i+1) +": ", "#e3e3e3", 400, "", "Identifier"), 0, row);
+					centerGrid.add(getDescriptorLabel("Identifier " + (i+1) +" ", "#e3e3e3", 400, "", "Identifier"), 0, row);
 
 					String value = id.getIdentifierValue();
 					value = value.replace("urn:uuid:", "");
@@ -201,13 +197,40 @@ public class TDBDController extends AnchorPane {
 
 			String val = element.get(key).toString();
 			String tooltip = key.getDisplayName();
-			if (key == MXFColumn.AS_07_Manifest_Valid) {
-				tooltip = "RDD 48 Manifest Valid: For this field, embARC validates the manifest found in the MXF file against the RDD 48 Manifest XML Schema Document (XSD), which can be found in Annex H of the RDD 48 Specification.";
-			}
-			centerGrid.add(getDescriptorLabel(key.getDisplayName() + ": ", "#e3e3e3", 400, "", tooltip), 0, sortOrder);
+			centerGrid.add(getDescriptorLabel(key.getDisplayName(), "#e3e3e3", 400, "", tooltip), 0, sortOrder);
 			centerGrid.add(getDescriptorLabel(val, "#e3e3e3", 400, "", ""), 1, sortOrder);
 			if (sortOrder > lastIndex) lastIndex = sortOrder;
 		}
+
+		BorderPane bp = new BorderPane();
+		bp.setPadding(new Insets(10,0,10,0));
+		GridPane topGrid = new GridPane();
+		HBox header = new HBox();
+		header.setSpacing(20);
+		topGrid.setPadding(new Insets(10, 10, 10, 10));
+		String titlePrefix = isManifest ? "RDD 48 Manifest" : "";
+		if (isManifest) {
+			if (isManifestValid.equals("true")) {
+				titlePrefix += " [VALID] - ";
+			} else if (isManifestValid.equals("false")) {
+				titlePrefix += " [INVALID] - ";
+			} else {
+				titlePrefix += " - ";
+			}
+		}
+		String title = isTD ? String.format("%sText Data Element #%s", titlePrefix, index) : String.format("Binary Data Element #%s", index);
+		Label label = new Label(title);
+		label.setStyle("-fx-font-size: 12; -fx-font-weight: bold;");
+		header.getChildren().add(label);
+
+		MXFService mxfService = new MXFServiceImpl(filePath);
+		ByteBuffer bb = mxfService.GetGenericStream(streamIdInt);
+		if (bb != null) {
+			FontAwesomeIconView downloadIcon = getDownloadIcon(streamId, filePath, fileName, isTD);
+			header.getChildren().add(downloadIcon);
+		}
+		topGrid.add(header, 0, 0);
+		bp.setTop(topGrid);
 
 		bp.setCenter(centerGrid);
 		return bp;
@@ -243,13 +266,54 @@ public class TDBDController extends AnchorPane {
 		return icon;
 	}
 
-	public void showDownloadDataDialog(String streamId, String filePath, String fileName, Boolean isTD) {
+	private ManifestType getMfType(int streamInt, String filePath) {
+		ManifestType mfType = ManifestType.NOT_MANIFEST;
+		try {
+			MXFService mxfService = new MXFServiceImpl(filePath);
+			ManifestParser mfParser = new ManifestParserImpl();
+			ByteBuffer bb = mxfService.GetGenericStream(streamInt);
+			mfType = mfParser.isManifest(bb);
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found error thrown in TDBDController.getMfType");
+		}
+		return mfType;
+	}
+
+	private String getFileExt(int streamInt, String filePath) {
+		String fileExt = "";
+		try {
+			MXFService mxfService = new MXFServiceImpl(filePath);
+			ByteBuffer bb = mxfService.GetGenericStream(streamInt);
+			fileExt = FileFormatDetection.getExtension(bb);
+		} catch (Exception e) {
+			System.out.println("Exception thrown in TDBDController.getFileExt");
+		}
+		return fileExt;
+	}
+
+	private void showDownloadDataDialog(String streamId, String filePath, String fileName, Boolean isTD) {
+		int streamInt = Integer.parseInt(streamId);
+		ManifestType mfType = getMfType(streamInt, filePath);
+		String fileExt = getFileExt(streamInt, filePath);
+		String cleanHomePath = CleanInputPathHelper.cleanString(System.getProperty("user.home"));
+		String defaultOutputFileNameNonManifest = String.format("%s_%s_%s", fileName, streamId, "DATA_DOWNLOAD" + fileExt);
+		String defaultOutputFileNameManifest = "manifest.xml";
+
+		String fullPath = "";
+		if (mfType == ManifestType.NOT_MANIFEST) {
+			fullPath = String.format("%s%s%s", cleanHomePath, File.separator, defaultOutputFileNameNonManifest);
+		} else {
+			fullPath = String.format("%s%s%s", cleanHomePath, File.separator, defaultOutputFileNameManifest);
+		}
+
+		final Label writeFilesPathLabel = new Label(fullPath);
+
 		final ChoiceDialog<ButtonData> dialog = new ChoiceDialog<>();
 		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
 		icon.setStyleClass("write-files-icon");
 		icon.setSize("20");
 		dialog.setGraphic(icon);
-		dialog.getDialogPane().setPrefSize(525, 120);
+		dialog.getDialogPane().setPrefSize(525, 150);
 		String tdbd = isTD ? "Text Data" : "Binary Data";
 		dialog.setTitle("Download " + tdbd);
 		dialog.setHeaderText("Write " + tdbd + " File to Disk");
@@ -264,60 +328,63 @@ public class TDBDController extends AnchorPane {
 			return data;
 		});
 
-		final GridPane grid = new GridPane();
-		grid.setHgap(10);
-		grid.setPadding(new Insets(10, 10, 10, 10));
-
-		String cleanHomePath = CleanInputPathHelper.cleanString(System.getProperty("user.home"));
-		final Label writeFilesPath = new Label(cleanHomePath);
 		final Button chooseOutputDirButton = new Button();
 		chooseOutputDirButton.setText("Save File To...");
 		chooseOutputDirButton.setPrefWidth(125);
-		chooseOutputDirButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent e) {
-				final DirectoryChooser dirChooser = new DirectoryChooser();
-				String cleanHomePath = CleanInputPathHelper.cleanString(System.getProperty("user.home"));
-				dirChooser.setInitialDirectory(new File(cleanHomePath));
-				dirChooser.setTitle("Select a directory");
-				final File dir = dirChooser.showDialog(null);
-				if (dir != null) {
-					writeFilesPath.setText(dir.getAbsolutePath());
-				}
-			}
-		});
-		writeFilesPath.setDisable(true);
-		grid.add(chooseOutputDirButton, 0, 4);
-		grid.add(writeFilesPath, 1, 4);
 
-		dialog.getDialogPane().setContent(grid);
+		if (mfType == ManifestType.NOT_MANIFEST) {
+			chooseOutputDirButton.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent e) {
+					final FileChooser fileChooser = new FileChooser();
+					fileChooser.setInitialDirectory(new File(cleanHomePath));
+					fileChooser.setInitialFileName(defaultOutputFileNameNonManifest);
+					fileChooser.setTitle("Save");
+					final File file = fileChooser.showSaveDialog(null);
+					if (file != null) {
+						writeFilesPathLabel.setText(file.getAbsolutePath());
+					}
+				}
+			});
+		} else {
+			chooseOutputDirButton.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent e) {
+					final DirectoryChooser dirChooser = new DirectoryChooser();
+					dirChooser.setInitialDirectory(new File(cleanHomePath));
+					dirChooser.setTitle("Select a directory");
+					final File dir = dirChooser.showDialog(null);
+					if (dir != null) {
+						writeFilesPathLabel.setText(String.format("%s%s%s", dir.getAbsolutePath(), File.separator, "manifest.xml"));
+					}
+				}
+			});
+		}
+
+		TextFlow textFlow = new TextFlow();
+		VBox vbox = new VBox(2);
+		vbox.setPadding(new Insets(10));
+		textFlow.getChildren().add(writeFilesPathLabel);
+		writeFilesPathLabel.setWrapText(true);
+		writeFilesPathLabel.setPadding(new Insets(10,0,10,0));
+		writeFilesPathLabel.setPrefWidth(500);
+		chooseOutputDirButton.setPrefWidth(150);
+		vbox.getChildren().add(chooseOutputDirButton);
+		vbox.getChildren().add(textFlow);
+		dialog.getDialogPane().setContent(vbox);
+
 		final Optional<ButtonData> result = dialog.showAndWait();
 		if (result.isPresent()) {
 			if (result.get() == ButtonData.OK_DONE) {
 				MXFService mxfService;
 				try {
 					mxfService = new MXFServiceImpl(filePath);
-					int streamInt = Integer.parseInt(streamId);
-					try {
-						ManifestParser mfParser = new ManifestParserImpl();
-						ByteBuffer bb = mxfService.GetGenericStream(streamInt);
-						ManifestType mfType = mfParser.isManifest(bb);
-						String ext = FileFormatDetection.getExtension(bb);
-						String outputPath = "";
-						if (mfType == ManifestType.VALID_MANIFEST || mfType == ManifestType.INVALID_MANIFEST) {
-							outputPath = String.format("%s/%s", writeFilesPath.getText(), "manifest.xml");
-						} else {
-							String fileType = "DATA_DOWNLOAD" + ext;
-							outputPath = String.format("%s/%s_%s_%s", writeFilesPath.getText(), fileName, streamId, fileType);
-						}
-						mxfService.DownloadGenericStream(streamInt, outputPath);
-					} catch (Exception e1) {
-						System.out.println("Error parsing manifest");
-					}
+					mxfService.DownloadGenericStream(streamInt, writeFilesPathLabel.getText());
 				} catch (FileNotFoundException e) {
-					System.out.println("File not found error");
+					System.out.println("File not found error thrown in TDBDController.showDownloadDataDialog");
 				}
 			}
 		}
 	}
+
 }

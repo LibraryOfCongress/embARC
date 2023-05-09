@@ -197,114 +197,112 @@ public class DPXService {
 	}
 
 	public DPXMetadata readFile() throws Exception {
-		final BinaryFileReader dpxFile = new BinaryFileReader(filePath);
+		try(final BinaryFileReader dpxFile = new BinaryFileReader(filePath)){
 
-		// Default byte order
-		ByteOrderEnum byteOrder = ByteOrderEnum.BIG;
-
-		// Create a new object to hold the metadata
-		final DPXMetadata dpxData = new DPXMetadata();
-
-		// Create an empty byte array for unread values;
-		byte[] emptyBA = new byte[0];
-
-		// Iterate through each column in the File Information Header
-		for (final DPXColumn c : DPXSection.FILE_INFORMATION_HEADER.getColumns()) {
-			// Read the section of bytes
-			final byte[] bytes = dpxFile.readBytes(c.getLength());
-
-			// Store this data in a metadata column
-			MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, bytes, byteOrder);
-
-			// If the magic number is "SDPX", we know the rest of the file is big endian
-			if (c == DPXColumn.MAGIC_NUMBER) {
-				if (mdColumn.toString().equals("SDPX")) {
-				} else if (mdColumn.toString().equals("XPDS")) {
-					byteOrder = ByteOrderEnum.LITTLE;
-					mdColumn = DPXMetadataColumnFactory.create(DPXColumn.MAGIC_NUMBER, bytes, byteOrder);
-				} else {
-					throw new IllegalArgumentException("Invalid magic number");
+			// Default byte order
+			ByteOrderEnum byteOrder = ByteOrderEnum.BIG;
+	
+			// Create a new object to hold the metadata
+			final DPXMetadata dpxData = new DPXMetadata();
+	
+			// Create an empty byte array for unread values;
+			byte[] emptyBA = new byte[0];
+	
+			// Iterate through each column in the File Information Header
+			for (final DPXColumn c : DPXSection.FILE_INFORMATION_HEADER.getColumns()) {
+				// Read the section of bytes
+				final byte[] bytes = dpxFile.readBytes(c.getLength());
+	
+				// Store this data in a metadata column
+				MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, bytes, byteOrder);
+	
+				// If the magic number is "SDPX", we know the rest of the file is big endian
+				if (c == DPXColumn.MAGIC_NUMBER) {
+					if (mdColumn.toString().equals("SDPX")) {
+					} else if (mdColumn.toString().equals("XPDS")) {
+						byteOrder = ByteOrderEnum.LITTLE;
+						mdColumn = DPXMetadataColumnFactory.create(DPXColumn.MAGIC_NUMBER, bytes, byteOrder);
+					} else {
+						throw new IllegalArgumentException("Invalid magic number");
+					}
+				}
+	
+				// Store the new column
+				dpxData.setValue(mdColumn);
+			}
+	
+			int industrySpecificHeaderLength = dpxData.getColumn(DPXColumn.INDUSTRY_SPECIFIC_HEADER_LENGTH).getInt();
+	
+			// Iterate through each column in the Image Information Header
+			for (final DPXColumn c : DPXSection.IMAGE_INFORMATION_HEADER.getColumns()) {
+				final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
+						byteOrder);
+				dpxData.setValue(mdColumn);
+			}
+	
+			// Iterate through each column in the Image Source Information Header
+			for (final DPXColumn c : DPXSection.IMAGE_SOURCE_INFORMATION_HEADER.getColumns()) {
+				final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
+						byteOrder);
+				dpxData.setValue(mdColumn);
+			}
+	
+			// Do not read industry specific data if the industry specific header length is 0
+			if (industrySpecificHeaderLength > 0) {
+				// Iterate through each column in the Motion Picture Film Information Header
+				for (final DPXColumn c : DPXSection.MOTION_PICTURE_FILM_INFORMATION_HEADER.getColumns()) {
+					final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
+							byteOrder);
+					dpxData.setValue(mdColumn);
+				}
+	
+				// Iterate through each column in the Television Information Header
+				for (final DPXColumn c : DPXSection.TELEVISION_INFORMATION_HEADER.getColumns()) {
+					final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
+							byteOrder);
+					dpxData.setValue(mdColumn);
+				}
+			} else {
+				// set all fields in motion pic and tv sections to empty values
+				for (final DPXColumn c : DPXSection.MOTION_PICTURE_FILM_INFORMATION_HEADER.getColumns()) {
+					final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, emptyBA, byteOrder);
+					dpxData.setValue(mdColumn);
+				}
+	
+				for (final DPXColumn c : DPXSection.TELEVISION_INFORMATION_HEADER.getColumns()) {
+					final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, emptyBA, byteOrder);
+					dpxData.setValue(mdColumn);
 				}
 			}
-
-			// Store the new column
-			dpxData.setValue(mdColumn);
-		}
-
-		int industrySpecificHeaderLength = dpxData.getColumn(DPXColumn.INDUSTRY_SPECIFIC_HEADER_LENGTH).getInt();
-
-		// Iterate through each column in the Image Information Header
-		for (final DPXColumn c : DPXSection.IMAGE_INFORMATION_HEADER.getColumns()) {
-			final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
-					byteOrder);
-			dpxData.setValue(mdColumn);
-		}
-
-		// Iterate through each column in the Image Source Information Header
-		for (final DPXColumn c : DPXSection.IMAGE_SOURCE_INFORMATION_HEADER.getColumns()) {
-			final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
-					byteOrder);
-			dpxData.setValue(mdColumn);
-		}
-
-		// Do not read industry specific data if the industry specific header length is 0
-		if (industrySpecificHeaderLength > 0) {
-			// Iterate through each column in the Motion Picture Film Information Header
-			for (final DPXColumn c : DPXSection.MOTION_PICTURE_FILM_INFORMATION_HEADER.getColumns()) {
-				final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
-						byteOrder);
-				dpxData.setValue(mdColumn);
+	
+			// Get the length of the User Identification Field
+			final int userIdLength = DPXColumn.USER_IDENTIFICATION.getLength();
+	
+			// User defined data length is the total specified in the User Defined Header
+			// Length column minus the length of the user identification length
+			final int lengthOfUserData = Math
+					.max(dpxData.getColumn(DPXColumn.USER_DEFINED_HEADER_LENGTH).getInt() - userIdLength, 0);
+			
+			if (lengthOfUserData > 0) {
+				// Read the user identification data
+				final MetadataColumn user = DPXMetadataColumnFactory.create(DPXColumn.USER_IDENTIFICATION,
+						dpxFile.readBytes(userIdLength), byteOrder);
+				dpxData.setValue(user);
+	
+				// Read the user defined data.
+				final MetadataColumn userDefinedData = DPXMetadataColumnFactory.create(DPXColumn.USER_DEFINED_DATA,
+						dpxFile.readBytes(lengthOfUserData), byteOrder);
+				dpxData.setValue(userDefinedData);
+			} else {
+				// set user identification and user defined data to empty values
+				final MetadataColumn user = DPXMetadataColumnFactory.create(DPXColumn.USER_IDENTIFICATION, emptyBA, byteOrder);
+				dpxData.setValue(user);
+	
+				final MetadataColumn userDefinedData = DPXMetadataColumnFactory.create(DPXColumn.USER_DEFINED_DATA, emptyBA, byteOrder);
+				dpxData.setValue(userDefinedData);
 			}
-
-			// Iterate through each column in the Television Information Header
-			for (final DPXColumn c : DPXSection.TELEVISION_INFORMATION_HEADER.getColumns()) {
-				final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, dpxFile.readBytes(c.getLength()),
-						byteOrder);
-				dpxData.setValue(mdColumn);
-			}
-		} else {
-			// set all fields in motion pic and tv sections to empty values
-			for (final DPXColumn c : DPXSection.MOTION_PICTURE_FILM_INFORMATION_HEADER.getColumns()) {
-				final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, emptyBA, byteOrder);
-				dpxData.setValue(mdColumn);
-			}
-
-			for (final DPXColumn c : DPXSection.TELEVISION_INFORMATION_HEADER.getColumns()) {
-				final MetadataColumn mdColumn = DPXMetadataColumnFactory.create(c, emptyBA, byteOrder);
-				dpxData.setValue(mdColumn);
-			}
+			return dpxData;
 		}
-
-		// Get the length of the User Identification Field
-		final int userIdLength = DPXColumn.USER_IDENTIFICATION.getLength();
-
-		// User defined data length is the total specified in the User Defined Header
-		// Length column minus the length of the user identification length
-		final int lengthOfUserData = Math
-				.max(dpxData.getColumn(DPXColumn.USER_DEFINED_HEADER_LENGTH).getInt() - userIdLength, 0);
-		
-		if (lengthOfUserData > 0) {
-			// Read the user identification data
-			final MetadataColumn user = DPXMetadataColumnFactory.create(DPXColumn.USER_IDENTIFICATION,
-					dpxFile.readBytes(userIdLength), byteOrder);
-			dpxData.setValue(user);
-
-			// Read the user defined data.
-			final MetadataColumn userDefinedData = DPXMetadataColumnFactory.create(DPXColumn.USER_DEFINED_DATA,
-					dpxFile.readBytes(lengthOfUserData), byteOrder);
-			dpxData.setValue(userDefinedData);
-		} else {
-			// set user identification and user defined data to empty values
-			final MetadataColumn user = DPXMetadataColumnFactory.create(DPXColumn.USER_IDENTIFICATION, emptyBA, byteOrder);
-			dpxData.setValue(user);
-
-			final MetadataColumn userDefinedData = DPXMetadataColumnFactory.create(DPXColumn.USER_DEFINED_DATA, emptyBA, byteOrder);
-			dpxData.setValue(userDefinedData);
-		}
-
-		// close the file
-		dpxFile.close();
-		return dpxData;
 	}
 
 }

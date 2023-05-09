@@ -40,14 +40,6 @@ public class FileInfoController extends AnchorPane {
 		}
 	}
 
-	private void setNumberOfSelectedFiles(int num) {
-		if (num == 1) {
-			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
-		} else {
-			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
-		}
-	}
-
 	public void setContent() {
 		fileInfoAreaLabel.setText("File Information");
 
@@ -109,6 +101,14 @@ public class FileInfoController extends AnchorPane {
 		fileInfoAnchorPane.getChildren().add(grid);
 
 		setNumberOfSelectedFiles(summary.getFileCount());
+	}
+
+	private void setNumberOfSelectedFiles(int num) {
+		if (num == 1) {
+			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
+		} else {
+			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
+		}
 	}
 
 }

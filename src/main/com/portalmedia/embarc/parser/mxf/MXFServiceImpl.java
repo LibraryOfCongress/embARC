@@ -136,7 +136,6 @@ public class MXFServiceImpl implements MXFService {
 		}
 		
 		if(updatedCore!=null) {
-			preface.appendIdentification(embarcIdent.getIdentification());
 			ContentStorage contentStorage = preface.getContentStorageObject();
 			Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
 			
@@ -215,13 +214,14 @@ public class MXFServiceImpl implements MXFService {
 				
 			}
 		}
-		
 		for ( int x = 1 ; x < mxfFile.countPartitions()-1; x++ ) {
 			BodyPartition originalPartition = (BodyPartition)mxfFile.getPartitionAt(x);
 			BodyPartition partition = originalPartition.clone();
 			if(partition!=null) {
 				
-				if (partition instanceof FooterPartitionImpl) continue;
+				if (partition instanceof FooterPartitionImpl) {
+					continue;
+				}
 				if (partition instanceof HeaderPartitionImpl) continue;
 				previousPartition = thisPartition;
 				thisPartition = totalBytes;
@@ -375,6 +375,9 @@ public class MXFServiceImpl implements MXFService {
 
 	public MXFFileWriteResult writeFile(String outputFilePath, AS07CoreDMSFramework updatedCore) throws IOException {
 		MXFFileWriteResult result = new MXFFileWriteResult();
+		getFile();
+		AS07CoreDMSFramework coreFrameworkHeader = getAS07CoreDMSFrameworkHeader();
+		AS07CoreDMSFramework coreFrameworkFooter = getAS07CoreDMSFrameworkFooter();
 		try {
 			long footerOffset = getFooterOffset(updatedCore);
 			EmbARCIdentification embarcIdent = getIdentification();
@@ -403,8 +406,10 @@ public class MXFServiceImpl implements MXFService {
 				
 				Preface preface = headerMetadata.getPreface();
 				
-				if(updatedCore!=null) {
-					preface.appendIdentification(embarcIdent.getIdentification());
+				int headerSize = (int) (headerPartitionPack.getEncodedSize());
+				headerSize = headerSize < 65536 ? 65546 : headerSize;
+
+				if(updatedCore!=null &&  coreFrameworkHeader != null) {
 					ContentStorage contentStorage = preface.getContentStorageObject();
 					Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
 					
@@ -440,9 +445,6 @@ public class MXFServiceImpl implements MXFService {
 						}
 					}
 				}
-				
-				int headerSize = (int) (headerPartitionPack.getEncodedSize());
-				headerSize = headerSize < 65536 ? 65546 : headerSize;
 				try(ByteArrayOutputStream headerBytes = new ByteArrayOutputStream(headerSize)){
 					try(ByteArrayOutputStream metadataBytes = new ByteArrayOutputStream(headerSize)){
 
@@ -472,8 +474,6 @@ public class MXFServiceImpl implements MXFService {
 							element != null ;
 							element = (EssenceElementImpl) hContainerPartition.readEssenceElement() ) {
 						
-						
-	
 						ByteBuffer bb = element.getData();
 						byte[] elementByteArray = bb.array();
 						
@@ -571,15 +571,57 @@ public class MXFServiceImpl implements MXFService {
 						
 					}
 				}
+
 				System.out.println("Essence Count: " + essenceCount);
-				if (mxfFile.getFooterPartition() != null) {
-		
-					FooterPartition footerPartition = mxfFile.getFooterPartition();
+				FooterPartition footerPartition = mxfFile.getFooterPartition();
+				if (footerPartition != null) {
+					HeaderMetadata footerMetadata = footerPartition.readHeaderMetadata();
 					FooterPartitionPack footerPartitionPack = footerPartition.getPartitionPack();
-	
+					Preface footerPreface = null;
+					if(footerMetadata != null) {
+						footerPreface = footerMetadata.getPreface();
+						if(updatedCore!=null &&  coreFrameworkFooter != null) {
+							ContentStorage contentStorage = footerPreface.getContentStorageObject();
+							Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
+							
+							for(tv.amwa.maj.model.Package p : packages) {
+								if(p instanceof MaterialPackage) {
+									for(Track t : p.getPackageTracks()) {
+										if(t instanceof StaticTrack) {
+											StaticTrack st = (StaticTrack)t;
+											Segment ts = st.getTrackSegment();
+											if(ts instanceof Sequence) {
+												
+												Sequence seq = (Sequence) ts;
+												List<? extends Component> components = seq.getComponentObjects();
+												
+												for(Component c : components) {
+													if(c instanceof DescriptiveMarkerImpl) {
+														DescriptiveMarker m = (DescriptiveMarker) c;
+														try {
+															DescriptiveFramework df = m.getDescriptiveFrameworkObject();
+															
+															if(df!=null && df instanceof AS07CoreDMSFramework) {
+																m.setDescriptiveFrameworkObject(updatedCore);
+															}	
+														}
+														catch(PropertyNotPresentException pnp) {
+															LOGGER.log(Level.INFO, pnp.toString());
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					
+					
 					previousPartition = thisPartition;
 					thisPartition = totalBytes;
-	
+					
 					RandomIndexItem ripItem = new RandomIndexItemImpl(footerPartitionPack.getBodySID(), thisPartition);
 					ripItems.add(ripItem);
 					
@@ -590,9 +632,21 @@ public class MXFServiceImpl implements MXFService {
 					int footerSize = (int) footerPartitionPack.getEncodedSize();
 					footerSize = footerSize < 65536 ? 65546 : footerSize;
 					try(ByteArrayOutputStream footerBytes = new ByteArrayOutputStream(footerSize)){
-						MXFStream.writePartitionPack(footerBytes, footerPartitionPack);
-						footerBytes.writeTo(outputStream);
+						try(ByteArrayOutputStream metadataBytes = new ByteArrayOutputStream(footerSize)){
+
+							if(footerPreface!=null){
+								MXFStream.writeHeaderMetadata(metadataBytes, footerPreface);
+								footerPartitionPack.setHeaderByteCount(metadataBytes.size() + klvFillLength);
+								MXFStream.writeFill(metadataBytes, klvFillLength);
+							}
+
+							MXFStream.writePartitionPack(footerBytes, footerPartitionPack);
+
+							footerBytes.writeTo(outputStream);
+							metadataBytes.writeTo(outputStream);
+						}
 					}
+					
 				}
 				
 				RandomIndexPackImpl ripOriginal = (RandomIndexPackImpl)mxfFile.getRandomIndexPack();
@@ -606,6 +660,7 @@ public class MXFServiceImpl implements MXFService {
 				if (ripOriginal != null) {
 					MXFStream.writeRandomIndexPack(outputStream, ripOriginal);
 				}
+				outputStream.close();
 	
 				Path p = Paths.get(outputFilePath);
 				Path p2 = Paths.get(tempFilePath);
@@ -613,9 +668,7 @@ public class MXFServiceImpl implements MXFService {
 				
 				Files.copy(p2, Paths.get(outputFilePath));
 				
-	
 				if(Files.exists(p2)) Files.delete(p2);
-				outputStream.close();
 			} catch(Exception ex) {
 				LOGGER.log(Level.WARNING, ex.toString(), ex);
 				Path p = Paths.get(tempFilePath);
@@ -926,80 +979,138 @@ public class MXFServiceImpl implements MXFService {
 		
 		return toReturn;
 	}
+	private AS07CoreDMSFramework getAS07CoreDMSFrameworkHeader() {
+		if(file==null) System.out.println("File is null");
+		if(file.getHeaderPartition()==null) System.out.println("Header partition is null");
+		HeaderMetadata fromTheHeader = file.getHeaderPartition().readHeaderMetadata();
+		
+		Preface preface = fromTheHeader.getPreface();
+		ContentStorage contentStorage = preface.getContentStorageObject();
+		Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
+		AS07CoreDMSFramework coreFramework = null;
+		int count =  1;
+		for(tv.amwa.maj.model.Package p : packages) {
+			if(p instanceof MaterialPackage) {
+				for(Track t : p.getPackageTracks()) {
+					if(t instanceof StaticTrack) {
+						StaticTrack st = (StaticTrack)t;
+						Segment ts = st.getTrackSegment();
+						if(ts instanceof Sequence) {
+							
+							Sequence seq = (Sequence) ts;
+							List<? extends Component> components = seq.getComponentObjects();
+							
+							for(Component c : components) {
+								if(c instanceof DescriptiveMarkerImpl) {
+									DescriptiveMarker m = (DescriptiveMarker) c;
+									try {
+										DescriptiveFramework df = m.getDescriptiveFrameworkObject();
+										if(df!=null && df instanceof AS07CoreDMSFramework) {
+											coreFramework = (AS07CoreDMSFramework) df;
+											System.out.println("Found  framework" + count);
+											count  = count  +  1;
+										}	
+									}
+									catch(PropertyNotPresentException pnp) {
+										LOGGER.log(Level.INFO, pnp.toString());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return coreFramework;
+
+	}
+	private AS07CoreDMSFramework getAS07CoreDMSFrameworkFooter() {
+
+		AS07CoreDMSFramework coreFramework = null;
+		HeaderMetadata fromTheFooter = file.getFooterPartition().readHeaderMetadata();
+		
+		if(fromTheFooter == null) return coreFramework;
+		
+		Preface prefaceF = fromTheFooter.getPreface();
+		ContentStorage contentStorageF = prefaceF.getContentStorageObject();
+		Set<? extends tv.amwa.maj.model.Package> packagesF = contentStorageF.getPackages();
+		for(tv.amwa.maj.model.Package p : packagesF) {
+			if(p instanceof MaterialPackage) {
+				for(Track t : p.getPackageTracks()) {
+					if(t instanceof StaticTrack) {
+						StaticTrack st = (StaticTrack)t;
+						Segment ts = st.getTrackSegment();
+						if(ts instanceof Sequence) {
+							
+							Sequence seq = (Sequence) ts;
+							List<? extends Component> components = seq.getComponentObjects();
+							
+							for(Component c : components) {
+								if(c instanceof DescriptiveMarkerImpl) {
+									DescriptiveMarker m = (DescriptiveMarker) c;
+									try {
+										DescriptiveFramework df = m.getDescriptiveFrameworkObject();
+										if(df!=null && df instanceof AS07CoreDMSFramework) {
+											coreFramework = (AS07CoreDMSFramework) df;
+										}	
+									}
+									catch(PropertyNotPresentException pnp) {
+										LOGGER.log(Level.INFO, pnp.toString());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return coreFramework;
+	}
 	public AS07CoreDMSFramework getAS07CoreDMSFramework() {
 		getFile();
+
+		AS07CoreDMSFramework coreFramework = getAS07CoreDMSFrameworkFooter();
+		if(coreFramework == null) coreFramework = getAS07CoreDMSFrameworkHeader();
 		
-		HeaderMetadata fromTheHeader = file.getHeaderPartition().readHeaderMetadata();
-		
-		Preface preface = fromTheHeader.getPreface();
-		ContentStorage contentStorage = preface.getContentStorageObject();
-		Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
-		
-		for(tv.amwa.maj.model.Package p : packages) {
-			if(p instanceof MaterialPackage) {
-				for(Track t : p.getPackageTracks()) {
-					if(t instanceof StaticTrack) {
-						StaticTrack st = (StaticTrack)t;
-						Segment ts = st.getTrackSegment();
-						if(ts instanceof Sequence) {
-							
-							Sequence seq = (Sequence) ts;
-							List<? extends Component> components = seq.getComponentObjects();
-							
-							for(Component c : components) {
-								if(c instanceof DescriptiveMarkerImpl) {
-									DescriptiveMarker m = (DescriptiveMarker) c;
-									try {
-										DescriptiveFramework df = m.getDescriptiveFrameworkObject();
-										if(df!=null && df instanceof AS07CoreDMSFramework) {
-											return (AS07CoreDMSFramework) df;
-										}	
-									}
-									catch(PropertyNotPresentException pnp) {
-										LOGGER.log(Level.INFO, pnp.toString());
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		return null;
+		return coreFramework;
 	}
 	public void setAS07CoreDMSFramework(AS07CoreDMSFramework dms) {
-		getFile();
-		
-		HeaderMetadata fromTheHeader = file.getHeaderPartition().readHeaderMetadata();
-		
-		Preface preface = fromTheHeader.getPreface();
-		ContentStorage contentStorage = preface.getContentStorageObject();
-		Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
-		
-		for(tv.amwa.maj.model.Package p : packages) {
-			if(p instanceof MaterialPackage) {
-				for(Track t : p.getPackageTracks()) {
-					if(t instanceof StaticTrack) {
-						StaticTrack st = (StaticTrack)t;
-						Segment ts = st.getTrackSegment();
-						if(ts instanceof Sequence) {
-							
-							Sequence seq = (Sequence) ts;
-							List<? extends Component> components = seq.getComponentObjects();
-							
-							for(Component c : components) {
-								if(c instanceof DescriptiveMarkerImpl) {
-									DescriptiveMarker m = (DescriptiveMarker) c;
-									try {
-										DescriptiveFramework df = m.getDescriptiveFrameworkObject();
-										
-										if(df!=null && df instanceof AS07CoreDMSFramework) {
-											m.setDescriptiveFrameworkObject(dms);
-										}	
-									}
-									catch(PropertyNotPresentException pnp) {
-										LOGGER.log(Level.INFO, pnp.toString());
+		AS07CoreDMSFramework coreFrameworkHeader = getAS07CoreDMSFrameworkHeader();
+		AS07CoreDMSFramework coreFrameworkFooter = getAS07CoreDMSFrameworkFooter();
+		EmbARCIdentification embarcIdent = getIdentification();
+		if(coreFrameworkHeader!=null) {
+			HeaderMetadata fromTheHeader = file.getHeaderPartition().readHeaderMetadata();
+			
+			Preface preface = fromTheHeader.getPreface();
+
+			preface.appendIdentification(embarcIdent.getIdentification());
+			ContentStorage contentStorage = preface.getContentStorageObject();
+			Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
+			
+			for(tv.amwa.maj.model.Package p : packages) {
+				if(p instanceof MaterialPackage) {
+					for(Track t : p.getPackageTracks()) {
+						if(t instanceof StaticTrack) {
+							StaticTrack st = (StaticTrack)t;
+							Segment ts = st.getTrackSegment();
+							if(ts instanceof Sequence) {
+								
+								Sequence seq = (Sequence) ts;
+								List<? extends Component> components = seq.getComponentObjects();
+								
+								for(Component c : components) {
+									if(c instanceof DescriptiveMarkerImpl) {
+										DescriptiveMarker m = (DescriptiveMarker) c;
+										try {
+											DescriptiveFramework df = m.getDescriptiveFrameworkObject();
+											
+											if(df!=null && df instanceof AS07CoreDMSFramework) {
+												m.setDescriptiveFrameworkObject(dms);
+											}	
+										}
+										catch(PropertyNotPresentException pnp) {
+											LOGGER.log(Level.INFO, pnp.toString());
+										}
 									}
 								}
 							}
@@ -1008,6 +1119,47 @@ public class MXFServiceImpl implements MXFService {
 				}
 			}
 		}
+		if(coreFrameworkFooter!=null) {
+			HeaderMetadata fromTheFooter = file.getFooterPartition().readHeaderMetadata();
+			
+			Preface preface = fromTheFooter.getPreface();
+			preface.appendIdentification(embarcIdent.getIdentification());
+			ContentStorage contentStorage = preface.getContentStorageObject();
+			Set<? extends tv.amwa.maj.model.Package> packages = contentStorage.getPackages();
+			
+			for(tv.amwa.maj.model.Package p : packages) {
+				if(p instanceof MaterialPackage) {
+					for(Track t : p.getPackageTracks()) {
+						if(t instanceof StaticTrack) {
+							StaticTrack st = (StaticTrack)t;
+							Segment ts = st.getTrackSegment();
+							if(ts instanceof Sequence) {
+								
+								Sequence seq = (Sequence) ts;
+								List<? extends Component> components = seq.getComponentObjects();
+								
+								for(Component c : components) {
+									if(c instanceof DescriptiveMarkerImpl) {
+										DescriptiveMarker m = (DescriptiveMarker) c;
+										try {
+											DescriptiveFramework df = m.getDescriptiveFrameworkObject();
+											
+											if(df!=null && df instanceof AS07CoreDMSFramework) {
+												m.setDescriptiveFrameworkObject(dms);
+											}	
+										}
+										catch(PropertyNotPresentException pnp) {
+											LOGGER.log(Level.INFO, pnp.toString());
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		
 	}
 	public boolean hasAS07CoreDMSFramework() {
@@ -1226,18 +1378,47 @@ public class MXFServiceImpl implements MXFService {
 			String objIdentifiers = idSetHelper.identifiersToString(identSet);
 			cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));	
 			
-			try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, binaryObject.getTextBasedMetadataPayloadSchemeID().toString()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, binaryObject.getTextBasedMetadataPayloadSchemeID().toString()));
+			}catch(PropertyNotPresentException ex) {
+				cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, "PROPERTY NOT PRESENT"));
+			}
 
-			try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, binaryObject.getRfc5646TextLanguageCode()));}catch(PropertyNotPresentException ex) {}
+			try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, binaryObject.getRfc5646TextLanguageCode()));}
+			catch(PropertyNotPresentException ex) {
+
+				cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, "PROPERTY NOT PRESENT"));
+				
+			}
 			try {cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, binaryObject.getMimeMediaType()));}
-			catch(PropertyNotPresentException ex) {} 
-			try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, binaryObject.getTextMimeMediaType()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, binaryObject.getDataDescriptions()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, binaryObject.getTextDataDescriptions()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, binaryObject.getNote()));}catch(PropertyNotPresentException ex) {}
-			try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(binaryObject.getGenericStreamId())));}catch(PropertyNotPresentException ex) {}
+			catch(PropertyNotPresentException ex) {
 
-			try {bdColumns.put(Integer.toString(binaryObject.getGenericStreamId()), cols);}catch(PropertyNotPresentException ex) {}
+				cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, "PROPERTY NOT PRESENT"));
+				
+			}
+			try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, binaryObject.getTextMimeMediaType()));}
+			catch(PropertyNotPresentException ex) {
+				cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, "PROPERTY NOT PRESENT"));
+			}
+			try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, binaryObject.getDataDescriptions()));}
+			catch(PropertyNotPresentException ex) {
+				cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, "PROPERTY NOT PRESENT"));
+			}
+			try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, binaryObject.getTextDataDescriptions()));}
+			catch(PropertyNotPresentException ex) {
+				cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, "PROPERTY NOT PRESENT"));
+			}
+			try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, binaryObject.getNote()));}
+			catch(PropertyNotPresentException ex) {
+				cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, "PROPERTY NOT PRESENT"));
+			}
+			try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(binaryObject.getGenericStreamId())));}
+			catch(PropertyNotPresentException ex) {
+				cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, "PROPERTY NOT PRESENT"));
+			}
+
+			try {bdColumns.put(Integer.toString(binaryObject.getGenericStreamId()), cols);}
+			catch(PropertyNotPresentException ex) {
+			}
 		}
 		metadata.setBDCount(bdColumns.size());
 		metadata.setBDColumns(bdColumns);
@@ -1247,15 +1428,25 @@ public class MXFServiceImpl implements MXFService {
 			HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>> tdColumns = new HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>>();
 			for(AS07GspTdDMSFrameworkImpl td : tds) {
 				LinkedHashMap<MXFColumn, MetadataColumnDef> cols = new LinkedHashMap<MXFColumn, MetadataColumnDef>();
-				try {cols.put(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, new StringMetadataColumn(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, td.getPrimaryRFC5646LanguageCode()));}catch(PropertyNotPresentException ex) {}
+				try {cols.put(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, new StringMetadataColumn(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, td.getPrimaryRFC5646LanguageCode()));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, new StringMetadataColumn(MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode, "PROPERTY NOT PRESENT"));
+				}
 				
 				AS07GSPDMSObject textBasedObject = td.getTextBasedObject();
 				
 				List<AS07DMSIdentifierSetImpl> identSet = textBasedObject.getIdentifiers();
 				String objIdentifiers = idSetHelper.identifiersToString(identSet);
 				
-				try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, textBasedObject.getTextBasedMetadataPayloadSchemeID().toString()));}catch(PropertyNotPresentException ex) {}
-				try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, textBasedObject.getRfc5646TextLanguageCode()));}catch(PropertyNotPresentException ex) {}
+				try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, 
+						textBasedObject.getTextBasedMetadataPayloadSchemeID().toString()));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, "PROPERTY NOT PRESENT"));
+				}
+				try {cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, textBasedObject.getRfc5646TextLanguageCode()));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, new StringMetadataColumn(MXFColumn.AS_07_Object_RFC5646TextLanguageCode, "PROPERTY NOT PRESENT"));
+				}
 				try {
 					String mimeType = textBasedObject.getMimeMediaType();
 					cols.put(MXFColumn.AS_07_Object_MIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_MIMEMediaType, textBasedObject.getMimeMediaType()));
@@ -1275,12 +1466,30 @@ public class MXFServiceImpl implements MXFService {
 				}catch(PropertyNotPresentException ex) {} catch (FileNotFoundException e) {
 					LOGGER.log(Level.WARNING, e.toString(), e);
 				}
-				try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, textBasedObject.getTextMimeMediaType()));}catch(PropertyNotPresentException ex) {}
-				try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, textBasedObject.getDataDescriptions()));}catch(PropertyNotPresentException ex) {}
-				try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, textBasedObject.getTextDataDescriptions()));}catch(PropertyNotPresentException ex) {}
-				try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, textBasedObject.getNote()));}catch(PropertyNotPresentException ex) {}
-				try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(textBasedObject.getGenericStreamId())));}catch(PropertyNotPresentException ex) {}
-				try {cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));}catch(PropertyNotPresentException ex) {}
+				try {cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, textBasedObject.getTextMimeMediaType()));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_TextMIMEMediaType, new StringMetadataColumn(MXFColumn.AS_07_Object_TextMIMEMediaType, "PROPERTY NOT PRESENT"));
+				}
+				try {cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, textBasedObject.getDataDescriptions()));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_DataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_DataDescription, "PROPERTY NOT PRESENT"));
+				}
+				try {cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, textBasedObject.getTextDataDescriptions()));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_TextDataDescription, new StringMetadataColumn(MXFColumn.AS_07_Object_TextDataDescription, "PROPERTY NOT PRESENT"));
+				}
+				try {cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, textBasedObject.getNote()));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_Note, new StringMetadataColumn(MXFColumn.AS_07_Object_Note, "PROPERTY NOT PRESENT"));
+				}
+				try {cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, Integer.toString(textBasedObject.getGenericStreamId())));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, "PROPERTY NOT PRESENT"));
+				}
+				try {cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));}
+				catch(PropertyNotPresentException ex) {
+					cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, "PROPERTY NOT PRESENT"));
+				}
 
 				try {tdColumns.put(Integer.toString(textBasedObject.getGenericStreamId()), cols);}catch(PropertyNotPresentException ex) {}
 			}

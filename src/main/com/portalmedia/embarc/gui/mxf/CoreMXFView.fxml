@@ -51,7 +51,6 @@
 						<children>
 							<VBox
 								styleClass="editor-header-box"
-								prefHeight="70.00"
 								AnchorPane.bottomAnchor="0.0"
 								AnchorPane.leftAnchor="0.0"
 								AnchorPane.rightAnchor="0.0"
@@ -61,14 +60,12 @@
 									<Label
 										fx:id="editFormLabel"
 										alignment="TOP_LEFT"
-										prefHeight="25.00"
 										styleClass="editor-header"
 										VBox.vgrow="ALWAYS"
 									/>
 									<Label
 										fx:id="selectedFilesLabel"
 										alignment="TOP_LEFT"
-										prefHeight="25.0"
 										styleClass="editor-header"
 										VBox.vgrow="ALWAYS"
 									/>
@@ -100,17 +97,17 @@
 					</VBox>
 				</AnchorPane>
 				<AnchorPane
-					maxHeight="100.0"
-					minHeight="100.0"
+					maxHeight="80.0"
+					minHeight="80.0"
 					minWidth="0.0"
-					prefHeight="100.0"
+					prefHeight="80.0"
 					prefWidth="160.0"
 					style="-fx-background-color: #496879;"
 				>
 					<children>
 						<Button
 							fx:id="applyChangesButton"
-							layoutY="50.0"
+							layoutY="30.0"
 							mnemonicParsing="false"
 							prefHeight="30.0"
 							prefWidth="132.0"
@@ -121,7 +118,7 @@
 						/>
 						<Button
 							fx:id="toggleEditButton"
-							layoutY="50.0"
+							layoutY="30.0"
 							mnemonicParsing="false"
 							prefHeight="30.0"
 							prefWidth="132.0"
