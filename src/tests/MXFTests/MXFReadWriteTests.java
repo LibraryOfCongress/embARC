@@ -122,21 +122,20 @@ public class MXFReadWriteTests {
 		Assert.assertNotNull(bb);
 		
 		File file = new File("stream_test.xml");
-
-		FileOutputStream fileOutputStream = new FileOutputStream(file, false);
-		FileChannel channel = fileOutputStream.getChannel();
 		 
         // Flips this buffer.  The limit is set to the current position and then
         // the position is set to zero.  If the mark is defined then it is discarded.
         //bb.flip();
 
         // Writes a sequence of bytes to this channel from the given buffer.
-        try {
+		// Commenting out until needed
+        /*try (FileOutputStream fileOutputStream = new FileOutputStream(file, false);){
+    		FileChannel channel = fileOutputStream.getChannel();
 			channel.write(bb);
 	        // close the channel
 			fileOutputStream.close();
 		} catch (IOException e) {
-		}
+		}*/
 	}
 	@Test
 	public void CanDownloadBD() throws FileNotFoundException {
@@ -145,21 +144,21 @@ public class MXFReadWriteTests {
 		
 		File file = new File("stream_test.tiff");
 
-		FileOutputStream fileOutputStream = new FileOutputStream(file, false);
-		FileChannel channel = fileOutputStream.getChannel();
 		 
         // Flips this buffer.  The limit is set to the current position and then
         // the position is set to zero.  If the mark is defined then it is discarded.
         //bb.flip();
 
+		/* Commenting out until needed
         // Writes a sequence of bytes to this channel from the given buffer.
-        try {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(file, false)){
+    		FileChannel channel = fileOutputStream.getChannel();
 			channel.write(bb);
 	        // close the channel
 			fileOutputStream.close();
 		} catch (IOException e) {
 		}
-
+		*/
 	}
 	@Test
 	public void CanGetExtension() throws Exception {

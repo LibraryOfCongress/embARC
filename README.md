@@ -6,7 +6,7 @@ embARC is a free, open source application that enables users to audit and correc
 embARC, short for “metadata embedded for archival content,” is in active development by the Federal Agencies Digital Guidelines Initiative (FADGI) to support two major guideline projects: 
 - [Guidelines for Embedded Metadata within DPX File Headers for Digitized Motion Picture Film.](http://www.digitizationguidelines.gov/guidelines/digitize-DPXembedding.html)
 - [SMPTE RDD 48: MXF Archive and Preservation Format](http://www.digitizationguidelines.gov/guidelines/MXF_app_spec.html)
-    - [Including RDD 48 Amendment 1: Mapping FFV1 to MXF](https://www.digitizationguidelines.gov/guidelines/rdd48-amd1-2022.pdf)
+    - Including [RDD 48 Amendment 1: Mapping FFV1 to MXF](https://www.digitizationguidelines.gov/guidelines/rdd48-amd1-2022.pdf)
 
 #### DPX
 Digital Picture eXchange

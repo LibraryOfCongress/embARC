@@ -1,6 +1,6 @@
 package com.portalmedia.embarc.parser.mxf;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 
 import tv.amwa.maj.enumeration.ProductReleaseType;
@@ -27,15 +27,12 @@ public class EmbARCIdentification {
     //private AUID embarcProductId = null;
     private ProductReleaseType releaseType = ProductReleaseType.Released;
     
-    
-    // What is applicationProductId
-    
     private EmbARCIdentification() { 
     	identification = new IdentificationImpl();
     	ProductVersion version = new ProductVersionImpl(majorVersion, minorVersion, tertiaryVersion, patchVersion, releaseType);
     	
         identification.setApplicationVersion(version);
-        Random rand = new Random();
+        SecureRandom rand = new SecureRandom();
         int data1 = rand.nextInt();
         short data2 = (short)rand.nextInt(32767);
         short data3 = (short)rand.nextInt(32767);;
