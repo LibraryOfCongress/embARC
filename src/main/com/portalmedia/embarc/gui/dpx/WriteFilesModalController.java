@@ -52,6 +52,7 @@ public class WriteFilesModalController {
 		final ChoiceDialog<ButtonData> dialog = new ChoiceDialog<>();
 		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
 		icon.setStyleClass("write-files-icon");
+		icon.setSize("20");
 		dialog.setGraphic(icon);
 		dialog.getDialogPane().setPrefSize(525, 320);
 		dialog.setTitle("Write Files");
@@ -68,7 +69,6 @@ public class WriteFilesModalController {
 			return data;
 		});
 
-		// Create the username and password labels and fields.
 		final GridPane grid = new GridPane();
 		grid.setHgap(10);
 		grid.setVgap(10);

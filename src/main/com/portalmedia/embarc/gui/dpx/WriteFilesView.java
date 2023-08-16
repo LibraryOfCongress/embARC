@@ -34,11 +34,10 @@ public class WriteFilesView extends AnchorPane {
 
 	@FXML
 	private AnchorPane writeFilesSummaryPane;
-	SectionDef section;
-	CheckBox smptcCB;
-	CheckBox fsrCB;
-	CheckBox frCB;
-	CheckBox foCB;
+	private CheckBox smptcCB;
+	private CheckBox fsrCB;
+	private CheckBox frCB;
+	private CheckBox foCB;
 
 	public WriteFilesView() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("WriteFilesView.fxml"));

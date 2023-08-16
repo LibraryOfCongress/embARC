@@ -72,7 +72,6 @@ public class DPXFileListHelper {
 			fileInfo.setFileData(service.readFile());
 		} catch (final Exception e) {
 			System.out.println("Failed to parse file metadata");
-			e.printStackTrace();
 		}
 
 		return fileInfo;
@@ -81,7 +80,7 @@ public class DPXFileListHelper {
 	public static SelectedFilesSummary createSelectedFilesSummary(List<DPXFileInformationViewModel> selectedRows) {
 
 		if (selectAll) {
-			final org.dizitart.no2.objects.Cursor<DPXFileInformationViewModel> files = dbService.getAllCursors();
+			final Cursor<DPXFileInformationViewModel> files = dbService.getAllCursors();
 			SelectedFilesSummary selectedFilesSummary = SelectedFilesSummary
 					.create(new ArrayList<DPXFileInformationViewModel>());
 			for (final DPXFileInformationViewModel fi : files) {
@@ -116,7 +115,6 @@ public class DPXFileListHelper {
 			dbService.delete(id);
 		} catch (final Exception e) {
 			System.out.println("Failed to delete file");
-			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -139,6 +137,18 @@ public class DPXFileListHelper {
 		return editedOnly ? dbService.getEditedCursors() : dbService.getAllCursors();
 	}
 
+	public static List<DPXFileInformationViewModel> getAllFilesToWrite(boolean editedOnly) {
+		Cursor<DPXFileInformationViewModel> fileList = editedOnly ? dbService.getEditedCursors() : dbService.getAllCursors();
+		List<DPXFileInformationViewModel> finalFileList = new ArrayList<DPXFileInformationViewModel>();
+		for (DPXFileInformationViewModel fivm : fileList) {
+			boolean fileShouldBeWritten = fivm.getFileShouldBeWritten();
+			if (fileShouldBeWritten) {
+				finalFileList.add(fivm);
+			}
+		}
+		return finalFileList;
+	}
+
 	public static byte[] getBytesFromFile(String filePath, int start) throws IOException {
 		final File f = new File(filePath);
 		final byte[] allBytes = Files.readAllBytes(f.toPath());
@@ -152,8 +162,7 @@ public class DPXFileListHelper {
 			c.update(bytes, 0, bytes.length);
 			return String.format("%02x", c.getValue());
 		} catch (final Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error getting crc32");
 		}
 		return "";
 	}
@@ -219,8 +228,17 @@ public class DPXFileListHelper {
 			file.setProp(column, changedValues.get(column));
 		}
 		file.setEdited(true);
+		setFileShouldBeWritten(file, true, false);
 		dbService.update(file);
 		DatabaseSummary.updateFile(file);
+	}
+
+	public static void setFileShouldBeWritten(DPXFileInformationViewModel file, boolean shouldBeWritten, boolean shouldUpdateDb) {
+		file.setFileShouldBeWritten(shouldBeWritten);
+		if (shouldUpdateDb) {
+			dbService.update(file);
+			DatabaseSummary.updateFile(file);
+		}
 	}
 
 }

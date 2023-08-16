@@ -1,15 +1,12 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
-import com.portalmedia.embarc.gui.IntegerInputControl;
 
-import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
@@ -35,10 +32,9 @@ public class BorderValidityField extends AnchorPane implements IEditorField {
 	@FXML
 	private Label editorTextFieldLabel;
 
-	DPXColumn column;
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
+	private DPXColumn column;
 	private String originalValue;
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public BorderValidityField() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("BorderValidityField.fxml"));
@@ -196,22 +192,6 @@ public class BorderValidityField extends AnchorPane implements IEditorField {
 			editorArrayValue3.setText(list[2]);
 			editorArrayValue4.setText(list[3]);
 		}
-	}
-
-	public StringProperty textProperty1() {
-		return editorArrayValue2.textProperty();
-	}
-
-	public StringProperty textProperty2() {
-		return editorArrayValue2.textProperty();
-	}
-
-	public StringProperty textProperty3() {
-		return editorArrayValue3.textProperty();
-	}
-
-	public StringProperty textProperty4() {
-		return editorArrayValue4.textProperty();
 	}
 
 	/*

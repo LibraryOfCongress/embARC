@@ -1,29 +1,15 @@
 package com.portalmedia.embarc.parser;
 
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.URI;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypes;
-import org.apache.tools.ant.Project;
 
-import uk.gov.nationalarchives.droid.core.BinarySignatureIdentifier;
-import uk.gov.nationalarchives.droid.core.SignatureParseException;
-import uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest;
-import uk.gov.nationalarchives.droid.core.interfaces.IdentificationResult;
-import uk.gov.nationalarchives.droid.core.interfaces.IdentificationResultCollection;
-import uk.gov.nationalarchives.droid.core.interfaces.RequestIdentifier;
-import uk.gov.nationalarchives.droid.core.interfaces.resource.FileSystemIdentificationRequest;
-import uk.gov.nationalarchives.droid.core.interfaces.resource.RequestMetaData;
+import com.portalmedia.embarc.parser.mxf.MXFFileFormats;
 
 public class FileFormatDetection {
 	
@@ -34,37 +20,36 @@ public class FileFormatDetection {
 	}
 	
 	public static boolean isDPX(String file) {
-		BinaryFileReader f;
 		try {
-			f = new BinaryFileReader(file);
-			String firstFourBytes = f.readAscii(4);
 			
-			f.skip(4);
-			
-			String nextSequence = f.readAscii(4);
+			try (BinaryFileReader f = new BinaryFileReader(file)){
 
-			f.close();
-			if(firstFourBytes.equals("SDPX") && nextSequence.matches("[vV][1-9][.][0-9]"))
-				return true;
-			else if(firstFourBytes.equals("XPDS") && nextSequence.matches("[vV][1-9][.][0-9]"))
-				return true;
+				String firstFourBytes = f.readAscii(4);
+				
+				f.skip(4);
+				
+				String nextSequence = f.readAscii(4);
+
+				if(firstFourBytes.equals("SDPX") && nextSequence.matches("[vV][1-9][.][0-9]"))
+					return true;
+				else if(firstFourBytes.equals("XPDS") && nextSequence.matches("[vV][1-9][.][0-9]"))
+					return true;
+			} 
+			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			System.out.println("File not found checking is dpx");
+		} 
 		
 		return false;
 	}
 	
 	private static List<String> validMxfFiles = new ArrayList<String>() {{add("fmt/200"); add("fmt/783"); add("fmt/790");}};
-	private static String droidSignatureFile = "DROID_SignatureFile_V95.xml";
-	private static String droidSignatureFileResources = "resources/DROID_SignatureFile_V95.xml";
+	
 	public static boolean isMXF(String file) {
-		List<String> droidFormats;
+		List<String> droidFormats = new ArrayList<String>();
 		try {
-			droidFormats = getDroidFormats(file);
+			droidFormats = MXFFileFormats.getInstance().getFormatMatches(file);
 		} catch (Exception e) {
-			e.printStackTrace();
 			return false;
 		}
 
@@ -75,46 +60,7 @@ public class FileFormatDetection {
 		}
 		return false;
 	}
-	
-	private static List<String> getDroidFormats(String filename) throws Exception{
-		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-        
-        Path tempPath = Files.createTempFile("droidSignatureFile", ".xml");
 
-		try (InputStream in = Project.class.getClassLoader().getResourceAsStream(droidSignatureFileResources)) {
-			Files.copy(in, tempPath, StandardCopyOption.REPLACE_EXISTING);
-		}
-
-		BinarySignatureIdentifier droid = new BinarySignatureIdentifier();
-
-        try {
-        	droid.setSignatureFile(tempPath.toString());
-            droid.init();
-        } catch (SignatureParseException x) {
-			x.printStackTrace();
-        	throw new Exception("Invalid signature file");
-        }
-        final Path file = Paths.get(filename);
-        
-        URI resourceUri = file.toUri();
-  
-        RequestMetaData metaData = new RequestMetaData(
-                Files.size(file), Files.getLastModifiedTime(file).toMillis(), filename);
-        RequestIdentifier identifier = new RequestIdentifier(resourceUri);
-        identifier.setParentId(1L);
-        
-        IdentificationRequest<Path> request = new FileSystemIdentificationRequest(metaData, identifier);
-        request.open(file);
-
-        IdentificationResultCollection resultsCollection = droid.matchBinarySignatures(request);
-        List<IdentificationResult> results = resultsCollection.getResults();
-        List<String> formats = new ArrayList<String>();
-        for(IdentificationResult result : results) {
-        	System.out.println(result.getPuid());
-        	formats.add(result.getPuid());
-        }
-        return formats;
-	}
 	public static String getExtension(ByteBuffer buffer) throws Exception{
 		  Tika t = new Tika();
 		  

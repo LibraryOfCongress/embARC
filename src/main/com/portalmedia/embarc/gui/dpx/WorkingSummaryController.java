@@ -31,39 +31,33 @@ public class WorkingSummaryController implements Initializable {
 	@FXML
 	private AnchorPane workingSummaryContainer;
 	@FXML
-	private Label totalNumberOfFiles;
+	private Label totalNumberOfFilesLabel;
 	@FXML
-	private Label totalFilesText;
+	private Label totalFilesLabel;
 	@FXML
-	private Label numberOfSelectedFiles;
+	private Label numberOfSelectedFilesLabel;
 	@FXML
-	private Label filesSelectedText;
+	private Label filesSelectedLabel;
 	@FXML
-	private Label selectAllFiles;
+	private Label selectAllFilesLabel;
 	@FXML
-	private Label deselectAllFiles;
+	private Label deselectAllFilesLabel;
 	@FXML
-	private Label removeSelectedFiles;
+	private Label removeSelectedFilesLabel;
 	@FXML
 	private CheckBox errorsOnlyCheckBox;
-
-	DPXFileListHelper fileListHelper = new DPXFileListHelper();
-
-	public void deselectAllFiles() {
-		ControllerMediatorDPX.getInstance().deselectAllFiles();
-	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorDPX.getInstance().registerWorkingSummaryController(this);
-		removeSelectedFiles.setVisible(false);
+		removeSelectedFilesLabel.setVisible(false);
 		ControllerMediatorDPX.getInstance().isEditingProperty().addListener(new ChangeListener() {
 			@Override
 			public void changed(ObservableValue o, Object ov, Object nv) {
-				selectAllFiles.setDisable((Boolean) nv);
-				deselectAllFiles.setDisable((Boolean) nv);
-				removeSelectedFiles.setDisable((Boolean) nv);
+				selectAllFilesLabel.setDisable((Boolean) nv);
+				deselectAllFilesLabel.setDisable((Boolean) nv);
+				removeSelectedFilesLabel.setDisable((Boolean) nv);
 			}
 		});
 
@@ -83,8 +77,19 @@ public class WorkingSummaryController implements Initializable {
 		});
 	}
 
+	@SuppressWarnings("ucd") // referenced in WorkingSummary.fxml
+	public void deselectAllFiles() {
+		ControllerMediatorDPX.getInstance().deselectAllFiles();
+	}
+
+	@SuppressWarnings("ucd") // referenced in WorkingSummary.fxml
 	public void removeSelectedFiles() {
 		ControllerMediatorDPX.getInstance().deleteSelectedFiles();
+	}
+
+	@SuppressWarnings("ucd") // referenced in WorkingSummary.fxml
+	public void selectAllFiles() {
+		ControllerMediatorDPX.getInstance().selectAllFiles();
 	}
 
 	public void resetErrorCount() {
@@ -99,39 +104,35 @@ public class WorkingSummaryController implements Initializable {
 		});
 	}
 
-	public void selectAllFiles() {
-		ControllerMediatorDPX.getInstance().selectAllFiles();
-	}
-
 	public <T> void setFiles() {
 		final long size = DPXFileListHelper.getTotalFiles();
-		selectAllFiles.setVisible(true);
-		deselectAllFiles.setVisible(true);
+		selectAllFilesLabel.setVisible(true);
+		deselectAllFilesLabel.setVisible(true);
 		if (size > 1) {
-			totalFilesText.setText("files imported");
+			totalFilesLabel.setText("files imported");
 		} else if (size == 1) {
-			totalFilesText.setText("file imported");
+			totalFilesLabel.setText("file imported");
 		} else if (size == 0) {
-			selectAllFiles.setVisible(false);
-			deselectAllFiles.setVisible(false);
+			selectAllFilesLabel.setVisible(false);
+			deselectAllFilesLabel.setVisible(false);
 		}
-		totalNumberOfFiles.setText(Long.toString(size));
+		totalNumberOfFilesLabel.setText(Long.toString(size));
 	}
 
 	public <T> void setSelectedFileList(ObservableList<DPXFileInformationViewModel> list) {
 		final long size = list == null ? 0
 				: DPXFileListHelper.getSelectedFileCount(list, ControllerMediatorDPX.getInstance().getCurrentRuleSets(),
 						errorsOnlyCheckBox.isSelected());
-		deselectAllFiles.setVisible(true);
-		removeSelectedFiles.setVisible(true);
-		filesSelectedText.setText("files selected");
+		deselectAllFilesLabel.setVisible(true);
+		removeSelectedFilesLabel.setVisible(true);
+		filesSelectedLabel.setText("files selected");
 		if (size == 1) {
-			filesSelectedText.setText("file selected");
+			filesSelectedLabel.setText("file selected");
 		} else if (size == 0) {
-			selectAllFiles.setVisible(true);
-			deselectAllFiles.setVisible(false);
-			removeSelectedFiles.setVisible(false);
+			selectAllFilesLabel.setVisible(true);
+			deselectAllFilesLabel.setVisible(false);
+			removeSelectedFilesLabel.setVisible(false);
 		}
-		numberOfSelectedFiles.setText(Long.toString(size));
+		numberOfSelectedFilesLabel.setText(Long.toString(size));
 	}
 }

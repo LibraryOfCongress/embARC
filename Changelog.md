@@ -1,8 +1,54 @@
-#  embARC Change Log
+# embARC GUI Change Log
 
 All notable changes to this project will be documented in this file
 
-## 1.0.0 2021-08-01
+## 1.2.0 2023-03-23
+	Improvements:
+	- Add Text DMS manifest validation
+	- Allow custom file naming for Text DMS download
+	- Highlight mandatory properties with asterisk
+	- Validate mandatory properties, display warning icon when absent
+	- Add cancel button on scalar property modal
+	- Read second AS07 Core DMS from footer when present
+	- Write AS07 Core DMS to both header and footer
+	- Fix RFC5646 Language Tag alphabetization
+	- Sort Text DMS display by GSPID ascending
+
+## 1.1.1 2022-11-28
+	Improvements:
+	- code cleanup
+
+## 1.1.0 2022-08-03
+	Feature Additions:
+	- MXF Manifest display and validation
+	- MXF FFV1 support
+	Bug fixes:
+	- Nested directory processing issue
+
+## 1.0.4 2022-07-29
+	Bug fixes:
+	- Fix DPX large file count processing bug
+	- DPX & MXF write files improvement
+
+## 1.0.3 2022-03-24
+	Bug fixes:
+	- Fix write files button erroneously disabled bug
+
+## 1.0.2 2022-03-09
+	Feature additions:
+	- Adds file write error report on write files dialog
+	- Adds mandatory/optional indicators on AS07 Core DMS fields
+	Bug fixes:
+	- File miscounting
+	- MXF shim name edit
+	- MXF file read issues
+	- disable write files if missing AS07 Core DMS or required fields
+
+## 1.0.1 2021-10-26
+	Bug fixes:
+	- Disable write files button when required core fields are empty
+
+## 1.0.0 2021-09-01
 	Feature additions:
 	- MXF File Support
 
@@ -10,7 +56,6 @@ All notable changes to this project will be documented in this file
 	Feature additions:
 	- File sorting
 	- Accessibility updates to validation icons
-
 	Bug fixes:
 	- Quit application bug
 
@@ -25,7 +70,6 @@ All notable changes to this project will be documented in this file
 	Feature additions:
 	- Added persistence for user options such as write files dialog options, report paths, etc.
 	- Added reporting feature indicating whether checksums matched when writing files
-	
 	Bug fixes:
 	- Addressed bug in number of changed fields when editing
 	- Prevent users from pasting scientific notation in float fields

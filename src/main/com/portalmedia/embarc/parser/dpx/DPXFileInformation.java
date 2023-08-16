@@ -1,10 +1,12 @@
 package com.portalmedia.embarc.parser.dpx;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.dizitart.no2.objects.Id;
 
 import com.portalmedia.embarc.parser.ColumnDef;
+import com.portalmedia.embarc.validation.CustomValidationRuleResult;
 
 /**
  * Wrapper containing disk data for the DPX file and also it's metadata
@@ -21,6 +23,7 @@ public class DPXFileInformation implements Serializable {
 	@Id
 	private int id;
 	private DPXMetadata fileData;
+	private List<CustomValidationRuleResult> validationResults;
 
 	public DPXFileInformation() {
 		super();
@@ -89,5 +92,13 @@ public class DPXFileInformation implements Serializable {
 	public void updateData(ColumnDef column, String value) {
 		edited = true;
 		fileData.setValue(column, value);
+	}
+
+	public List<CustomValidationRuleResult> getValidationResults() {
+		return validationResults;
+	}
+
+	public void setValidationResults(List<CustomValidationRuleResult> validationResults) {
+		this.validationResults = validationResults;
 	}
 }

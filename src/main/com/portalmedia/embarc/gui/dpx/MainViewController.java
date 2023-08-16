@@ -58,7 +58,7 @@ public class MainViewController implements Initializable {
 				userPreferences.setImageChecksumReportPath(file.getParent());
 			}
 		} catch (final IOException e) {
-			e.printStackTrace();
+			System.out.println("Error creating checksum report");
 		}
 	}
 
@@ -82,7 +82,7 @@ public class MainViewController implements Initializable {
 				userPreferences.setValidationReportPath(file.getParent());
 			}
 		} catch (final IOException e) {
-			e.printStackTrace();
+			System.out.println("Error creating validation report");
 		}
 	}
 

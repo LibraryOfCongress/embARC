@@ -3,20 +3,32 @@ package MXFTests;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+//import java.io.File; // if you use File
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 import com.portalmedia.embarc.parser.FileFormatDetection;
 import com.portalmedia.embarc.parser.FileInformation;
@@ -27,6 +39,9 @@ import com.portalmedia.embarc.parser.mxf.MXFFileDescriptorResult;
 import com.portalmedia.embarc.parser.mxf.MXFMetadata;
 import com.portalmedia.embarc.parser.mxf.MXFService;
 import com.portalmedia.embarc.parser.mxf.MXFServiceImpl;
+import com.portalmedia.embarc.parser.mxf.ManifestParser;
+import com.portalmedia.embarc.parser.mxf.ManifestParserImpl;
+import com.portalmedia.embarc.parser.mxf.ManifestType;
 
 import tv.amwa.maj.io.mxf.LocalTagEntry;
 import tv.amwa.maj.io.mxf.MXFFile;
@@ -35,12 +50,9 @@ import tv.amwa.maj.model.AS07CoreDMSFramework;
 import tv.amwa.maj.model.AS07GSPDMSObject;
 import tv.amwa.maj.model.Identification;
 import tv.amwa.maj.model.Preface;
-import tv.amwa.maj.model.impl.AS07CoreDMSDeviceObjectsImpl;
 import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
 import tv.amwa.maj.model.impl.AS07GspBdDMSFrameworkImpl;
 import tv.amwa.maj.model.impl.AS07GspTdDMSFrameworkImpl;
-import tv.amwa.maj.record.AUID;
-import tv.amwa.maj.record.impl.AUIDImpl;
 
 public class MXFReadWriteTests {
 
@@ -54,7 +66,8 @@ public class MXFReadWriteTests {
         File srcFile = new File(classLoader.getResource("as07_sample1-gf-unc-3.1.mxf").getFile());
         
         filePath = srcFile.getAbsolutePath();
-        service = new MXFServiceImpl(filePath);
+        
+        service = new MXFServiceImpl(filePath); 
 	}
 	@Test
 	public void CanReadMxfFile() {
@@ -63,27 +76,66 @@ public class MXFReadWriteTests {
 		Assert.assertNotNull(mxf);
 	}
 	@Test
+	public void CanValidateManifest() throws ParserConfigurationException, SAXException, IOException {
+
+		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+		File schemaFile =new File(classLoader.getResource("RDD48-Manifest-20180827.xsd").getFile());
+		
+		File f = new File(classLoader.getResource("RDD48_LakeJulianP1060231_50i_576_MKV_FFV1_422_8_ag_20220517.mxf_1003_DATA_DOWNLOAD.xml").getFile());
+		Source xmlFile = new StreamSource(f);
+		
+
+	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
+	    DocumentBuilder db = dbf.newDocumentBuilder();
+	    Document doc = db.parse(f);
+	    
+	    Element root = doc.getDocumentElement();
+	    
+	    System.out.println(root.getNodeName());
+		
+		SchemaFactory schemaFactory = SchemaFactory
+		    .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		try {
+		  Schema schema = schemaFactory.newSchema(schemaFile);
+		  Validator validator = schema.newValidator();
+		  validator.validate(xmlFile);
+		  System.out.println(xmlFile.getSystemId() + " is valid");
+		} catch (SAXException e) {
+		  System.out.println(xmlFile.getSystemId() + " is NOT valid reason:" + e);
+		} catch (IOException e) {}
+	}
+	
+	@Test
+	public void CanValidateMxfFileManifest() throws ParserConfigurationException, SAXException, IOException {
+		ByteBuffer bb = service.GetGenericStream(2);
+
+		ManifestParser parser = new ManifestParserImpl();
+		
+		ManifestType type = parser.isManifest(bb);
+		
+		Assert.assertTrue(type==ManifestType.INVALID_MANIFEST);
+	}
+	@Test
 	public void CanDownloadTD() throws FileNotFoundException {
 		ByteBuffer bb = service.GetGenericStream(2);
 		Assert.assertNotNull(bb);
 		
 		File file = new File("stream_test.xml");
-		
-		FileChannel channel = new FileOutputStream(file, false).getChannel();
 		 
         // Flips this buffer.  The limit is set to the current position and then
         // the position is set to zero.  If the mark is defined then it is discarded.
         //bb.flip();
 
         // Writes a sequence of bytes to this channel from the given buffer.
-        try {
+		// Commenting out until needed
+        /*try (FileOutputStream fileOutputStream = new FileOutputStream(file, false);){
+    		FileChannel channel = fileOutputStream.getChannel();
 			channel.write(bb);
 	        // close the channel
-	        channel.close();
+			fileOutputStream.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		}*/
 	}
 	@Test
 	public void CanDownloadBD() throws FileNotFoundException {
@@ -91,23 +143,22 @@ public class MXFReadWriteTests {
 		Assert.assertNotNull(bb);
 		
 		File file = new File("stream_test.tiff");
-		
-		FileChannel channel = new FileOutputStream(file, false).getChannel();
+
 		 
         // Flips this buffer.  The limit is set to the current position and then
         // the position is set to zero.  If the mark is defined then it is discarded.
         //bb.flip();
 
+		/* Commenting out until needed
         // Writes a sequence of bytes to this channel from the given buffer.
-        try {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(file, false)){
+    		FileChannel channel = fileOutputStream.getChannel();
 			channel.write(bb);
 	        // close the channel
-	        channel.close();
+			fileOutputStream.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
+		*/
 	}
 	@Test
 	public void CanGetExtension() throws Exception {
@@ -126,10 +177,10 @@ public class MXFReadWriteTests {
 		String responsibleOrganizationCode = "test org code";
 		String pictureFormat = "test picture format";
 		String captions = "test captions";
-		AUID audioTrackLayout = new AUIDImpl();// TODO
+		//AUID audioTrackLayout = new AUIDImpl();// TODO
 		String intendedAFD = "test AFD";
-		List<AS07DMSIdentifierSetImpl> identifiers = new ArrayList<AS07DMSIdentifierSetImpl>(); // TODO
-		List<AS07CoreDMSDeviceObjectsImpl> devices = Collections.synchronizedList(new ArrayList<AS07CoreDMSDeviceObjectsImpl>()); // TODO
+		//List<AS07DMSIdentifierSetImpl> identifiers = new ArrayList<AS07DMSIdentifierSetImpl>(); // TODO
+		//List<AS07CoreDMSDeviceObjectsImpl> devices = Collections.synchronizedList(new ArrayList<AS07CoreDMSDeviceObjectsImpl>()); // TODO
 		String audioTrackLayoutComment = "test audio track layout comment";
 		String audioTrackSecondaryLanguage = "test audio track secondary language";
 		String audioTrackPrimaryLanguage = "test audio track primary languag";
@@ -360,10 +411,9 @@ public class MXFReadWriteTests {
         
         Assert.assertFalse(metadata.getCoreColumns().isEmpty());
         HashMap<MXFColumn, MetadataColumnDef> coreCols = metadata.getCoreColumns();
-        System.out.println("AudioCount" + metadata.getAudioTrackCount());
-        System.out.println("VideoCount" + metadata.getVideoTrackCount());
-        System.out.println("CaptionCount" + metadata.getCaptionTrackCount());
-        System.out.println("TimecodeCount" + metadata.getTimecodeTrackCount());
+        System.out.println("SoundCount" + metadata.getSoundTrackCount());
+        System.out.println("PictureCount" + metadata.getPictureTrackCount());
+        System.out.println("OtherCount" + metadata.getOtherTrackCount());
         for(MXFColumn col : coreCols.keySet())
         {
         	System.out.println(col.getDisplayName() + ":" + coreCols.get(col).toString());

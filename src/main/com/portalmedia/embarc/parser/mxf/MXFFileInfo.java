@@ -5,10 +5,9 @@ public enum MXFFileInfo {
 	VERSION("Version", "version"),
 	PROFILE("Profile", "profile"),
 	FILE_SIZE("File Size", "size"),
-	VIDEO_TRACK_COUNT("Video Track Count", "videoTrackCount"),
-	AUDIO_TRACK_COUNT("Audio Track Count", "audioTrackCount"),
-	CAPTION_TRACK_COUNT("Caption Track Count", "captionTrackCount"),
-	TIMECODE_TRACK_COUNT("Timecode Track Count", "timecodeTrackCount"),
+	PICTURE_TRACK_COUNT("Picture Track Count", "pictureTrackCount"),
+	SOUND_TRACK_COUNT("Sound Track Count", "soundTrackCount"),
+	OTHER_TRACK_COUNT("Other Track Count", "otherTrackCount"),
 	TD_COUNT("TD Count", "tdTrackCount"),
 	BD_COUNT("BD Count", "bdTrackCount");
 	

@@ -1,5 +1,7 @@
 package com.portalmedia.embarc.gui.helper;
 
+import java.io.File;
+
 /**
  * Cleans input path string to avoid path manipulation and other security issues
  * Code borrowed from StackExchange #103884
@@ -33,7 +35,9 @@ public class CleanInputPathHelper {
 		for (int i = 97; i < 123; ++i) {
 			if (aChar == i) return (char) i;
 		}
-		
+		// handle file separator
+		char fileSeparator = File.separatorChar;
+		if (aChar == fileSeparator) return fileSeparator;
 		// other valid characters
 		switch (aChar) {
 			case '/':
@@ -46,6 +50,8 @@ public class CleanInputPathHelper {
 			return '_';
 			case ' ':
 			return ' ';
+			case ':':
+			return ':';
 		}
 		return '%';
 	}

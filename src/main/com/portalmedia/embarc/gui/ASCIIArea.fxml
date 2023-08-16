@@ -34,8 +34,8 @@
 				/>
 				<TextArea
 					fx:id="editorTextArea"
-					prefWidth="294"
-					maxWidth="294"
+					prefWidth="300"
+					maxWidth="300"
 					layoutX="184.0"
 					layoutY="9.0"
 					HBox.hgrow="NEVER"

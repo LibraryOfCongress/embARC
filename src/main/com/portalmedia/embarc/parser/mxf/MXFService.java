@@ -21,7 +21,7 @@ public interface MXFService {
 
 	MXFFile getFile();
 
-	boolean writeFile(String outputFilePath, AS07CoreDMSFramework udpatedCore) throws IOException;
+	MXFFileWriteResult writeFile(String outputFilePath, AS07CoreDMSFramework udpatedCore) throws IOException;
 
 	boolean hasAS07CoreDMSFramework();
 
@@ -34,7 +34,7 @@ public interface MXFService {
 	List<AS07GSPDMSObject> getAS07GSPDMSObjects();
 	MXFFileDescriptorResult getDescriptors();
 	Preface getPreface();
-	boolean writeFile(String outputFilePath, HashMap<MXFColumn, MetadataColumnDef> coreColumns) throws IOException;
+	MXFFileWriteResult writeFile(String outputFilePath, HashMap<MXFColumn, MetadataColumnDef> coreColumns) throws IOException;
 
 	ByteBuffer GetGenericStream(int streamId);
 

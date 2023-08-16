@@ -17,6 +17,8 @@ import com.portalmedia.embarc.parser.mxf.MXFMetadata;
 import com.portalmedia.embarc.parser.mxf.MXFService;
 import com.portalmedia.embarc.parser.mxf.MXFServiceImpl;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import tv.amwa.maj.exception.PropertyNotPresentException;
@@ -39,6 +41,7 @@ public class MXFFileList {
 	}
 	
 	private static List<FileInformation<MXFMetadata>> fileList;
+	private static BooleanProperty hasCoreRequiredFieldsError = new SimpleBooleanProperty();
 	private int maxTD = 0;
 	private int maxBD = 0;
 	
@@ -65,12 +68,12 @@ public class MXFFileList {
 			vm.setProp("format", f.getFileData().getFormat());
 			vm.setProp("profile", f.getFileData().getProfile());
 			vm.setProp("size", Long.toString(f.getFileData().getFileSize()));
-			vm.setProp("audioTrackCount", Integer.toString(f.getFileData().getAudioTrackCount()));
-			vm.setProp("videoTrackCount", Integer.toString(f.getFileData().getVideoTrackCount()));
-			vm.setProp("captionTrackCount", Integer.toString(f.getFileData().getCaptionTrackCount()));
-			vm.setProp("timecodeTrackCount", Integer.toString(f.getFileData().getTimecodeTrackCount()));
+			vm.setProp("soundTrackCount", Integer.toString(f.getFileData().getSoundTrackCount()));
+			vm.setProp("pictureTrackCount", Integer.toString(f.getFileData().getPictureTrackCount()));
+			vm.setProp("otherTrackCount", Integer.toString(f.getFileData().getOtherTrackCount()));
 			vm.setProp("tdTrackCount", Integer.toString(f.getFileData().getTDCount()));
 			vm.setProp("bdTrackCount", Integer.toString(f.getFileData().getBDCount()));
+			vm.setProp("hasAS07CoreDMSFramework", f.getFileData().getHasAS07CoreDMSFramework() ? "true" : "false");
 
 			HashMap<String, LinkedHashMap<MXFColumn, MetadataColumnDef>> td = f.getFileData().getTDColumns();
 			for (final String y : td.keySet()) {
@@ -93,41 +96,39 @@ public class MXFFileList {
 		}
 		return FXCollections.observableArrayList(list);
 	}
-	
+
 	public boolean addFileToList(FileInformation<MXFMetadata> fileInfo) {
 		if (fileInfo == null) return false;
 		fileList.add(fileInfo);
 		return true;
 	}
-	
+
 	public boolean addFileToList(String filePath) {
 		LOGGER.info("Adding file to list: " + filePath);
 		FileInformation<MXFMetadata> fileInfo = getFileInfo(filePath);
 		if (fileInfo == null) return false;
 		addFileToList(fileInfo);
+		checkRequiredCoreDMSFields();
 		return true;
 	}
-	
+
 	public FileInformation<MXFMetadata> getFileInfo(String filePath) {
 		FileInformation<MXFMetadata> fileInfo = null;
-        try {
-        	MXFService service = new MXFServiceImpl(filePath);
-	        fileInfo = service.getMetadata();
+		try {
+			MXFService service = new MXFServiceImpl(filePath);
+			fileInfo = service.getMetadata();
 		} catch (PropertyNotPresentException pnpe) {
 			LOGGER.log(Level.SEVERE, pnpe.toString(), pnpe);
 			System.out.println("property not present exception: " + pnpe);
-			pnpe.printStackTrace();
 		} catch (FileNotFoundException e) {
 			LOGGER.log(Level.SEVERE, e.toString(), e);
 			System.out.println("File not found exception in getFileInfo");
-			e.printStackTrace();
 		} catch (Exception ex) {
 			LOGGER.log(Level.SEVERE, ex.toString(), ex);
 			System.out.println("mxf file info exception: " + ex);
-			ex.printStackTrace();
 		}
 
-        return fileInfo;
+		return fileInfo;
 	}
 
 	public int getMaxTD() {
@@ -148,8 +149,10 @@ public class MXFFileList {
 			if (file.getPath().equals(fivm.getProp("path"))) {
 				file.getFileData().setCoreColumns(fivm.getCoreData());
 				file.setEdited(true);
+				file.setFileShouldBeWritten(true);
 			}
 		}
+		checkRequiredCoreDMSFields();
 	}
 
 	public static void deleteSelectedRows(List<MXFFileInformationViewModel> selectedRows) {
@@ -158,5 +161,25 @@ public class MXFFileList {
 				return file.getPath().equals(fivm.getProp("path"));
 			});
 		}
+		checkRequiredCoreDMSFields();
+	}
+
+	public static void checkRequiredCoreDMSFields() {
+		boolean hasAtLeastOneError = false;
+		hasCoreRequiredFieldsError.set(hasAtLeastOneError);
+		for (FileInformation<MXFMetadata> file : fileList) {
+			HashMap<MXFColumn, MetadataColumnDef> coreData = file.getFileData().getCoreColumns();
+			for (MXFColumn col : coreData.keySet()) {
+				String val = coreData.get(col).getCurrentValue();
+				if (col.isRequired() && (val == null || val.equals(""))) {
+					hasAtLeastOneError = true;
+				}
+			}
+		}
+		hasCoreRequiredFieldsError.set(hasAtLeastOneError);
+	}
+
+	public BooleanProperty hasCoreRequiredFieldsErrorProperty() {
+		return hasCoreRequiredFieldsError;
 	}
 }

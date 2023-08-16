@@ -1,10 +1,10 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.gui.dpx.ValidationChangeListener;
+import com.portalmedia.embarc.gui.mxf.ValidationChangeListenerMXF;
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
@@ -23,7 +23,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 
@@ -36,18 +35,15 @@ import javafx.stage.Modality;
  */
 public class ASCIIArea extends AnchorPane implements IEditorField {
 	@FXML
-	private HBox ASCIIHBox;
-	@FXML
 	private TextArea editorTextArea;
 	@FXML
 	private Label editorTextAreaLabel;
 	@FXML
 	private FontAwesomeIconView popoutIcon;
 
-	DPXColumn column;
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
+	private DPXColumn column;
 	private String originalValue;
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public ASCIIArea() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ASCIIArea.fxml"));
@@ -132,7 +128,6 @@ public class ASCIIArea extends AnchorPane implements IEditorField {
 		icons.setInvalidRuleSets(invalidRuleSet, getColumn());
 		AnchorPane.setBottomAnchor(icons, 0.0);
 		AnchorPane.setTopAnchor(icons, 0.0);
-		// EditorTextArea.setRight(icons);
 	}
 
 	/*
@@ -178,16 +173,18 @@ public class ASCIIArea extends AnchorPane implements IEditorField {
 				alert.setContentText(null);
 				alert.initModality(Modality.APPLICATION_MODAL);
 				alert.initOwner(Main.getPrimaryStage());
-				final ButtonType[] buttonList = new ButtonType[1];
+				final ButtonType[] buttonList = new ButtonType[2];
 				if (column != null) {
 					if (column.getEditable()) {
 						buttonList[0] = ButtonType.APPLY;
+						buttonList[1] = ButtonType.CLOSE;
 					} else {
 						buttonList[0] = ButtonType.CLOSE;
 					}
 				} else if (mxfColumn != null) {
 					if (mxfColumn.getEditable()) {
 						buttonList[0] = ButtonType.APPLY;
+						buttonList[1] = ButtonType.CLOSE;
 					} else {
 						buttonList[0] = ButtonType.CLOSE;
 					}
@@ -260,11 +257,9 @@ public class ASCIIArea extends AnchorPane implements IEditorField {
 	 * com.portalmedia.embarc.gui.IEditorField#setMXFColumn(MXFColumn)
 	 */
 	public void setMXFColumn(MXFColumn col) {
-		// TODO
-//		if (this.mxfColumn == null) {
-//			editorTextArea.textProperty().addListener(new MaxLengthChangeListener(editorTextArea, col.getLength()));
-//		}
-		this.mxfColumn = col;
+		if (this.mxfColumn == null) {
+			this.mxfColumn = col;
+		}
 	}
 
 	/*

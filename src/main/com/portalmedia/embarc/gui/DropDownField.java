@@ -2,14 +2,12 @@ package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ComboBox;
@@ -30,10 +28,9 @@ public class DropDownField extends AnchorPane implements IEditorField {
 	@FXML
 	private Label editorTextFieldLabel;
 
-	DPXColumn column;
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
+	private DPXColumn column;
 	private String originalValue;
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public DropDownField() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DropDownField.fxml"));
@@ -174,10 +171,6 @@ public class DropDownField extends AnchorPane implements IEditorField {
 		comboBoxField.setValue(value);
 	}
 
-	public ObjectProperty<String> textProperty() {
-		return comboBoxField.valueProperty();
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -185,10 +178,12 @@ public class DropDownField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public boolean valueChanged() {
-		if (originalValue == null) {
+		String newValue = comboBoxField.getValue();
+		if (originalValue == null && newValue == null) {
 			return false;
-		}
-		if (originalValue.equals(comboBoxField.getValue())) {
+		} else if (originalValue == null && newValue != null) {
+			return true;
+		} else if (originalValue != null && originalValue.equals(newValue)) {
 			return false;
 		}
 

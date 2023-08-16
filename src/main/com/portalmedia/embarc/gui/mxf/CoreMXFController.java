@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.portalmedia.embarc.gui.ASCIIArea;
+import com.portalmedia.embarc.gui.ASCIIField;
 import com.portalmedia.embarc.gui.DropDownField;
 import com.portalmedia.embarc.gui.IEditorField;
 import com.portalmedia.embarc.gui.LabelField;
@@ -78,12 +78,12 @@ public class CoreMXFController extends AnchorPane {
 	@FXML
 	private VBox editableFieldsVBox;
 
-	HashSet<IEditorField> fields;
-	IntegerProperty editedFieldsCount = new SimpleIntegerProperty(0);
-	int numSelected;
+	private HashSet<IEditorField> fields;
+	private IntegerProperty editedFieldsCount = new SimpleIntegerProperty(0);
+	private int numSelected;
 
 	public CoreMXFController() {
-		ControllerMediatorMXF.getInstance().registerEditMXFCoreForm(this);
+		ControllerMediatorMXF.getInstance().registerCoreMXFController(this);
 		fields = new HashSet<>();
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CoreMXFView.fxml"));
 		fxmlLoader.setController(this);
@@ -114,14 +114,14 @@ public class CoreMXFController extends AnchorPane {
 		editedFieldsCount.addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> obs, Number ov, Number nv) {
-				if (nv.equals(0)) {
+				if (nv.intValue() == 0) {
 					editingSummary.setText("");
 					applyChangesButton.setDisable(true);
 					applyChangesButton.setStyle("-fx-background-color: #7EFFFE;");
 					return;
 				}
 				String text = "Change ";
-				if (nv.equals(1)) text += nv + " field in ";
+				if (nv.intValue() == 1) text += nv + " field in ";
 				else text += nv + " fields in ";
 				if (numSelected == 1) text += numSelected + " file?";
 				else text += numSelected + " files?";
@@ -175,11 +175,17 @@ public class CoreMXFController extends AnchorPane {
 			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
 		}
 	}
-	
-	public void setSection(Boolean resetValues) {
-		if (resetValues) {}
 
+	public void setSection() {
 		final MXFSelectedFilesSummary summary = ControllerMediatorMXF.getInstance().getSelectedFilesSummary();
+
+		if (summary.getFilesAreMissingAS07CoreDMSFramework()) {
+			toggleEditButton.setDisable(true);
+		}
+
+		Label requiredFieldsLabel = new Label("* = required field");
+		requiredFieldsLabel.styleProperty().set("-fx-padding: 0 0 10 0;");
+		editableFieldsVBox.getChildren().add(requiredFieldsLabel);
 
 		for (final MXFColumn col : MXFColumn.values()) {
 			if (col.getSection() != MXFSection.CORE) continue;
@@ -224,31 +230,34 @@ public class CoreMXFController extends AnchorPane {
 				continue;
 			}
 
-			// Default to ascii area
-			final ASCIIArea area = new ASCIIArea();
-			area.setMXFColumn(col);
-			area.setVisible(true);
-			area.setLabel(col.getDisplayName(), MXFColumnHelpText.getInstance().getHelpText(col));
+			// Default to ascii field
+			final ASCIIField field = new ASCIIField();
+			field.setMXFColumn(col);
+			field.setVisible(true);
+			String label = col.getDisplayName();
+			if (col.isRequired()) label += " *";
+			field.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col));
 			MetadataColumnDef columnDef = summary.getCoreData().get(col);
 			if (columnDef != null && columnDef.getCurrentValue() != null) {
-				area.setValue(columnDef.getCurrentValue());
+				field.setValue(columnDef.getCurrentValue());
 			} else {
-				area.setValue("");
+				field.setValue("");
 			}
-			area.setEditable(col.getEditable());
-			area.managedProperty().bind(area.visibleProperty());
-			area.setPopoutIcon();
-			area.setMaxHeight(50);
-			area.textProperty().addListener(new ChangeListener<String>() {
+			field.setEditable(col.getEditable());
+			field.managedProperty().bind(field.visibleProperty());
+			field.setPopoutIcon();
+			field.setMXFMissingRequiredFieldRules();
+			field.setMaxHeight(50);
+			field.textProperty().addListener(new ChangeListener<String>() {
 				@Override
 				public void changed(ObservableValue<? extends String> obs, String ov, String nv) {
 					calculateEditedFields();
 				}
 			});
-			fields.add(area);
-			AnchorPane.setLeftAnchor(area, 0.00);
-			AnchorPane.setRightAnchor(area, 0.00);
-			editableFieldsVBox.getChildren().add(area);
+			fields.add(field);
+			AnchorPane.setLeftAnchor(field, 0.00);
+			AnchorPane.setRightAnchor(field, 0.00);
+			editableFieldsVBox.getChildren().add(field);
 		}
 
 		setNumberOfSelectedFiles(summary.getFileCount());
@@ -279,7 +288,9 @@ public class CoreMXFController extends AnchorPane {
 		dropDownField.setEditable(col.getEditable());
 		dropDownField.setMXFColumn(col);
 		dropDownField.setVisible(true);
-		dropDownField.setLabel(col.getDisplayName(), MXFColumnHelpText.getInstance().getHelpText(col));
+		String label = col.getDisplayName();
+		if (col.isRequired()) label += " *";
+		dropDownField.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col));
 		MetadataColumnDef columnDef = summary.getCoreData().get(col);
 		if (columnDef != null) {
 			dropDownField.setValue(columnDef.getCurrentValue());
@@ -300,14 +311,16 @@ public class CoreMXFController extends AnchorPane {
 		DeviceSetHelper deviceSetHelper = new DeviceSetHelper();
 		ArrayList<AS07CoreDMSDeviceObjectsImpl> devices = deviceSetHelper.createDeviceListFromString(summary.getCoreData().get(col).getCurrentValue());
 		HBox hbox = new HBox();
-		Label devicesLabel = new Label("Devices");
+		String label = "Devices";
+		if (col.isRequired()) label += " *";
+		Label devicesLabel = new Label(label);
 		devicesLabel.setLayoutX(14.0);
 		devicesLabel.setLayoutY(14.0);
 		devicesLabel.setPrefHeight(26.0);
-		devicesLabel.setPrefWidth(200.0);
+		devicesLabel.setPrefWidth(231.0);
 		devicesLabel.setMinWidth(100.0);
-		devicesLabel.setMaxWidth(200.0);
-		HBox.setHgrow(devicesLabel, Priority.ALWAYS);
+		devicesLabel.setMaxWidth(231.0);
+		HBox.setHgrow(devicesLabel, Priority.NEVER);
 		hbox.getChildren().add(devicesLabel);
 		editableFieldsVBox.getChildren().add(hbox);
 		GridPane grid = new GridPane();
@@ -508,7 +521,9 @@ public class CoreMXFController extends AnchorPane {
 		IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
 		ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(summary.getCoreData().get(col).getCurrentValue());
 		HBox hbox = new HBox();
-		Label identifierLabel = new Label("Identifiers");
+		String label = "Identifiers";
+		if (col.isRequired()) label += " *";
+		Label identifierLabel = new Label(label);
 		final Tooltip tt = new Tooltip("Identifiers" + "\n\n" + MXFColumnHelpText.getInstance().getHelpText(col));
 		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
 		tt.setPrefWidth(500);
@@ -518,10 +533,10 @@ public class CoreMXFController extends AnchorPane {
 		identifierLabel.setLayoutX(14.0);
 		identifierLabel.setLayoutY(14.0);
 		identifierLabel.setPrefHeight(26.0);
-		identifierLabel.setPrefWidth(200.0);
+		identifierLabel.setPrefWidth(231.0);
 		identifierLabel.setMinWidth(100.0);
-		identifierLabel.setMaxWidth(200.0);
-		HBox.setHgrow(identifierLabel, Priority.ALWAYS);
+		identifierLabel.setMaxWidth(231.0);
+		HBox.setHgrow(identifierLabel, Priority.NEVER);
 		hbox.getChildren().add(identifierLabel);
 		editableFieldsVBox.getChildren().add(hbox);
 		GridPane grid = new GridPane();

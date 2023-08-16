@@ -35,18 +35,15 @@
 					<HBox alignment="CENTER">
 						<children>
 							<Button
-								alignment="CENTER"
 								fx:id="aboutButton"
-								mnemonicParsing="false"
-								prefWidth="72.0"
-								text="About"
+								prefWidth="100.0"
+								text="About "
 							/>
 							<Label prefWidth="30.0" />
 							<Button
-								alignment="CENTER"
 								fx:id="licenseButton"
-								mnemonicParsing="false"
-								text="Licenses"
+								prefWidth="100.0"
+								text="Licenses "
 							/>
 						</children>
 					</HBox>
@@ -93,7 +90,7 @@
 											<Pane prefHeight="50.0">
 												<children>
 													<Label
-														text="Version: 1.0.0"
+														text="Version: 1.2.0"
 													/>
 													<Hyperlink
 														fx:id="fadgiLink"

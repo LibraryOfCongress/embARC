@@ -1,17 +1,19 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.controlsfx.control.textfield.CustomTextField;
 
 import com.portalmedia.embarc.gui.dpx.ValidationChangeListener;
+import com.portalmedia.embarc.gui.mxf.ValidationChangeListenerMXF;
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.beans.property.StringProperty;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -25,7 +27,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 
@@ -38,18 +39,15 @@ import javafx.stage.Modality;
  */
 public class ASCIIField extends AnchorPane implements IEditorField {
 	@FXML
-	private HBox ASCIIHBox;
-	@FXML
 	private CustomTextField editorTextField;
 	@FXML
 	private Label editorTextFieldLabel;
 	@FXML
 	private FontAwesomeIconView popoutIcon;
 
-	DPXColumn column;
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
+	private DPXColumn column;
 	private String originalValue;
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public ASCIIField() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ASCIIField.fxml"));
@@ -184,11 +182,21 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 				alert.initModality(Modality.APPLICATION_MODAL);
 				alert.initOwner(Main.getPrimaryStage());
 
-				final ButtonType[] buttonList = new ButtonType[1];
-				if (column.getEditable()) {
-					buttonList[0] = ButtonType.APPLY;
-				} else {
-					buttonList[0] = ButtonType.CLOSE;
+				final ButtonType[] buttonList = new ButtonType[2];
+				if (column != null) {
+					if (column.getEditable()) {
+						buttonList[0] = ButtonType.APPLY;
+						buttonList[1] = ButtonType.CLOSE;
+					} else {
+						buttonList[0] = ButtonType.CLOSE;
+					}
+				} else if (mxfColumn != null) {
+					if (mxfColumn.getEditable()) {
+						buttonList[0] = ButtonType.APPLY;
+						buttonList[1] = ButtonType.CLOSE;
+					} else {
+						buttonList[0] = ButtonType.CLOSE;
+					}
 				}
 				alert.getButtonTypes().setAll(buttonList);
 
@@ -248,11 +256,9 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 		if (originalValue == null) {
 			return false;
 		}
-		//System.out.println("Orig: " + originalValue.trim() + " New: " + editorTextField.getText().trim())
 		if (originalValue.trim().equals(editorTextField.getText().trim())) {
 			return false;
 		}
-
 		return true;
 	}
 
@@ -263,7 +269,9 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	 * com.portalmedia.embarc.gui.IEditorField#setMXFColumn(MXFColumn)
 	 */
 	public void setMXFColumn(MXFColumn col) {
-		this.mxfColumn = col;
+		if (this.mxfColumn == null) {
+			this.mxfColumn = col;
+		}
 	}
 
 	/*
@@ -274,4 +282,16 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	public MXFColumn getMXFColumn() {
 		return mxfColumn;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see com.portalmedia.embarc.gui.IEditorField#setMXFRules()
+	 */
+	public void setMXFMissingRequiredFieldRules() {
+		ValidationChangeListenerMXF validationListener = new ValidationChangeListenerMXF(editorTextField, mxfColumn);
+		validationListener.setMissingRequiredField(originalValue);
+		editorTextField.textProperty().addListener(validationListener);
+	}
+	
 }

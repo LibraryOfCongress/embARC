@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import com.portalmedia.embarc.parser.dpx.DPXColumn;
-
 /**
  * Method to store all needed information about a metadata column.
  *
@@ -86,5 +84,9 @@ public class MetadataColumn implements Serializable, MetadataColumnDef {
 	@Override
 	public String getCurrentValue() {
 		return BytesToStringHelper.toTypedString(type, currentValue, getByteOrder());
+	}
+	
+	public String getStandardizedValue() {
+		return BytesToStringHelper.toStandardizedTypedString(type, currentValue, getByteOrder());
 	}
 }

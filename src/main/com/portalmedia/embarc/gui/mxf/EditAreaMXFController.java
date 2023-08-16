@@ -4,6 +4,8 @@ import java.net.URL;
 
 import java.util.ResourceBundle;
 
+import com.portalmedia.embarc.gui.Main;
+import com.portalmedia.embarc.gui.helper.MXFFileList;
 import com.portalmedia.embarc.parser.SectionDef;
 import com.portalmedia.embarc.parser.mxf.MXFSection;
 
@@ -13,9 +15,14 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Modality;
 
 /**
  * 
@@ -33,6 +40,8 @@ public class EditAreaMXFController implements Initializable {
 	private ScrollPane mxfEditScrollPane;
 	@FXML
 	private Button writeMXFFilesButton;
+	@FXML
+	private SplitPane writeMXFFilesControlWrapper;
 
 	CoreMXFController coreView;
 	WriteMXFController writeViewMXF;
@@ -44,16 +53,6 @@ public class EditAreaMXFController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorMXF.getInstance().registerEditAreaController(this);
-		
-		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener() {
-			@Override
-			public void changed(ObservableValue o, Object ov, Object nv) {
-				if (writeViewMXF == null) return;
-				else {
-					writeMXFFilesButton.setDisable((boolean) nv);
-				}
-			}
-		});
 
 		writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -63,6 +62,48 @@ public class EditAreaMXFController implements Initializable {
 		});
 
 		writeMXFFilesButton.setGraphicTextGap(20);
+
+		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) {
+				if (writeViewMXF == null) return;
+				setWriteFilesButtonsDisabled(nv);
+			}
+		});
+
+		MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) {
+				if (writeViewMXF == null) return;
+				if (nv) {
+					writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
+						@Override
+						public void handle(ActionEvent e) {
+							final Alert alert = new Alert(AlertType.NONE, "Fix missing required Core DMS fields marked with icon in Core DMS tab.", ButtonType.OK);
+							alert.initModality(Modality.APPLICATION_MODAL);
+							alert.initOwner(Main.getPrimaryStage());
+							alert.setHeaderText("Cannot Write Files");
+							alert.showAndWait();
+							if (alert.getResult() == ButtonType.OK) {
+								alert.close();
+							}
+						}
+					});
+				} else {
+					writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
+						@Override
+						public void handle(ActionEvent e) {
+							WriteFilesModalControllerMXF.getInstance().showWriteFilesDialog();
+						}
+					});
+				}
+			}
+		});
+	}
+
+	private void setWriteFilesButtonsDisabled(boolean isDisabled) {
+		writeMXFFilesButton.setDisable(isDisabled);
+		Main.getMXFMenuBar().getMenus().get(0).getItems().get(2).setDisable(isDisabled);
 	}
 
 	public void resetEditArea() {
@@ -87,7 +128,7 @@ public class EditAreaMXFController implements Initializable {
 		if (editAreaContainer.getChildren().size() > 0) {
 			editAreaContainer.getChildren().removeAll(editAreaContainer.getChildren());
 		}
-		coreView.setSection(false);
+		coreView.setSection();
 		coreView.setTitle("Core DMS");
 		coreView.setMaxWidth(Double.MAX_VALUE);
 		AnchorPane.setTopAnchor(coreView, 0.0);

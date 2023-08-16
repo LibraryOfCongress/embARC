@@ -1,7 +1,6 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
@@ -28,13 +27,9 @@ public class FloatField extends AnchorPane implements IEditorField {
 	@FXML
 	private Label editorTextFieldLabel;
 
-	DPXColumn column;
-
-	HashSet<ValidationRuleSetEnum> validationRuleSetEnum;
-
+	private DPXColumn column;
 	private String originalValue;
-
-	MXFColumn mxfColumn;
+	private MXFColumn mxfColumn;
 
 	public FloatField() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("FloatField.fxml"));

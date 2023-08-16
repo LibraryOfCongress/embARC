@@ -24,6 +24,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.DragEvent;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -43,7 +44,7 @@ public class FileProcessController {
 	List<String> validFileFailures = new ArrayList<>();
 	int totalItemsCount;
 	FileFormat fileFormat = FileFormat.OTHER;
-    private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
+	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
 
 	private static class ControllerHolder {
 		private static final FileProcessController INSTANCE = new FileProcessController();
@@ -134,28 +135,25 @@ public class FileProcessController {
 		}
 
 		// create file processing report labels for ProgressDialog
-		final List<Label> labels = new ArrayList<>();
+		final List<Text> labels = new ArrayList<>();
 		final int total = validFileList.size() + validFileFailures.size() + notValidFileList.size();
-		labels.add(new Label(fileFormat + " Successes: " + validFileList.size()));
-		labels.add(new Label(fileFormat + " Failures: " + validFileFailures.size()));
-		labels.add(new Label("Non-" + fileFormat + " Ignored: " + notValidFileList.size()));
-		final Label totalProcessed = new Label("Total Files Processed: " + total);
+		labels.add(new Text(fileFormat + " Successes: " + validFileList.size()));
+		labels.add(new Text(fileFormat + " Failures: " + validFileFailures.size()));
+		labels.add(new Text("Non-" + fileFormat + " Ignored: " + notValidFileList.size()));
+		final Text totalProcessed = new Text("Total Files Processed: " + total);
 		labels.add(totalProcessed);
 		progressDialog.showLabels(labels);
 		progressDialog.showCloseButton();
 
-		// fetch the new file list if any valid files were added
-		if (validFileList.size() > 0) {
-			validFileList.removeAll(validFileList);
-			notValidFileList.removeAll(notValidFileList);
-			validFileFailures.removeAll(validFileFailures);
+		// reset the lists and update the working file list
+		validFileList.clear();
+		notValidFileList.clear();
+		validFileFailures.clear();
 
-			if (fileFormat == FileFormat.DPX) {
-				ControllerMediatorDPX.getInstance().refetchFileList();
-			} else if (fileFormat == FileFormat.MXF) {
-				ControllerMediatorMXF.getInstance().setFileList();
-			}
-			System.gc();
+		if (fileFormat == FileFormat.DPX) {
+			ControllerMediatorDPX.getInstance().refetchFileList();
+		} else if (fileFormat == FileFormat.MXF) {
+			ControllerMediatorMXF.getInstance().setFileList();
 		}
 
 		if (event != null) {
@@ -164,27 +162,33 @@ public class FileProcessController {
 	}
 
 
-	private List<File> getAllFilesInPath(File file, List<File> fileList) {
-		final Path folder = Paths.get(file.getAbsolutePath());
+	private List<File> getAllFilesInPath(String file, List<File> fileList) {
+		final Path folder = Paths.get(file);
 		if (!Files.isDirectory(folder)) {
-			fileList.add(file);
+			fileList.add(new File(file));
 		} else {
+			List<Path> pathsToProcess = new ArrayList<Path>();
 			try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder)) {
 				for (final Path filePath : stream) {
 					if (Files.isHidden(filePath)) {
 						continue;
 					}
-					if (Files.isDirectory(filePath)) {
-						getAllFilesInPath(file, fileList);
-					} else {
-						File newFile = new File(filePath.toString());
-						fileList.add(newFile);
+					else {
+						pathsToProcess.add(filePath);
 					}
 				}
 			} catch (final IOException ex) {
 				// An I/O problem has occurred
 				LOGGER.log(Level.SEVERE, ex.toString(), ex);
-				ex.printStackTrace();
+			}
+			for(final Path filePath : pathsToProcess) {
+				if (Files.isDirectory(filePath)) {
+					LOGGER.log(Level.WARNING, "Checking file path " + filePath);
+					getAllFilesInPath(filePath.toString(), fileList);
+				} else {
+					File newFile = new File(filePath.toString());
+					fileList.add(newFile);
+				}
 			}
 		}
 		return fileList;
@@ -192,21 +196,21 @@ public class FileProcessController {
 
 	private Boolean validFileFormat(List<File> files) {
 		List<File> fileList = new ArrayList<File>();
-		for (File f : files) getAllFilesInPath(f, fileList);
+		for (File f : files) getAllFilesInPath(f.toString(), fileList);
 
 		Boolean foundMXF = false;
 		Boolean foundDPX = false;
 
 		for (File file : fileList) {
-			Boolean isMXF = FileFormatDetection.isMXF(file.getAbsolutePath());
-			if (isMXF) {
-				foundMXF = true;
-				continue;
-			}
-
 			Boolean isDPX = FileFormatDetection.isDPX(file.getAbsolutePath());
 			if (isDPX) {
 				foundDPX = true;
+				continue;
+			}
+			
+			Boolean isMXF = FileFormatDetection.isMXF(file.getAbsolutePath());
+			if (isMXF) {
+				foundMXF = true;
 				continue;
 			}
 		}
@@ -247,6 +251,9 @@ public class FileProcessController {
 
 				int count = 0;
 				final int totalValidFiles = validFileList.size();
+				
+				LOGGER.info("Total DPX/MXF Files: " + totalValidFiles);
+				
 				int increment = 1;
 
 				if (totalValidFiles > 10000) {
@@ -267,9 +274,12 @@ public class FileProcessController {
 							final boolean success = DPXFileListHelper.addFileToDatabase(f);
 							count++;
 							if (!success) { // This error is most likely a duplicate file path
+								LOGGER.info("Error while adding " + fileFormat + " file to DB.");
 								System.out.println("Error while adding " + fileFormat + " file to DB.");
 								validFileFailures.add(f);
 							}
+
+							LOGGER.info("Finished adding " + count + ": " + f);
 							if (count == totalFiles || count % increment == 0) {
 								processed = (count * 100) / totalFiles;
 								updateProgress(processed, 100);
@@ -291,14 +301,11 @@ public class FileProcessController {
 					}
 				} catch (final Exception ex) {
 					LOGGER.log(Level.SEVERE, ex.toString(), ex);
-					ex.printStackTrace();
 				}
 				count += notValidFileList.size();
 				processed = (count * 100) / totalFiles;
 				updateProgress(processed, 100);
 
-				Runtime.getRuntime().gc();
-				System.gc();
 				return null;
 			}
 		};
@@ -324,7 +331,6 @@ public class FileProcessController {
 			} catch (final IOException ex) {
 				// An I/O problem has occurred
 				LOGGER.log(Level.SEVERE, ex.toString(), ex);
-				ex.printStackTrace();
 			}
 		}
 	}

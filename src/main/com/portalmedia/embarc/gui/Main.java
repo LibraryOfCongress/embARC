@@ -2,8 +2,13 @@ package com.portalmedia.embarc.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -26,10 +31,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -60,18 +65,30 @@ public class Main extends Application {
 	private static String programType = "";
 	static Handler fileHandler = null;
 	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
+	private static final String embARCVersion = "v1.2.0";
 
 	public static void main(String[] args) throws Exception {
-		setupLogger();
-		LOGGER.info("Starting embARC");
-		launch(args);
+		try {
+			RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+			List<String> arguments = runtimeMxBean.getInputArguments();
+			for(String a : arguments){
+				LOGGER.info(a);
+			}
+			setupLogger();
+			LOGGER.info("Starting embARC " + embARCVersion);
+			launch(args);
+		}
+		catch(Exception ex) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in Main.  Rethrowing", ex);
+			throw ex;
+		}
 	}
 
 	public static void setupLogger() {
 		try {
 			String logFileDir = "";
 
-		    String os = System.getProperty("os.name");
+			String os = System.getProperty("os.name");
 			String cleanHomePath = CleanInputPathHelper.cleanString(System.getProperty("user.home"));
 			if (os != null && os.startsWith("Mac")) {
 				// MacOS log file location
@@ -81,16 +98,16 @@ public class Main extends Application {
 				logFileDir = cleanHomePath + "/AppData/Local/embARC";
 			}
 
-		    File directory = new File(logFileDir);
-		    if (!directory.exists()) directory.mkdir();
-		    String fullPath = logFileDir + "/embARC.log";
-		    fileHandler = new FileHandler(fullPath);
-		    System.out.println("log file location: " + fullPath);
-		    SimpleFormatter simple = new SimpleFormatter();
-		    fileHandler.setFormatter(simple);
-		    LOGGER.addHandler(fileHandler);
+			File directory = new File(logFileDir);
+			if (!directory.exists()) directory.mkdir();
+			Path fullPath = Paths.get(logFileDir, "embARC.log");
+			fileHandler = new FileHandler(fullPath.toString());
+			System.out.println("log file location: " + fullPath);
+			SimpleFormatter simple = new SimpleFormatter();
+			fileHandler.setFormatter(simple);
+			LOGGER.addHandler(fileHandler);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("IO Exception Error");
 		}
 	}
 
@@ -106,7 +123,7 @@ public class Main extends Application {
 
 			StackPane stack = new StackPane();
 
-			Label embarcLabel = new Label("embARC v1.0.0");
+			Label embarcLabel = new Label("embARC " + embARCVersion);
 			embarcLabel.setFont(Font.font ("Verdana", 14));
 			embarcLabel.setPadding(new Insets(150,0,0,400));
 
@@ -120,8 +137,10 @@ public class Main extends Application {
 			splashLayout.setCenter(stack);
 			splashLayout.setStyle("-fx-background-color: transparent;");
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
+			
+		}catch (Exception e) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
 		}
 	}
 
@@ -166,10 +185,6 @@ public class Main extends Application {
 		setSplashScreenCloseRequest();
 	}
 
-	public static void hideSplash() {
-		if (splashStage.isShowing()) splashStage.hide();
-	}
-
 	public static void showMainStageDPX(Boolean refresh) {
 		LOGGER.info("Begin DPX GUI");
 		programType = "DPX";
@@ -185,8 +200,8 @@ public class Main extends Application {
 			dbService.dropCollection();
 			dbService.closeDB();
 			primaryStage.show();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in showMainStageDPX", ex);
 		}
 	}
 
@@ -202,7 +217,7 @@ public class Main extends Application {
 			rootLayout.setCenter(mainWindow);
 			primaryStage.show();
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in showMainStageMXF", e);
 		}
 	}
 
@@ -221,7 +236,7 @@ public class Main extends Application {
 				Optional<ButtonType> result = alert.showAndWait();
 				if (result.get() == ButtonType.OK) {
 					LOGGER.info("Closing embARC");
-					if (programType == "DPX") closeDatabase();
+					if ("DPX".equals(programType)) closeDatabase();
 				} else {
 					e.consume();
 				}
@@ -233,7 +248,7 @@ public class Main extends Application {
 		splashStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
 			public void handle(WindowEvent e) {
-				if (!primaryStage.isShowing() || programType == "DPX") closeDatabase();
+				if (!primaryStage.isShowing() || "DPX".equals(programType)) closeDatabase();
 			}
 		});
 	}
@@ -250,7 +265,7 @@ public class Main extends Application {
 				return null;
 			}, executor).get(60, TimeUnit.SECONDS);
 		} catch (Exception ex) {
-			System.out.println("Unable to close database");
+			LOGGER.log(java.util.logging.Level.SEVERE, "Error closing database", ex);
 		}
 		executor.shutdown();
 	}
@@ -261,6 +276,10 @@ public class Main extends Application {
 
 	public static Stage getSplashStage() {
 		return splashStage;
+	}
+
+	public static MenuBar getMXFMenuBar() {
+		return menuBarMXF;
 	}
 
 	public static void setMenuBarDPX(Boolean refresh) {
@@ -304,5 +323,5 @@ public class Main extends Application {
 			splashLayout.setTop(splashMenuBar);
 		}
 	}
-	
+
 }
