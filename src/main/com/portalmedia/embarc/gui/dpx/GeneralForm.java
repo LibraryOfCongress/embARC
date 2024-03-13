@@ -26,10 +26,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 /**
- * UI component for displaying file name and file path
+ * UI component for displaying filename and file path
  * Also allows user to view an image
  *
  * @author PortalMedia
@@ -37,15 +36,10 @@ import javafx.scene.layout.VBox;
  * @since 2018-05-08
  */
 public class GeneralForm extends AnchorPane {
-
-	@FXML
-	private VBox userDataContainer;
 	@FXML
 	private Label sectionLabel;
 	@FXML
 	private Label selectedFilesLabel;
-	@FXML
-	private HBox subsectionBox;
 	@FXML
 	private AnchorPane generalInfo;
 
@@ -64,34 +58,47 @@ public class GeneralForm extends AnchorPane {
 		}
 
 		final SelectedFilesSummary summary = ControllerMediatorDPX.getInstance().getSelectedFilesSummary();
+		setNumberOfSelectedFiles(summary.getFileCount());
 
+		final HBox gridBox = new HBox();
+		gridBox.setPadding(new Insets(10, 0, 0, 10));
 		final GridPane grid = new GridPane();
+		gridBox.getChildren().add(grid);
 		grid.setAlignment(Pos.CENTER);
-		grid.setHgap(10);
-		grid.setVgap(10);
-		grid.setPadding(new Insets(25, 25, 25, 25));
+		grid.setHgap(15);
+		grid.setVgap(15);
 
-		generalInfo.getChildren().add(grid);
-
-		final Label fileNameLabel = new Label("Filename:");
-		grid.add(fileNameLabel, 0, 0);
+		generalInfo.getChildren().add(gridBox);
 
 		final Label fileNameText = new Label(summary.getFileName());
+		fileNameText.setFocusTraversable(false);
 		grid.add(fileNameText, 1, 0);
-
-		final Label filePath = new Label("File Path:");
-		grid.add(filePath, 0, 1);
+		final Label fileNameLabel = new Label("Filename ");
+		fileNameLabel.setStyle("-fx-font-size: 12.0");
+		fileNameLabel.setAccessibleText("File name is " + fileNameText.getText());
+		fileNameLabel.setFocusTraversable(true);
+		grid.add(fileNameLabel, 0, 0);
 
 		filePathString = summary.getFilePath();
 		final Label filePathText = new Label(filePathString);
+		filePathText.setFocusTraversable(false);
 		grid.add(filePathText, 1, 1);
+		final Label filePath = new Label("File Path ");
+		filePath.setStyle("-fx-font-size: 12.0");
+		filePath.setAccessibleText("File path is " + filePathString);
+		filePath.setFocusTraversable(true);
+		grid.add(filePath, 0, 1);
 
 		if (filePathString != null && !filePathString.equals("{multiple values}")) {
-			final Label viewImage = new Label("View Image:");
+			final Label viewImage = new Label("View Image ");
+			viewImage.setStyle("-fx-font-size: 12.0");
+			viewImage.setAccessibleText("View image");
+			viewImage.setFocusTraversable(false);
 			grid.add(viewImage, 0, 2);
 
 			final FontAwesomeIconView viewImageIcon = new FontAwesomeIconView();
 			viewImageIcon.setGlyphName("EXTERNAL_LINK");
+			viewImageIcon.setAccessibleText("Select to open image viewer");
 			final Button b = new Button();
 			b.setGraphic(viewImageIcon);
 			b.setOnAction(new EventHandler<ActionEvent>() {
@@ -107,11 +114,11 @@ public class GeneralForm extends AnchorPane {
 
 	public void setTitle(String title) {
 		sectionLabel.setText(title);
+		sectionLabel.setAccessibleText(title);
+		sectionLabel.setFocusTraversable(true);
 	}
 
 	public void showDiaglog() {
-		logger.error("PROBLEM");
-
 		Path tempPath;
 		try {
 
@@ -167,7 +174,10 @@ public class GeneralForm extends AnchorPane {
 			System.out.println("Error displaying DPX sequence final");
 		}
 		return;
-
 	}
 
+	private void setNumberOfSelectedFiles(int num) {
+		selectedFilesLabel.setText(Integer.toString(num) + " file" + (num > 1 ? "s " : " ") + "selected");
+		selectedFilesLabel.setFocusTraversable(true);
+	}
 }

@@ -215,10 +215,6 @@ public class DBService<T> {
 	}
 
 	public long getSize() {
-		System.out.println("Repo closed: " + repo.isClosed());
-		System.out.println("Repo name: " + repo.getName());
-		System.out.println("Repo name: " + repo.getType());
-
 		return repo.size();
 	}
 

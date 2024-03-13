@@ -6,12 +6,11 @@ import java.util.ResourceBundle;
 import com.portalmedia.embarc.gui.helper.MXFFileList;
 import com.portalmedia.embarc.gui.model.MXFSelectedFilesSummary;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.AccessibleRole;
 import javafx.scene.control.Label;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.input.KeyCode;
 
 /**
  * UI component, bottom strip containing file count, error count, etc
@@ -22,15 +21,8 @@ import javafx.scene.layout.AnchorPane;
  */
 @SuppressWarnings({ "rawtypes" })
 public class SessionSummaryController implements Initializable {
-
-	@FXML
-	private AnchorPane sessionSummaryContainer;
-	@FXML
-	private Label totalNumberOfFilesLabel;
 	@FXML
 	private Label totalFilesLabel;
-	@FXML
-	private Label numberOfSelectedFilesLabel;
 	@FXML
 	private Label filesSelectedLabel;
 	@FXML
@@ -44,61 +36,91 @@ public class SessionSummaryController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorMXF.getInstance().registerSessionSummaryController(this);
+
 		removeSelectedFilesLabel.setVisible(false);
-		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener() {
-			@Override
-			public void changed(ObservableValue o, Object ov, Object nv) {
-				selectAllFilesLabel.setDisable((Boolean) nv);
-				deselectAllFilesLabel.setDisable((Boolean) nv);
-				removeSelectedFilesLabel.setDisable((Boolean) nv);
-			}
+
+		totalFilesLabel.setAccessibleText("Total number of files imported.");
+		totalFilesLabel.setFocusTraversable(true);
+
+		filesSelectedLabel.setAccessibleText("Total number of files currently selected.");
+		filesSelectedLabel.setFocusTraversable(true);
+		
+		selectAllFilesLabel.setAccessibleText("Select all files.");
+		selectAllFilesLabel.setAccessibleRole(AccessibleRole.BUTTON);
+		selectAllFilesLabel.setFocusTraversable(true);
+		selectAllFilesLabel.getStyleClass().add("hover-hand");
+		selectAllFilesLabel.setOnMouseClicked(event -> {
+			ControllerMediatorMXF.getInstance().selectAllFiles();
 		});
+		selectAllFilesLabel.setOnKeyPressed(event -> {
+			if (event.getCode() != KeyCode.SPACE) {
+				return;
+			}
+			ControllerMediatorMXF.getInstance().selectAllFiles();
+		});
+		
+		deselectAllFilesLabel.setAccessibleText("Deselect all files.");
+		deselectAllFilesLabel.setAccessibleRole(AccessibleRole.BUTTON);
+		deselectAllFilesLabel.setFocusTraversable(true);
+		deselectAllFilesLabel.getStyleClass().add("hover-hand");
+		deselectAllFilesLabel.setOnMouseClicked(event -> {
+			ControllerMediatorMXF.getInstance().deselectAllFiles();
+		});
+		deselectAllFilesLabel.setOnKeyPressed(event -> {
+			if (event.getCode() != KeyCode.SPACE) {
+				return;
+			}
+			ControllerMediatorMXF.getInstance().deselectAllFiles();
+		});
+		
+		removeSelectedFilesLabel.setAccessibleText("Remove all selected files.");
+		removeSelectedFilesLabel.setAccessibleRole(AccessibleRole.BUTTON);
+		removeSelectedFilesLabel.setFocusTraversable(true);
+		removeSelectedFilesLabel.getStyleClass().add("hover-hand");
+		removeSelectedFilesLabel.setOnMouseClicked(event -> {
+			ControllerMediatorMXF.getInstance().deleteSelectedFiles();
+		});
+		removeSelectedFilesLabel.setOnKeyPressed(event -> {
+			if (event.getCode() != KeyCode.SPACE) {
+				return;
+			}
+			ControllerMediatorMXF.getInstance().deleteSelectedFiles();
+		});
+		
 		setFiles();
-	}
-
-	@SuppressWarnings("ucd") // referenced in SessionSummary.fxml
-	public void removeSelectedFiles() {
-		ControllerMediatorMXF.getInstance().deleteSelectedFiles();
-		setFiles();
-	}
-
-	@SuppressWarnings("ucd") // referenced in SessionSummary.fxml
-	public void selectAllFiles() {
-		ControllerMediatorMXF.getInstance().selectAllFiles();
-	}
-
-	@SuppressWarnings("ucd") // referenced in SessionSummary.fxml
-	public void deselectAllFiles() {
-		ControllerMediatorMXF.getInstance().deselectAllFiles();
 	}
 
 	public <T> void setFiles() {
 		MXFFileList.getInstance();
 		final long size = MXFFileList.getList().size();
-		selectAllFilesLabel.setVisible(true);
-		deselectAllFilesLabel.setVisible(true);
-		if (size > 1) {
-			totalFilesLabel.setText("files imported");
-		} else if (size == 1) {
-			totalFilesLabel.setText("file imported");
-		} else if (size == 0) {
+		if (size >= 1) {
+			String text = Long.toString(size) + " file" + (size == 1 ? " " : "s ") + "imported";
+			totalFilesLabel.setText(text);
+			totalFilesLabel.setAccessibleText(text);
+			selectAllFilesLabel.setVisible(true);
+			deselectAllFilesLabel.setVisible(true);
+		} else {
+			totalFilesLabel.setText(Long.toString(size) + " files imported");
+			totalFilesLabel.setAccessibleText(Long.toString(size) + " files imported");
 			selectAllFilesLabel.setVisible(false);
 			deselectAllFilesLabel.setVisible(false);
 		}
-		totalNumberOfFilesLabel.setText(Long.toString(size));
 	}
 
 	public <T> void setSelectedFileList(MXFSelectedFilesSummary list) {
-		deselectAllFilesLabel.setVisible(true);
-		removeSelectedFilesLabel.setVisible(true);
-		filesSelectedLabel.setText("files selected");
-		if (list.getFileCount() == 1) {
-			filesSelectedLabel.setText("file selected");
-		} else if (list.getFileCount() == 0) {
+		final long size = list.getFileCount();
+		if (size >= 1) {
+			String text = Long.toString(size) + " file" + (size == 1 ? " " : "s ") + "selected";
+			filesSelectedLabel.setText(text);
+			filesSelectedLabel.setAccessibleText(text);
+			deselectAllFilesLabel.setVisible(true);
+			removeSelectedFilesLabel.setVisible(true);
+		} else {
+			filesSelectedLabel.setText(Long.toString(size) + " files selected");
+			filesSelectedLabel.setAccessibleText(Long.toString(size) + " files selected");
 			selectAllFilesLabel.setVisible(true);
 			deselectAllFilesLabel.setVisible(false);
 			removeSelectedFilesLabel.setVisible(false);
 		}
-		numberOfSelectedFilesLabel.setText(Long.toString(list.getFileCount()));
 	}
 }

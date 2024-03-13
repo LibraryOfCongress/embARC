@@ -65,7 +65,7 @@ public class Main extends Application {
 	private static String programType = "";
 	static Handler fileHandler = null;
 	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
-	private static final String embARCVersion = "v1.2.0";
+	private static final String embARCVersion = "v1.3.0";
 
 	public static void main(String[] args) throws Exception {
 		try {
@@ -163,6 +163,8 @@ public class Main extends Application {
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(Main.class.getResource("/com/portalmedia/embarc/gui/Root.fxml"));
 		rootLayout = loader.load();
+		rootLayout.setAccessibleText("embARC Application");
+		rootLayout.setAccessibleHelp("embARC Application");
 		
 		// set root scene, apply style sheet
 		Scene scene = new Scene(rootLayout);

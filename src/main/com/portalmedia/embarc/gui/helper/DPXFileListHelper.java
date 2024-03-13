@@ -202,7 +202,7 @@ public class DPXFileListHelper {
 		selectAll = value;
 	}
 
-	private static DPXFileInformationViewModel toFileInformationViewModel(DPXFileInformation f) {
+	public static DPXFileInformationViewModel toFileInformationViewModel(DPXFileInformation f) {
 		final DPXFileInformationViewModel fivm = new DPXFileInformationViewModel();
 		fivm.setProp("name", f.getName());
 		fivm.setProp("path", f.getPath());

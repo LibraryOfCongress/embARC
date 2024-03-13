@@ -28,7 +28,7 @@ import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.dpx.DPXFileInformation;
 
 public class CustomValidationRuleService {
-	static String[] headers = null;
+	private static String[] headers = null;
 
 	public static void readRuleSet(String input, String output, TreeMap<String, DPXFileInformation> dpxFileList) {
 		JSONObject object = null;
@@ -43,13 +43,12 @@ public class CustomValidationRuleService {
 
 		if (object == null) return;
 
-		Object jsonList = object.get("Rules");
-		JSONArray jsonArray = (JSONArray)jsonList;
+		JSONArray jsonArray = object.getJSONArray("Rules");
     	CustomValidationRuleSet validation = new CustomValidationRuleSet();
 
 		if (jsonArray != null) {
 			for (int i = 0; i < jsonArray.length(); i++){
-				JSONObject rule = (JSONObject)jsonArray.get(i);
+				JSONObject rule = jsonArray.getJSONObject(i);
 				CustomValidationRuleDefinition ruleDefinition = new CustomValidationRuleDefinition();
 				ruleDefinition.setColumn(rule.getString("Column"));
 				ruleDefinition.setOperator(rule.getString("Operator"));
@@ -72,6 +71,7 @@ public class CustomValidationRuleService {
 	        String formatted = formatter.format(now);
 			output = FilenameUtils.getFullPath(input) + "embarc_cli_conformance_report_" + formatted + ".csv";
 		}
+
 		try {
 			try(FileWriter fileWriter = new FileWriter(output)){
 				try(ICsvMapWriter csvWriter = new CsvMapWriter(fileWriter, CsvPreference.STANDARD_PREFERENCE)){
@@ -103,6 +103,7 @@ public class CustomValidationRuleService {
 					csvWriter.close();
 				}
 			}
+
 			String numFilesLine = "Number of Files Tested: " + fileCount;
 			String numFailsLine = "Number of Failed Files: " + failedFileNames.size();
 
@@ -171,7 +172,7 @@ public class CustomValidationRuleService {
 		return rule;
 	}
 
-	private static DPXColumn getDPXColumnFromString(String name) {
+	public static DPXColumn getDPXColumnFromString(String name) {
 		DPXColumn col = null;
 
 		switch(name) {
