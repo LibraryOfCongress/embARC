@@ -90,6 +90,7 @@ public class ValidationWarningIcons extends AnchorPane {
 					}
 				}
 				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_CIRCLE);
+				icon.setAccessibleText(ruleText);
 				icon.setStyleClass("fadgi-o-warning");
 				final Tooltip tt = new Tooltip(ruleText);
 				tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
@@ -104,6 +105,7 @@ public class ValidationWarningIcons extends AnchorPane {
 					}
 				}
 				final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_TRIANGLE);
+				icon.setAccessibleText(ruleText);
 				icon.setStyleClass("fadgi-r-warning");
 				final Tooltip tt = new Tooltip(ruleText);
 				tt.setStyle("-fx-text-fill: white;");
@@ -118,6 +120,7 @@ public class ValidationWarningIcons extends AnchorPane {
 					}
 				}
 				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
+				icon.setAccessibleText(ruleText);
 				icon.setStyleClass("fadgi-sr-warning");
 				final Tooltip tt = new Tooltip(ruleText);
 				tt.setStyle("-fx-text-fill: white;");
@@ -132,6 +135,7 @@ public class ValidationWarningIcons extends AnchorPane {
 					}
 				}
 				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_BOX);
+				icon.setAccessibleText(ruleText);
 				icon.setStyleClass("smpte-c-warning");
 				final Tooltip tt = new Tooltip(ruleText);
 				tt.setStyle("-fx-text-fill: white;");

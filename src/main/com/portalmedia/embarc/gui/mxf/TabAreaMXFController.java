@@ -54,7 +54,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView.TableViewSelectionModel;
-import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.util.Callback;
 import tv.amwa.maj.exception.PropertyNotPresentException;
@@ -70,11 +69,9 @@ import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
  */
 public class TabAreaMXFController implements Initializable {
 	@FXML
-	private AnchorPane tabAreaAnchorPane;
+	private TabPane mxfTabPane;
 	@FXML
 	private TableView<MXFFileInformationViewModel> mxfTable;
-	@FXML
-	private TabPane mxfTabPane;
 
 	private TableViewSelectionModel<MXFFileInformationViewModel> tableSelectionModel;
 	private SectionDef selectedSection;
@@ -231,7 +228,6 @@ public class TabAreaMXFController implements Initializable {
 	}
 
 	private void setDescriptorColumns() {
-		// TODO: row nums
 		final TableColumn<MXFFileInformationViewModel, String> idCol = new TableColumn<>("Row");
 		idCol.setId("Row");
 		idCol.setUserData("Descriptors");
@@ -349,7 +345,9 @@ public class TabAreaMXFController implements Initializable {
 				col.setId(mcvm.getDisplayName());
 				setColumnStyles(col, mcvm);
 				setColumnToolTip(col, MXFColumnHelpText.getInstance().getHelpText(mcvm.getColumn()));
-				if (mcvm.getColumn().hasSubsection()) setNestedDataColumns(col);
+				if (mcvm.getColumn().hasSubsection()) {
+					setNestedDataColumns(col);
+				}
 				mxfTable.getColumns().add(col);
 			}
 		}
@@ -429,9 +427,14 @@ public class TabAreaMXFController implements Initializable {
 	private void setSubsectionContextMenu(TableColumn<MXFFileInformationViewModel, String> headerCol) {
 		boolean isTD = "TD".equals(headerCol.getUserData().toString());
 		int max = 0;
-		if (isTD) max = MXFFileList.getInstance().getMaxTD();
-		else max = MXFFileList.getInstance().getMaxBD();
-		if (max <= 1) return;
+		if (isTD) {
+			max = MXFFileList.getInstance().getMaxTD();
+		} else {
+			max = MXFFileList.getInstance().getMaxBD();
+		}
+		if (max <= 1) {
+			return;
+		}
 
 		FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
 		final Tooltip tt = new Tooltip("Right click for options");
@@ -467,8 +470,11 @@ public class TabAreaMXFController implements Initializable {
 		col.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(cellData.getValue().getProp(propName)));
 		col.setId(name);
 		col.setUserData(userData);
-		if ("FileInfo".equals(userData)) col.setVisible(false);
-		else col.setVisible(true);
+		if ("FileInfo".equals(userData)) {
+			col.setVisible(false);
+		} else {
+			col.setVisible(true);
+		}
 		setColumnWidth(col);
 		//setColumnToolTip(col, ""); <- need tooltip data
 		return col;
@@ -545,14 +551,17 @@ public class TabAreaMXFController implements Initializable {
 
 	private void showEditsAlert(int editedCount) {
 		String info = String.format("%s total fields changed.", editedCount);
-		if (editedCount == 1) info = String.format("%s field changed.", editedCount);
+		if (editedCount == 1) {
+			info = String.format("%s field changed.", editedCount);
+		}
 		final Alert alert = new Alert(AlertType.NONE, info, ButtonType.OK);
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
 		alert.setHeaderText("Changes Applied");
 		alert.showAndWait();
-		if (alert.getResult() == ButtonType.OK) alert.close();
-//		ControllerMediatorMXF.getInstance().setEditedFieldsCount(0);
+		if (alert.getResult() == ButtonType.OK) {
+			alert.close();
+		}
 	}
 
 	private void setTabWarnings() {

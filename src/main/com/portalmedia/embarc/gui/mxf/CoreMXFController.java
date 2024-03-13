@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.gui.ASCIIField;
+import com.portalmedia.embarc.gui.DataFieldInfoAlert;
 import com.portalmedia.embarc.gui.DropDownField;
 import com.portalmedia.embarc.gui.IEditorField;
 import com.portalmedia.embarc.gui.LabelField;
@@ -36,6 +37,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.AccessibleRole;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -43,12 +45,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import tv.amwa.maj.exception.PropertyNotPresentException;
 import tv.amwa.maj.model.impl.AS07CoreDMSDeviceObjectsImpl;
@@ -64,23 +66,20 @@ import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CoreMXFController extends AnchorPane {
 	@FXML
-	private VBox dataContainer;
-	@FXML
-	private Label editFormLabel;
+	private Label sectionLabel;
 	@FXML
 	private Label selectedFilesLabel;
 	@FXML
-	private Button toggleEditButton;
+	private VBox editableFieldsVBox;
+	@FXML
+	private Text editingSummary;
 	@FXML
 	private Button applyChangesButton;
 	@FXML
-	private Label editingSummary;
-	@FXML
-	private VBox editableFieldsVBox;
+	private Button discardChangesButton;
 
 	private HashSet<IEditorField> fields;
 	private IntegerProperty editedFieldsCount = new SimpleIntegerProperty(0);
-	private int numSelected;
 
 	public CoreMXFController() {
 		ControllerMediatorMXF.getInstance().registerCoreMXFController(this);
@@ -94,98 +93,78 @@ public class CoreMXFController extends AnchorPane {
 			throw new RuntimeException(exception);
 		}
 
-		ControllerMediatorMXF.getInstance().isEditingProperty().addListener(new ChangeListener() {
-			@Override
-			public void changed(ObservableValue o, Object ov, Object nv) {
-				setIsEditingMode((Boolean) nv);
-			}
-		});
-
-		setIsEditingMode(ControllerMediatorMXF.getInstance().isEditingProperty().get());
-
-		toggleEditButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent e) {
-				final Boolean isEditing = ControllerMediatorMXF.getInstance().isEditingProperty().get();
-				ControllerMediatorMXF.getInstance().isEditingProperty().set(!isEditing);
-			}
-		});
-
 		editedFieldsCount.addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> obs, Number ov, Number nv) {
+				final String[] numFiles = selectedFilesLabel.getText().split(" ");
 				if (nv.intValue() == 0) {
-					editingSummary.setText("");
-					applyChangesButton.setDisable(true);
-					applyChangesButton.setStyle("-fx-background-color: #7EFFFE;");
+					editingSummary.setText("0 edited fields");
 					return;
 				}
-				String text = "Change ";
-				if (nv.intValue() == 1) text += nv + " field in ";
-				else text += nv + " fields in ";
-				if (numSelected == 1) text += numSelected + " file?";
-				else text += numSelected + " files?";
-				editingSummary.setText(text);
-				applyChangesButton.setDisable(false);
-				applyChangesButton.setStyle("-fx-background-color: #AED581");
-			}
-		});
-
-		applyChangesButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent e) {
-				final HashMap<MXFColumn, MetadataColumnDef> changedValsNew = new LinkedHashMap<MXFColumn, MetadataColumnDef>();
-				for (final IEditorField field : fields) {
-					if (field.valueChanged()) {
-						changedValsNew.put(field.getMXFColumn(), new StringMetadataColumn(field.getMXFColumn(), field.getValue()));
-					}
+				String filesString = " files";
+				if ("1".equals(numFiles[0])) {
+					filesString = " file";
 				}
-				ControllerMediatorMXF.getInstance().updateChangedValues(changedValsNew);
+				String text = nv.intValue() + (nv.intValue() == 1 ? " edit in " : " edits in ") + numFiles[0] + filesString;
+				editingSummary.setText(text);
 			}
 		});
 
-		editableFieldsVBox.setPadding(new Insets(10, 10, 10, 10));
+		applyChangesButton.setOnAction(e -> {
+			if (editedFieldsCount.get() == 0) {
+				showAlert("", "There are no edits to apply.");
+				return;
+			}
+			final HashMap<MXFColumn, MetadataColumnDef> changedValsNew = new LinkedHashMap<MXFColumn, MetadataColumnDef>();
+			for (final IEditorField field : fields) {
+				if (field.valueChanged()) {
+					changedValsNew.put(field.getMXFColumn(), new StringMetadataColumn(field.getMXFColumn(), field.getValue()));
+				}
+			}
+			ControllerMediatorMXF.getInstance().updateChangedValues(changedValsNew);
+		});
+
+		discardChangesButton.setOnAction(e -> {
+			if (editedFieldsCount.get() == 0) {
+				showAlert("", "There are no edits to discard.");
+			} else {
+				showConfirmation("Are you sure?", "Press OK to discard current changes. Press cancel to keep changes.");
+			}
+		});
 	}
 
 	public void setTitle(String title) {
-		editFormLabel.setText(title);
+		sectionLabel.setText(title);
 	}
 
 	private void calculateEditedFields() {
 		int count = 0;
 		for (final IEditorField field : fields) {
-			if (field.valueChanged()) count++;
+			if (field.valueChanged()) {
+				count++;
+			}
 		}
 		editedFieldsCount.set(count);
 	}
 
-	public int getEditedFieldsCount() {
-		return editedFieldsCount.get();
-	}
-
-	public void setEditedFieldsCount(int count) {
-		if (editedFieldsCount != null) editedFieldsCount.set(count);
-	}
-
 	private void setNumberOfSelectedFiles(int num) {
-		numSelected = num;
-		if (num == 1) {
-			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
-		} else {
-			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
-		}
+		selectedFilesLabel.setText(Integer.toString(num) + " file" + (num > 1 ? "s " : " ") + "selected");
 	}
+	
+	public void setSection(boolean resetValues) {
+		if (resetValues) {
+			for (final IEditorField field : fields) {
+				field.resetValueChanged();
+			}
+			editableFieldsVBox.getChildren().clear();
+			fields.clear();
+		}
 
-	public void setSection() {
 		final MXFSelectedFilesSummary summary = ControllerMediatorMXF.getInstance().getSelectedFilesSummary();
 
 		if (summary.getFilesAreMissingAS07CoreDMSFramework()) {
-			toggleEditButton.setDisable(true);
+			// TODO: prevent editing?
 		}
-
-		Label requiredFieldsLabel = new Label("* = required field");
-		requiredFieldsLabel.styleProperty().set("-fx-padding: 0 0 10 0;");
-		editableFieldsVBox.getChildren().add(requiredFieldsLabel);
 
 		for (final MXFColumn col : MXFColumn.values()) {
 			if (col.getSection() != MXFSection.CORE) continue;
@@ -261,35 +240,19 @@ public class CoreMXFController extends AnchorPane {
 		}
 
 		setNumberOfSelectedFiles(summary.getFileCount());
-		editableFieldsVBox.setVisible(true);
-	}
-
-	private void setIsEditingMode(Boolean isEditing) {
-		if (isEditing) {
-			toggleEditButton.setText("Stop Editing");
-			toggleEditButton.setStyle("-fx-background-color: #FFAB91");
-			dataContainer.setDisable(false);
-			editingSummary.setVisible(true);
-		} else {
-			toggleEditButton.setText("Start Editing");
-			toggleEditButton.setStyle("-fx-background-color: #7EFFFE");
-			applyChangesButton.setStyle("-fx-background-color: #7EFFFE");
-			applyChangesButton.setDisable(true);
-			dataContainer.setDisable(true);
-			editingSummary.setVisible(false);
-			editingSummary.setText("");
-			editedFieldsCount.set(0);
-		}
+		calculateEditedFields();
 	}
 
 	private void setDropDownField(MXFColumn col, MXFSelectedFilesSummary summary, Collection<String> strVals) {
 		final DropDownField dropDownField = new DropDownField();
 		dropDownField.setComboBoxValues(strVals);
-		dropDownField.setEditable(col.getEditable());
+		dropDownField.setEditable(false);
 		dropDownField.setMXFColumn(col);
 		dropDownField.setVisible(true);
 		String label = col.getDisplayName();
-		if (col.isRequired()) label += " *";
+		if (col.isRequired()) {
+			label += " *";
+		}
 		dropDownField.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col));
 		MetadataColumnDef columnDef = summary.getCoreData().get(col);
 		if (columnDef != null) {
@@ -310,29 +273,53 @@ public class CoreMXFController extends AnchorPane {
 	private void createDevicesDisplay(MXFSelectedFilesSummary summary, MXFColumn col) {
 		DeviceSetHelper deviceSetHelper = new DeviceSetHelper();
 		ArrayList<AS07CoreDMSDeviceObjectsImpl> devices = deviceSetHelper.createDeviceListFromString(summary.getCoreData().get(col).getCurrentValue());
-		HBox hbox = new HBox();
+
 		String label = "Devices";
-		if (col.isRequired()) label += " *";
+		if (col.isRequired()) {
+			label += " *";
+		}
+
+		HBox hbox = new HBox();
+		HBox labelIconHbox = new HBox();
+		labelIconHbox.setSpacing(5);
 		Label devicesLabel = new Label(label);
-		devicesLabel.setLayoutX(14.0);
-		devicesLabel.setLayoutY(14.0);
-		devicesLabel.setPrefHeight(26.0);
-		devicesLabel.setPrefWidth(231.0);
-		devicesLabel.setMinWidth(100.0);
-		devicesLabel.setMaxWidth(231.0);
-		HBox.setHgrow(devicesLabel, Priority.NEVER);
-		hbox.getChildren().add(devicesLabel);
+		HBox iconHbox = new HBox();
+		labelIconHbox.getChildren().addAll(devicesLabel, iconHbox);
+		FontAwesomeIconView infoIcon = new FontAwesomeIconView();
+		infoIcon.setGlyphName("INFO_CIRCLE");
+		infoIcon.getStyleClass().add("popout-icon");
+		infoIcon.setSize("12px");
+		iconHbox.idProperty().set("editorTextFieldLabelInfoIcon");
+		iconHbox.setFocusTraversable(true);
+		iconHbox.getChildren().add(infoIcon);
+		iconHbox.setOnKeyPressed(event -> {
+			if (event.getCode() == KeyCode.SPACE) {
+				DataFieldInfoAlert.showFieldInfoAlert("Devices", MXFColumnHelpText.getInstance().getHelpText(col));
+			}
+		});
+		iconHbox.setOnMouseClicked(event -> {
+			DataFieldInfoAlert.showFieldInfoAlert("Devices", MXFColumnHelpText.getInstance().getHelpText(col));
+		});
+		iconHbox.setAccessibleRole(AccessibleRole.BUTTON);
+		iconHbox.setAccessibleText("Open modal with Devices specification.");
+		hbox.getChildren().addAll(labelIconHbox);
+		
+		labelIconHbox.setPrefWidth(285.0);
+		labelIconHbox.setMaxWidth(285.0);
+		labelIconHbox.setMinWidth(100.0);
 		editableFieldsVBox.getChildren().add(hbox);
-		GridPane grid = new GridPane();
-		hbox.getChildren().add(grid);
+		VBox vbox = new VBox();
+		vbox.setSpacing(5.0);
+		hbox.getChildren().add(vbox);
 		LabelField field = new LabelField();
 		field.setMXFColumn(col);
 		field.setValue(summary.getCoreData().get(col).getCurrentValue());
 		fields.add(field);
 		if (devices.size() == 0) {
-			grid.add(new Label("No Devices"), 0, 0);
+			vbox.getChildren().add(new Label("No Devices"));
 			Label newDeviceLabel = createNewDeviceLabel(devices, field);
-			grid.add(newDeviceLabel, 0, 1);
+			newDeviceLabel.setFocusTraversable(true);
+			vbox.getChildren().add(newDeviceLabel);
 			return;
 		}
 		for (int i = 0; i < devices.size(); i++) {
@@ -346,173 +333,50 @@ public class CoreMXFController extends AnchorPane {
 				type = device.getDeviceType();
 			} catch(PropertyNotPresentException pex) {}
 			Label deviceLabel = new Label(manu + " " + type);
-			deviceLabel.setPrefWidth(300.0);
-			deviceLabel.setMaxWidth(300.0);
-			deviceLabel.setLayoutX(184.0);
-			deviceLabel.setLayoutY(9.0);
-			deviceLabel.setPrefHeight(26.0);
+			deviceLabel.setPrefWidth(306.0);
+			deviceLabel.setMaxWidth(306.0);
 			deviceLabel.setMinWidth(100.0);
-			HBox.setHgrow(deviceLabel, Priority.NEVER);
+			deviceLabel.setFocusTraversable(true);
 			HBox iconBox = new HBox();
 			FontAwesomeIconView popoutIcon = new FontAwesomeIconView(FontAwesomeIcon.EXTERNAL_LINK);
 			popoutIcon.setSize("16px");
 			popoutIcon.setStyleClass("popout-icon");
 			popoutIcon.setVisible(true);
+			iconBox.setAccessibleText("Open modal to edit or delete " + deviceLabel.getText() + " device");
+			iconBox.setAccessibleRole(AccessibleRole.BUTTON);
 			iconBox.getChildren().add(popoutIcon);
-			grid.add(deviceLabel, 0, i);
-			grid.add(popoutIcon, 1, i);
-			popoutIcon.setOnMouseClicked(new EventHandler<MouseEvent>() {
-				@Override
-				public void handle(MouseEvent event) {
-					Alert alert = createIdDevicePopup("Edit Device");
-
-					final Label deviceTypeLabel = createLabel("Device Type");
-					String type = "";
-					try { type = device.getDeviceType(); }
-					catch(PropertyNotPresentException pex) {}
-					final TextArea deviceTypeTextArea = createTextArea(type);
-					deviceTypeLabel.setTooltip(createTooltip("Device Type\n\nThe kind of device used to capture or create the content (as either a commonly known name or as a locally defined name; e.g., Radio-camera)"));
-
-					final Label manufacturerLabel = createLabel("Manufacturer");
-					String manu = "";
-					try { manu = device.getManufacturer(); }
-					catch(PropertyNotPresentException pex) {}
-					final TextArea manufacturerTextArea = createTextArea(manu);
-					manufacturerLabel.setTooltip(createTooltip("Manufacturer\n\nThe manufacturer or maker of the device"));
-
-					final Label modelLabel = createLabel("Model");
-					String model = "";
-					try { model = device.getModel(); }
-					catch(PropertyNotPresentException pex) {}
-					final TextArea modelTextArea = createTextArea(model);
-					modelLabel.setTooltip(createTooltip("Model\n\nIdentifies the device model used in capturing or generating the essence."));
-
-					final Label serialNumberLabel = createLabel("Serial Number");
-					String serial = "";
-					try { serial = device.getSerialNumber(); }
-					catch(PropertyNotPresentException pex) {}
-					final TextArea serialNumberTextArea = createTextArea(serial);
-					serialNumberLabel.setTooltip(createTooltip("Serial Number\n\nAlphanumeric serial number identifying the individual device"));
-
-					final Label usageDescriptionLabel = createLabel("Usage Description");
-					String usage = "";
-					try { usage = device.getUsageDescription(); }
-					catch(PropertyNotPresentException pex) {}
-					final TextArea usageDescriptionTextArea = createTextArea(usage);
-					usageDescriptionLabel.setTooltip(createTooltip("UsageDescription\n\nFree text description of the function or use of the device in the production of a specific content item"));
-
-					final GridPane expContent = new GridPane();
-					expContent.setMaxWidth(Double.MAX_VALUE);
-					expContent.add(deviceTypeLabel, 0, 0);
-					expContent.add(deviceTypeTextArea, 0, 1);
-					expContent.add(manufacturerLabel, 0, 2);
-					expContent.add(manufacturerTextArea, 0, 3);
-					expContent.add(modelLabel, 0, 4);
-					expContent.add(modelTextArea, 0, 5);
-					expContent.add(serialNumberLabel, 0, 6);
-					expContent.add(serialNumberTextArea, 0, 7);
-					expContent.add(usageDescriptionLabel, 0, 8);
-					expContent.add(usageDescriptionTextArea, 0, 9);
-					expContent.add(new Label(""), 0, 10);
-
-					Button deleteButton = new Button("Delete Identifier");
-					deleteButton.setOnAction(new EventHandler<ActionEvent>() {
-						@Override
-						public void handle(ActionEvent e) {
-							devices.remove(device);
-							field.setValue(deviceSetHelper.devicesToString(devices));
-							field.setValueChanged();
-							calculateEditedFields();
-							alert.close();
-						}
-					});
-					expContent.add(deleteButton, 0, 11);
-
-					alert.getDialogPane().setContent(expContent);
-					alert.showAndWait();
-					if (alert.getResult() == ButtonType.APPLY) {
-						device.setDeviceType(deviceTypeTextArea.getText());
-						device.setManufacturer(manufacturerTextArea.getText());
-						device.setModel(modelTextArea.getText());
-						device.setSerialNumber(serialNumberTextArea.getText());
-						device.setUsageDescription(usageDescriptionTextArea.getText());
-						field.setValue(deviceSetHelper.devicesToString(devices));
-						field.setValueChanged();
-						calculateEditedFields();
-						alert.close();
-					} else if (alert.getResult() == ButtonType.CLOSE) {
-						alert.close();
-					}
+			iconBox.setFocusTraversable(true);
+			iconBox.idProperty().set("popoutIconContainer");
+			HBox labelPopoutHbox = new HBox();
+			labelPopoutHbox.getChildren().addAll(deviceLabel, iconBox);
+			vbox.getChildren().add(labelPopoutHbox);
+			iconBox.setOnKeyPressed(e -> {
+				if (e.getCode() == KeyCode.SPACE) {
+					devicesPopout(device, devices, field, deviceSetHelper);
 				}
+			});
+			iconBox.setOnMouseClicked(e -> {
+				devicesPopout(device, devices, field, deviceSetHelper);
 			});
 		}
 		Label newDeviceLabel = createNewDeviceLabel(devices, field);
-		grid.add(newDeviceLabel, 0, devices.size()+1);
+		newDeviceLabel.setFocusTraversable(true);
+		vbox.getChildren().add(newDeviceLabel);
 	}
 
 	private Label createNewDeviceLabel(ArrayList<AS07CoreDMSDeviceObjectsImpl> devices, LabelField field) {
-		// create plus button to add identifier
-		Label newDeviceLabel = new Label("Add Device");
+		Label newDeviceLabel = new Label("Add New Device");
+		newDeviceLabel.setAccessibleRole(AccessibleRole.BUTTON);
 		FontAwesomeIconView plusCircle = new FontAwesomeIconView(FontAwesomeIcon.PLUS_CIRCLE);
 		plusCircle.setStyleClass("popout-icon");
 		newDeviceLabel.setGraphic(plusCircle);
-		newDeviceLabel.setOnMouseClicked(new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent event) {
-				Alert popup = createIdDevicePopup("Add New Device");
-				final Label deviceTypeLabel = createLabel("Device Type");
-				final TextArea deviceTypeTextArea = createTextArea("");
-				deviceTypeLabel.setTooltip(createTooltip("Device Type\n\nThe kind of device used to capture or create the content (as either a commonly known name or as a locally defined name; e.g., Radio-camera)"));
-
-				final Label manufacturerLabel = createLabel("Manufacturer");
-				final TextArea manufacturerTextArea = createTextArea("");
-				manufacturerLabel.setTooltip(createTooltip("Manufacturer\n\nThe manufacturer or maker of the device"));
-
-				final Label modelLabel = createLabel("Model");
-				final TextArea modelTextArea = createTextArea("");
-				modelLabel.setTooltip(createTooltip("Model\n\nIdentifies the device model used in capturing or generating the essence."));
-
-				final Label serialNumberLabel = createLabel("Serial Number");
-				final TextArea serialNumberTextArea = createTextArea("");
-				serialNumberLabel.setTooltip(createTooltip("Serial Number\n\nAlphanumeric serial number identifying the individual device"));
-
-				final Label usageDescriptionLabel = createLabel("Usage Description");
-				final TextArea usageDescriptionTextArea = createTextArea("");
-				usageDescriptionLabel.setTooltip(createTooltip("UsageDescription\n\nFree text description of the function or use of the device in the production of a specific content item"));
-
-				final GridPane expContent = new GridPane();
-				expContent.setMaxWidth(Double.MAX_VALUE);
-				expContent.add(deviceTypeLabel, 0, 0);
-				expContent.add(deviceTypeTextArea, 0, 1);
-				expContent.add(manufacturerLabel, 0, 2);
-				expContent.add(manufacturerTextArea, 0, 3);
-				expContent.add(modelLabel, 0, 4);
-				expContent.add(modelTextArea, 0, 5);
-				expContent.add(serialNumberLabel, 0, 6);
-				expContent.add(serialNumberTextArea, 0, 7);
-				expContent.add(usageDescriptionLabel, 0, 8);
-				expContent.add(usageDescriptionTextArea, 0, 9);
-
-				popup.getDialogPane().setContent(expContent);
-				popup.showAndWait();
-
-				if (popup.getResult() == ButtonType.APPLY) {
-					AS07CoreDMSDeviceObjectsImpl newDevice = new AS07CoreDMSDeviceObjectsImpl();
-					newDevice.setDeviceType(deviceTypeTextArea.getText());
-					newDevice.setManufacturer(manufacturerTextArea.getText());
-					newDevice.setModel(modelTextArea.getText());
-					newDevice.setSerialNumber(serialNumberTextArea.getText());
-					newDevice.setUsageDescription(usageDescriptionTextArea.getText());
-					devices.add(newDevice);
-					DeviceSetHelper deviceSetHelper = new DeviceSetHelper();
-					field.setValue(deviceSetHelper.devicesToString(devices));
-					field.setValueChanged();
-					calculateEditedFields();
-					popup.close();
-				} else if (popup.getResult() == ButtonType.CLOSE) {
-					popup.close();
-				}
+		newDeviceLabel.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.SPACE) {
+				newDevice(devices, field);
 			}
+		});
+		newDeviceLabel.setOnMouseClicked(e -> {
+			newDevice(devices, field);
 		});
 		return newDeviceLabel;
 	}
@@ -520,35 +384,53 @@ public class CoreMXFController extends AnchorPane {
 	private void createIdentifiersDisplay(MXFSelectedFilesSummary summary, MXFColumn col) {
 		IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
 		ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(summary.getCoreData().get(col).getCurrentValue());
-		HBox hbox = new HBox();
+
 		String label = "Identifiers";
-		if (col.isRequired()) label += " *";
+		if (col.isRequired()) {
+			label += " *";
+		}
+
+		HBox hbox = new HBox();
+		HBox labelIconHbox = new HBox();
+		labelIconHbox.setSpacing(5);
 		Label identifierLabel = new Label(label);
-		final Tooltip tt = new Tooltip("Identifiers" + "\n\n" + MXFColumnHelpText.getInstance().getHelpText(col));
-		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
-		tt.setPrefWidth(500);
-		tt.setWrapText(true);
-		tt.setAutoHide(false);
-		identifierLabel.setTooltip(tt);
-		identifierLabel.setLayoutX(14.0);
-		identifierLabel.setLayoutY(14.0);
-		identifierLabel.setPrefHeight(26.0);
-		identifierLabel.setPrefWidth(231.0);
-		identifierLabel.setMinWidth(100.0);
-		identifierLabel.setMaxWidth(231.0);
-		HBox.setHgrow(identifierLabel, Priority.NEVER);
-		hbox.getChildren().add(identifierLabel);
+		HBox iconHbox = new HBox();
+		labelIconHbox.getChildren().addAll(identifierLabel, iconHbox);
+		FontAwesomeIconView infoIcon = new FontAwesomeIconView();
+		infoIcon.setGlyphName("INFO_CIRCLE");
+		infoIcon.getStyleClass().add("popout-icon");
+		infoIcon.setSize("12px");
+		iconHbox.idProperty().set("editorTextFieldLabelInfoIcon");
+		iconHbox.setFocusTraversable(true);
+		iconHbox.getChildren().add(infoIcon);
+		iconHbox.setOnKeyPressed(event -> {
+			if (event.getCode() == KeyCode.SPACE) {
+				DataFieldInfoAlert.showFieldInfoAlert("Identifiers", MXFColumnHelpText.getInstance().getHelpText(col));
+			}
+		});
+		iconHbox.setOnMouseClicked(event -> {
+			DataFieldInfoAlert.showFieldInfoAlert("Identifiers", MXFColumnHelpText.getInstance().getHelpText(col));
+		});
+		iconHbox.setAccessibleRole(AccessibleRole.BUTTON);
+		iconHbox.setAccessibleText("Open modal with Identifiers specification.");
+		hbox.getChildren().addAll(labelIconHbox);
+
+		labelIconHbox.setPrefWidth(285.0);
+		labelIconHbox.setMaxWidth(285.0);
+		labelIconHbox.setMinWidth(100.0);
 		editableFieldsVBox.getChildren().add(hbox);
-		GridPane grid = new GridPane();
-		hbox.getChildren().add(grid);
+		VBox vbox = new VBox();
+		vbox.setSpacing(5.0);
+		hbox.getChildren().add(vbox);
 		LabelField field = new LabelField();
 		field.setMXFColumn(col);
 		field.setValue(summary.getCoreData().get(col).getCurrentValue());
 		fields.add(field);
 		if (identifiers.size() == 0) {
-			grid.add(new Label("No Identifiers"), 0, 0);
-			Label newDeviceLabel = createNewIdentifierLabel(identifiers, field);
-			grid.add(newDeviceLabel, 0, 1);
+			vbox.getChildren().add(new Label("No Identifiers"));
+			Label newIdentifierLabel = createNewIdentifierLabel(identifiers, field);
+			newIdentifierLabel.setFocusTraversable(true);
+			vbox.getChildren().add(newIdentifierLabel);
 			return;
 		}
 		for (int i = 0; i < identifiers.size(); i++) {
@@ -557,83 +439,29 @@ public class CoreMXFController extends AnchorPane {
 				String idValue = id.getIdentifierValue();
 				String idRole = id.getIdentifierRole();
 				Label idLabel = new Label(idValue +" ("+ idRole +")");
-				idLabel.setPrefWidth(300.0);
-				idLabel.setMaxWidth(300.0);
-				idLabel.setLayoutX(184.0);
-				idLabel.setLayoutY(9.0);
-				idLabel.setPrefHeight(26.0);
-				idLabel.setMinWidth(100.0);
-				hbox.setPadding(new Insets(5, 0, 5, 0));
+				idLabel.setPrefWidth(306.0);
+				idLabel.setMaxWidth(306.0);
+				idLabel.setFocusTraversable(true);
 				HBox iconBox = new HBox();
 				FontAwesomeIconView popoutIcon = new FontAwesomeIconView(FontAwesomeIcon.EXTERNAL_LINK);
 				popoutIcon.setSize("16px");
 				popoutIcon.setStyleClass("popout-icon");
-				popoutIcon.setVisible(true);
+				iconBox.setAccessibleText("Open modal to edit or delete " + idLabel.getText() + " identifier");
+				iconBox.setAccessibleRole(AccessibleRole.BUTTON);
+				iconBox.setFocusTraversable(true);
 				iconBox.getChildren().add(popoutIcon);
-				grid.add(idLabel, 0, i);
-				grid.add(popoutIcon, 1, i);
-				popoutIcon.setOnMouseClicked(new EventHandler<MouseEvent>() {
-					@Override
-					public void handle(MouseEvent event) {
-						final Alert alert = createIdDevicePopup("Edit " + id.getIdentifierValue() +" ("+ id.getIdentifierRole() +")");
-
-						final Label typeLabel = createLabel("Identifier Type");
-						final TextArea typeTextArea = createTextArea(id.getIdentifierType());
-						typeLabel.setTooltip(createTooltip("Identifier Type\n\nControlled vocabulary string value identifying the type of identifier: UUID - UUID encoded as a URN according to IETF RFC 4122; UMID - Unique Material Identifier (UMID) defined by SMPTE ST 330:2004, represented as a URN per ST 2029:2009; UL – Universal Label as defined by SMPTE ST 298:2009, represented as a URN per ST 2029:2009; Other –A value not included in the controlled list, including archive specific values."));
-
-						final Label roleLabel = createLabel("Identifier Role");
-						final TextArea roleTextArea = createTextArea(id.getIdentifierRole());
-						roleLabel.setTooltip(createTooltip("Identifier Role\n\nControlled vocabulary string value identifying the role of identifier: Main (universally unique primary identifier for the entire RDD 48 file) Additional (additional, possibly local, identifier for the entire RDD 48 file. Additional identifiers are not required to be universally unique) GSP (universally unique identifier for GSP payload)"));
-
-						final Label valueLabel = createLabel("Identifier Value");
-						final TextArea valueTextArea = createTextArea(id.getIdentifierValue());
-						valueLabel.setTooltip(createTooltip("Identifier Value\n\nIdentifier value."));
-
-						final Label commentLabel = createLabel("Identifier Comment");
-						final TextArea commentTextArea = createTextArea(id.getIdentifierComment());
-						commentLabel.setTooltip(createTooltip("Identifier Comment\n\nIdentifier comment."));
-
-						final GridPane expContent = new GridPane();
-						expContent.setMaxWidth(Double.MAX_VALUE);
-						expContent.add(typeLabel, 0, 0);
-						expContent.add(typeTextArea, 0, 1);
-						expContent.add(roleLabel, 0, 2);
-						expContent.add(roleTextArea, 0, 3);
-						expContent.add(valueLabel, 0, 4);
-						expContent.add(valueTextArea, 0, 5);
-						expContent.add(commentLabel, 0, 6);
-						expContent.add(commentTextArea, 0, 7);
-						expContent.add(new Label(""), 0, 8);
-
-						Button deleteButton = new Button("Delete Identifier");
-						deleteButton.setOnAction(new EventHandler<ActionEvent>() {
-							@Override
-							public void handle(ActionEvent e) {
-								identifiers.remove(id);
-								field.setValue(idSetHelper.identifiersToString(identifiers));
-								field.setValueChanged();
-								calculateEditedFields();
-								alert.close();
-							}
-						});
-						expContent.add(deleteButton, 0, 9);
-
-						alert.getDialogPane().setContent(expContent);
-
-						alert.showAndWait();
-						if (alert.getResult() == ButtonType.APPLY) {
-							id.setIdentifierType(typeTextArea.getText());
-							id.setIdentifierRole(roleTextArea.getText());
-							id.setIdentifierValue(valueTextArea.getText());
-							id.setIdentifierComment(commentTextArea.getText());
-							field.setValue(idSetHelper.identifiersToString(identifiers));
-							field.setValueChanged();
-							calculateEditedFields();
-							alert.close();
-						} else if (alert.getResult() == ButtonType.CLOSE) {
-							alert.close();
-						}
+				iconBox.idProperty().set("popoutIconContainer");
+				HBox labelPopoutHbox = new HBox();
+				labelPopoutHbox.getChildren().addAll(idLabel, iconBox);
+				vbox.getChildren().add(labelPopoutHbox);
+				iconBox.setOnKeyPressed(e -> {
+					if (e.getCode() != KeyCode.SPACE) {
+						return;
 					}
+					identifierPopout(id, identifiers, field, idSetHelper);
+				});
+				iconBox.setOnMouseClicked(e -> {
+					identifierPopout(id, identifiers, field, idSetHelper);
 				});
 			} catch (PropertyNotPresentException e) {
 				System.out.println("Property not found exception in createIdentifiersDisplay");
@@ -641,66 +469,24 @@ public class CoreMXFController extends AnchorPane {
 		}
 
 		Label newIdentifierLabel = createNewIdentifierLabel(identifiers, field);
-		grid.add(newIdentifierLabel, 0, identifiers.size()+1);
+		newIdentifierLabel.setFocusTraversable(true);
+		vbox.getChildren().add(newIdentifierLabel);
 	}
 
 	private Label createNewIdentifierLabel(ArrayList<AS07DMSIdentifierSetImpl> identifiers, LabelField field) {
-		// create plus button to add identifier
 		Label newIdentifierLabel = new Label("Add New Identifier");
+		newIdentifierLabel.setAccessibleRole(AccessibleRole.BUTTON);
 		FontAwesomeIconView plusCircle = new FontAwesomeIconView(FontAwesomeIcon.PLUS_CIRCLE);
 		plusCircle.setStyleClass("popout-icon");
 		newIdentifierLabel.setGraphic(plusCircle);
-		newIdentifierLabel.setOnMouseClicked(new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent event) {
-				Alert popup = createIdDevicePopup("Add Identifier");
-
-				final Label typeLabel = createLabel("Identifier Type");
-				final TextArea typeTextArea = createTextArea("");
-				typeLabel.setTooltip(createTooltip("Identifier Type\n\nControlled vocabulary string value identifying the type of identifier: UUID - UUID encoded as a URN according to IETF RFC 4122; UMID - Unique Material Identifier (UMID) defined by SMPTE ST 330:2004, represented as a URN per ST 2029:2009; UL – Universal Label as defined by SMPTE ST 298:2009, represented as a URN per ST 2029:2009; Other –A value not included in the controlled list, including archive specific values."));
-
-				final Label roleLabel = createLabel("Identifier Role");
-				final TextArea roleTextArea = createTextArea("");
-				roleLabel.setTooltip(createTooltip("Identifier Role\n\nControlled vocabulary string value identifying the role of identifier: Main (universally unique primary identifier for the entire RDD 48 file) Additional (additional, possibly local, identifier for the entire RDD 48 file. Additional identifiers are not required to be universally unique) GSP (universally unique identifier for GSP payload)"));
-
-				final Label valueLabel = createLabel("Identifier Value");
-				final TextArea valueTextArea = createTextArea("");
-				valueLabel.setTooltip(createTooltip("Identifier Value\n\nIdentifier value."));
-
-				final Label commentLabel = createLabel("Identifier Comment");
-				final TextArea commentTextArea = createTextArea("");
-				commentLabel.setTooltip(createTooltip("Identifier Comment\n\nIdentifier comment."));
-
-				final GridPane expContent = new GridPane();
-				expContent.setMaxWidth(Double.MAX_VALUE);
-				expContent.add(typeLabel, 0, 0);
-				expContent.add(typeTextArea, 0, 1);
-				expContent.add(roleLabel, 0, 2);
-				expContent.add(roleTextArea, 0, 3);
-				expContent.add(valueLabel, 0, 4);
-				expContent.add(valueTextArea, 0, 5);
-				expContent.add(commentLabel, 0, 6);
-				expContent.add(commentTextArea, 0, 7);
-
-				popup.getDialogPane().setContent(expContent);
-				popup.showAndWait();
-
-				if (popup.getResult() == ButtonType.APPLY) {
-					AS07DMSIdentifierSetImpl newIdSet = new AS07DMSIdentifierSetImpl();
-					newIdSet.setIdentifierType(typeTextArea.getText());
-					newIdSet.setIdentifierRole(roleTextArea.getText());
-					newIdSet.setIdentifierValue(valueTextArea.getText());
-					newIdSet.setIdentifierComment(commentTextArea.getText());
-					identifiers.add(newIdSet);
-					IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
-					field.setValue(idSetHelper.identifiersToString(identifiers));
-					field.setValueChanged();
-					calculateEditedFields();
-					popup.close();
-				} else if (popup.getResult() == ButtonType.CLOSE) {
-					popup.close();
-				}
+		newIdentifierLabel.setOnKeyPressed(e -> {
+			if (e.getCode() != KeyCode.SPACE) {
+				return;
 			}
+			newIdentifier(identifiers, field);
+		});
+		newIdentifierLabel.setOnMouseClicked(e -> {
+			newIdentifier(identifiers, field);
 		});
 		return newIdentifierLabel;
 	}
@@ -743,5 +529,309 @@ public class CoreMXFController extends AnchorPane {
 		tt.setWrapText(true);
 		tt.setAutoHide(false);
 		return tt;
+	}
+	
+	private void showAlert(String modalTitle, String alertText) {
+		final Alert alert = new Alert(AlertType.NONE);
+		alert.setTitle(modalTitle);
+		alert.setHeaderText(null);
+		alert.setContentText(null);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.initOwner(Main.getPrimaryStage());
+
+		final ButtonType[] buttonList = new ButtonType[1];
+		buttonList[0] = ButtonType.CLOSE;
+		alert.getButtonTypes().setAll(buttonList);
+
+		final GridPane grid = new GridPane();
+		final Text text = new Text(alertText);
+		text.setStyle("-fx-font-size: 14.0");
+		text.setFocusTraversable(true);
+		grid.add(text, 0, 0);
+		grid.setVgap(15);
+		alert.getDialogPane().setContent(grid);
+
+		alert.showAndWait();
+		if (alert.getResult() == ButtonType.CLOSE) {
+			alert.close();
+		}
+	}
+	
+	private void showConfirmation(String modalTitle, String confirmationText) {
+		final Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle(modalTitle);
+		alert.setHeaderText(null);
+		alert.setContentText(null);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.initOwner(Main.getPrimaryStage());
+
+		final ButtonType[] buttonList = new ButtonType[2];
+		buttonList[0] = ButtonType.CANCEL;
+		buttonList[1] = ButtonType.OK;
+		alert.getButtonTypes().setAll(buttonList);
+
+		final GridPane grid = new GridPane();
+		final Text text = new Text(confirmationText);
+		text.setStyle("-fx-font-size: 14.0");
+		text.setFocusTraversable(true);
+		grid.add(text, 0, 0);
+		grid.setVgap(15);
+		alert.getDialogPane().setContent(grid);
+
+		alert.showAndWait();
+		if (alert.getResult() == ButtonType.CANCEL) {
+			alert.close();
+		} else if (alert.getResult() == ButtonType.OK) {
+			setSection(true);
+		}
+	}
+	
+	private void identifierPopout(AS07DMSIdentifierSetImpl id, ArrayList<AS07DMSIdentifierSetImpl> identifiers, LabelField field, IdentifierSetHelper idSetHelper) {
+		final Alert alert = createIdDevicePopup("Edit " + id.getIdentifierValue() +" ("+ id.getIdentifierRole() +")");
+
+		final Label typeLabel = createLabel("Identifier Type");
+		final TextArea typeTextArea = createTextArea(id.getIdentifierType());
+		typeLabel.setTooltip(createTooltip("Identifier Type\n\nControlled vocabulary string value identifying the type of identifier: UUID - UUID encoded as a URN according to IETF RFC 4122; UMID - Unique Material Identifier (UMID) defined by SMPTE ST 330:2004, represented as a URN per ST 2029:2009; UL – Universal Label as defined by SMPTE ST 298:2009, represented as a URN per ST 2029:2009; Other –A value not included in the controlled list, including archive specific values."));
+
+		final Label roleLabel = createLabel("Identifier Role");
+		final TextArea roleTextArea = createTextArea(id.getIdentifierRole());
+		roleLabel.setTooltip(createTooltip("Identifier Role\n\nControlled vocabulary string value identifying the role of identifier: Main (universally unique primary identifier for the entire RDD 48 file) Additional (additional, possibly local, identifier for the entire RDD 48 file. Additional identifiers are not required to be universally unique) GSP (universally unique identifier for GSP payload)"));
+
+		final Label valueLabel = createLabel("Identifier Value");
+		final TextArea valueTextArea = createTextArea(id.getIdentifierValue());
+		valueLabel.setTooltip(createTooltip("Identifier Value\n\nIdentifier value."));
+
+		final Label commentLabel = createLabel("Identifier Comment");
+		final TextArea commentTextArea = createTextArea(id.getIdentifierComment());
+		commentLabel.setTooltip(createTooltip("Identifier Comment\n\nIdentifier comment."));
+
+		final GridPane expContent = new GridPane();
+		expContent.setMaxWidth(Double.MAX_VALUE);
+		expContent.add(typeLabel, 0, 0);
+		expContent.add(typeTextArea, 0, 1);
+		expContent.add(roleLabel, 0, 2);
+		expContent.add(roleTextArea, 0, 3);
+		expContent.add(valueLabel, 0, 4);
+		expContent.add(valueTextArea, 0, 5);
+		expContent.add(commentLabel, 0, 6);
+		expContent.add(commentTextArea, 0, 7);
+		expContent.add(new Label(""), 0, 8);
+
+		Button deleteButton = new Button("Delete Identifier");
+		deleteButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				identifiers.remove(id);
+				field.setValue(idSetHelper.identifiersToString(identifiers));
+				field.setValueChanged();
+				calculateEditedFields();
+				alert.close();
+			}
+		});
+		expContent.add(deleteButton, 0, 9);
+
+		alert.getDialogPane().setContent(expContent);
+
+		alert.showAndWait();
+		if (alert.getResult() == ButtonType.APPLY) {
+			id.setIdentifierType(typeTextArea.getText());
+			id.setIdentifierRole(roleTextArea.getText());
+			id.setIdentifierValue(valueTextArea.getText());
+			id.setIdentifierComment(commentTextArea.getText());
+			field.setValue(idSetHelper.identifiersToString(identifiers));
+			field.setValueChanged();
+			calculateEditedFields();
+			alert.close();
+		} else if (alert.getResult() == ButtonType.CLOSE) {
+			alert.close();
+		}
+	}
+	
+	private void newIdentifier(ArrayList<AS07DMSIdentifierSetImpl> identifiers, LabelField field) {
+		Alert popup = createIdDevicePopup("Add Identifier");
+
+		final Label typeLabel = createLabel("Identifier Type");
+		final TextArea typeTextArea = createTextArea("");
+		typeLabel.setTooltip(createTooltip("Identifier Type\n\nControlled vocabulary string value identifying the type of identifier: UUID - UUID encoded as a URN according to IETF RFC 4122; UMID - Unique Material Identifier (UMID) defined by SMPTE ST 330:2004, represented as a URN per ST 2029:2009; UL – Universal Label as defined by SMPTE ST 298:2009, represented as a URN per ST 2029:2009; Other –A value not included in the controlled list, including archive specific values."));
+
+		final Label roleLabel = createLabel("Identifier Role");
+		final TextArea roleTextArea = createTextArea("");
+		roleLabel.setTooltip(createTooltip("Identifier Role\n\nControlled vocabulary string value identifying the role of identifier: Main (universally unique primary identifier for the entire RDD 48 file) Additional (additional, possibly local, identifier for the entire RDD 48 file. Additional identifiers are not required to be universally unique) GSP (universally unique identifier for GSP payload)"));
+
+		final Label valueLabel = createLabel("Identifier Value");
+		final TextArea valueTextArea = createTextArea("");
+		valueLabel.setTooltip(createTooltip("Identifier Value\n\nIdentifier value."));
+
+		final Label commentLabel = createLabel("Identifier Comment");
+		final TextArea commentTextArea = createTextArea("");
+		commentLabel.setTooltip(createTooltip("Identifier Comment\n\nIdentifier comment."));
+
+		final GridPane expContent = new GridPane();
+		expContent.setMaxWidth(Double.MAX_VALUE);
+		expContent.add(typeLabel, 0, 0);
+		expContent.add(typeTextArea, 0, 1);
+		expContent.add(roleLabel, 0, 2);
+		expContent.add(roleTextArea, 0, 3);
+		expContent.add(valueLabel, 0, 4);
+		expContent.add(valueTextArea, 0, 5);
+		expContent.add(commentLabel, 0, 6);
+		expContent.add(commentTextArea, 0, 7);
+
+		popup.getDialogPane().setContent(expContent);
+		popup.showAndWait();
+
+		if (popup.getResult() == ButtonType.APPLY) {
+			AS07DMSIdentifierSetImpl newIdSet = new AS07DMSIdentifierSetImpl();
+			newIdSet.setIdentifierType(typeTextArea.getText());
+			newIdSet.setIdentifierRole(roleTextArea.getText());
+			newIdSet.setIdentifierValue(valueTextArea.getText());
+			newIdSet.setIdentifierComment(commentTextArea.getText());
+			identifiers.add(newIdSet);
+			IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
+			field.setValue(idSetHelper.identifiersToString(identifiers));
+			field.setValueChanged();
+			calculateEditedFields();
+			popup.close();
+		} else if (popup.getResult() == ButtonType.CLOSE) {
+			popup.close();
+		}
+	}
+
+	private void devicesPopout(AS07CoreDMSDeviceObjectsImpl device, ArrayList<AS07CoreDMSDeviceObjectsImpl> devices, LabelField field, DeviceSetHelper deviceSetHelper) {
+		Alert alert = createIdDevicePopup("Edit Device");
+
+		final Label deviceTypeLabel = createLabel("Device Type");
+		String type = "";
+		try { type = device.getDeviceType(); }
+		catch(PropertyNotPresentException pex) {}
+		final TextArea deviceTypeTextArea = createTextArea(type);
+		deviceTypeLabel.setTooltip(createTooltip("Device Type\n\nThe kind of device used to capture or create the content (as either a commonly known name or as a locally defined name; e.g., Radio-camera)"));
+
+		final Label manufacturerLabel = createLabel("Manufacturer");
+		String manu = "";
+		try { manu = device.getManufacturer(); }
+		catch(PropertyNotPresentException pex) {}
+		final TextArea manufacturerTextArea = createTextArea(manu);
+		manufacturerLabel.setTooltip(createTooltip("Manufacturer\n\nThe manufacturer or maker of the device"));
+
+		final Label modelLabel = createLabel("Model");
+		String model = "";
+		try { model = device.getModel(); }
+		catch(PropertyNotPresentException pex) {}
+		final TextArea modelTextArea = createTextArea(model);
+		modelLabel.setTooltip(createTooltip("Model\n\nIdentifies the device model used in capturing or generating the essence."));
+
+		final Label serialNumberLabel = createLabel("Serial Number");
+		String serial = "";
+		try { serial = device.getSerialNumber(); }
+		catch(PropertyNotPresentException pex) {}
+		final TextArea serialNumberTextArea = createTextArea(serial);
+		serialNumberLabel.setTooltip(createTooltip("Serial Number\n\nAlphanumeric serial number identifying the individual device"));
+
+		final Label usageDescriptionLabel = createLabel("Usage Description");
+		String usage = "";
+		try { usage = device.getUsageDescription(); }
+		catch(PropertyNotPresentException pex) {}
+		final TextArea usageDescriptionTextArea = createTextArea(usage);
+		usageDescriptionLabel.setTooltip(createTooltip("UsageDescription\n\nFree text description of the function or use of the device in the production of a specific content item"));
+
+		final GridPane expContent = new GridPane();
+		expContent.setMaxWidth(Double.MAX_VALUE);
+		expContent.add(deviceTypeLabel, 0, 0);
+		expContent.add(deviceTypeTextArea, 0, 1);
+		expContent.add(manufacturerLabel, 0, 2);
+		expContent.add(manufacturerTextArea, 0, 3);
+		expContent.add(modelLabel, 0, 4);
+		expContent.add(modelTextArea, 0, 5);
+		expContent.add(serialNumberLabel, 0, 6);
+		expContent.add(serialNumberTextArea, 0, 7);
+		expContent.add(usageDescriptionLabel, 0, 8);
+		expContent.add(usageDescriptionTextArea, 0, 9);
+		expContent.add(new Label(""), 0, 10);
+
+		Button deleteButton = new Button("Delete Device");
+		deleteButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				devices.remove(device);
+				field.setValue(deviceSetHelper.devicesToString(devices));
+				field.setValueChanged();
+				calculateEditedFields();
+				alert.close();
+			}
+		});
+		expContent.add(deleteButton, 0, 11);
+
+		alert.getDialogPane().setContent(expContent);
+		alert.showAndWait();
+		if (alert.getResult() == ButtonType.APPLY) {
+			device.setDeviceType(deviceTypeTextArea.getText());
+			device.setManufacturer(manufacturerTextArea.getText());
+			device.setModel(modelTextArea.getText());
+			device.setSerialNumber(serialNumberTextArea.getText());
+			device.setUsageDescription(usageDescriptionTextArea.getText());
+			field.setValue(deviceSetHelper.devicesToString(devices));
+			field.setValueChanged();
+			calculateEditedFields();
+			alert.close();
+		} else if (alert.getResult() == ButtonType.CLOSE) {
+			alert.close();
+		}
+	}
+
+	private void newDevice(ArrayList<AS07CoreDMSDeviceObjectsImpl> devices, LabelField field) {
+		Alert popup = createIdDevicePopup("Add New Device");
+		final Label deviceTypeLabel = createLabel("Device Type");
+		final TextArea deviceTypeTextArea = createTextArea("");
+		deviceTypeLabel.setTooltip(createTooltip("Device Type\n\nThe kind of device used to capture or create the content (as either a commonly known name or as a locally defined name; e.g., Radio-camera)"));
+
+		final Label manufacturerLabel = createLabel("Manufacturer");
+		final TextArea manufacturerTextArea = createTextArea("");
+		manufacturerLabel.setTooltip(createTooltip("Manufacturer\n\nThe manufacturer or maker of the device"));
+
+		final Label modelLabel = createLabel("Model");
+		final TextArea modelTextArea = createTextArea("");
+		modelLabel.setTooltip(createTooltip("Model\n\nIdentifies the device model used in capturing or generating the essence."));
+
+		final Label serialNumberLabel = createLabel("Serial Number");
+		final TextArea serialNumberTextArea = createTextArea("");
+		serialNumberLabel.setTooltip(createTooltip("Serial Number\n\nAlphanumeric serial number identifying the individual device"));
+
+		final Label usageDescriptionLabel = createLabel("Usage Description");
+		final TextArea usageDescriptionTextArea = createTextArea("");
+		usageDescriptionLabel.setTooltip(createTooltip("UsageDescription\n\nFree text description of the function or use of the device in the production of a specific content item"));
+
+		final GridPane expContent = new GridPane();
+		expContent.setMaxWidth(Double.MAX_VALUE);
+		expContent.add(deviceTypeLabel, 0, 0);
+		expContent.add(deviceTypeTextArea, 0, 1);
+		expContent.add(manufacturerLabel, 0, 2);
+		expContent.add(manufacturerTextArea, 0, 3);
+		expContent.add(modelLabel, 0, 4);
+		expContent.add(modelTextArea, 0, 5);
+		expContent.add(serialNumberLabel, 0, 6);
+		expContent.add(serialNumberTextArea, 0, 7);
+		expContent.add(usageDescriptionLabel, 0, 8);
+		expContent.add(usageDescriptionTextArea, 0, 9);
+
+		popup.getDialogPane().setContent(expContent);
+		popup.showAndWait();
+
+		if (popup.getResult() == ButtonType.APPLY) {
+			AS07CoreDMSDeviceObjectsImpl newDevice = new AS07CoreDMSDeviceObjectsImpl();
+			newDevice.setDeviceType(deviceTypeTextArea.getText());
+			newDevice.setManufacturer(manufacturerTextArea.getText());
+			newDevice.setModel(modelTextArea.getText());
+			newDevice.setSerialNumber(serialNumberTextArea.getText());
+			newDevice.setUsageDescription(usageDescriptionTextArea.getText());
+			devices.add(newDevice);
+			DeviceSetHelper deviceSetHelper = new DeviceSetHelper();
+			field.setValue(deviceSetHelper.devicesToString(devices));
+			field.setValueChanged();
+			calculateEditedFields();
+			popup.close();
+		} else if (popup.getResult() == ButtonType.CLOSE) {
+			popup.close();
+		}
 	}
 }

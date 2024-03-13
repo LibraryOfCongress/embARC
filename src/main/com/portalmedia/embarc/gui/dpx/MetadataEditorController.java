@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 
 /**
@@ -37,17 +38,24 @@ public class MetadataEditorController implements Initializable {
 	private Tab nonEditableTab;
 	@FXML
 	private Button writeFilesButton;
-	EditorForm pane1;
-	GeneralForm pane2;
+	@FXML
+	private ImageView fadgiLogoImageView;
+
+	private EditorForm editorFormPane;
+	private GeneralForm generalFormPane;
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorDPX.getInstance().registerMetadataEditorController(this);
+
+		fadgiLogoImageView.setFocusTraversable(true);
+		fadgiLogoImageView.setAccessibleText("FADGI logo. F A D G I stands for Federal Agencies Digital Guidelines Initiative.");
+
 		ControllerMediatorDPX.getInstance().isEditingProperty().addListener(new ChangeListener() {
 			@Override
 			public void changed(ObservableValue o, Object ov, Object nv) {
-				if (pane1 == null) {
+				if (editorFormPane == null) {
 					return;
 				} else {
 					writeFilesButton.setDisable((boolean) nv);
@@ -66,8 +74,8 @@ public class MetadataEditorController implements Initializable {
 	}
 
 	public void refreshValidation() {
-		if (pane1 != null) {
-			pane1.refreshValidation();
+		if (editorFormPane != null) {
+			editorFormPane.refreshValidation();
 		}
 	}
 
@@ -77,42 +85,42 @@ public class MetadataEditorController implements Initializable {
 	}
 
 	public void setEditControl(SectionDef section) {
-		pane1 = new EditorForm();
-		if (pane2 != null) {
-			pane2.setVisible(false);
+		editorFormPane = new EditorForm();
+		if (generalFormPane != null) {
+			generalFormPane.setVisible(false);
 		}
-		pane1.setVisible(true);
+		editorFormPane.setVisible(true);
 		if (editorContentSwapPane.getChildren().size() > 0) {
 			editorContentSwapPane.getChildren().removeAll(editorContentSwapPane.getChildren());
 		}
-		pane1.setSection(section, false);
-		pane1.setTitle(section.getDisplayName());
-		pane1.setMaxWidth(Double.MAX_VALUE);
-		AnchorPane.setTopAnchor(pane1, 0.0);
-		AnchorPane.setLeftAnchor(pane1, 0.0);
-		AnchorPane.setRightAnchor(pane1, 0.0);
-		AnchorPane.setBottomAnchor(pane1, 0.0);
+		editorFormPane.setSection(section, false);
+		editorFormPane.setTitle(section.getDisplayName());
+		editorFormPane.setMaxWidth(Double.MAX_VALUE);
+		AnchorPane.setTopAnchor(editorFormPane, 0.0);
+		AnchorPane.setLeftAnchor(editorFormPane, 0.0);
+		AnchorPane.setRightAnchor(editorFormPane, 0.0);
+		AnchorPane.setBottomAnchor(editorFormPane, 0.0);
 
-		editorContentSwapPane.getChildren().setAll(pane1);
+		editorContentSwapPane.getChildren().setAll(editorFormPane);
 	}
 
 	public void setGeneralControl() {
-		pane2 = new GeneralForm();
-		pane2.setVisible(true);
-		if (pane1 != null) {
-			pane1.setVisible(false);
+		generalFormPane = new GeneralForm();
+		generalFormPane.setVisible(true);
+		if (editorFormPane != null) {
+			editorFormPane.setVisible(false);
 		}
 		if (editorContentSwapPane.getChildren().size() > 0) {
 			editorContentSwapPane.getChildren().removeAll(editorContentSwapPane.getChildren());
 		}
-		pane2.setTitle("General Information");
-		pane2.setMaxWidth(Double.MAX_VALUE);
-		AnchorPane.setTopAnchor(pane2, 0.0);
-		AnchorPane.setLeftAnchor(pane2, 0.0);
-		AnchorPane.setRightAnchor(pane2, 0.0);
-		AnchorPane.setBottomAnchor(pane2, 0.0);
+		generalFormPane.setTitle("General Information");
+		generalFormPane.setMaxWidth(Double.MAX_VALUE);
+		AnchorPane.setTopAnchor(generalFormPane, 0.0);
+		AnchorPane.setLeftAnchor(generalFormPane, 0.0);
+		AnchorPane.setRightAnchor(generalFormPane, 0.0);
+		AnchorPane.setBottomAnchor(generalFormPane, 0.0);
 
-		editorContentSwapPane.getChildren().setAll(pane2);
+		editorContentSwapPane.getChildren().setAll(generalFormPane);
 	}
 
 	public void setWriteControl(SectionDef section) {

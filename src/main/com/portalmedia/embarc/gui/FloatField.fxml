@@ -1,64 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.portalmedia.embarc.gui.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import java.lang.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import org.controlsfx.control.textfield.CustomTextField?>
-<?import com.portalmedia.embarc.gui.*?>
+<?import javafx.scene.text.Text?>
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 
 <fx:root
 	type="javafx.scene.layout.AnchorPane"
-	xmlns="http://javafx.com/javafx/8"
-	xmlns:fx="http://javafx.com/fxml/1"
+	xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
 >
-	<children>
+	<HBox
+		fx:id="editorTextFieldContainer"
+		spacing="8"
+		AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0"
+		AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0"
+	>
 		<HBox
-			AnchorPane.bottomAnchor="0.0"
-			AnchorPane.leftAnchor="0.0"
-			AnchorPane.rightAnchor="0.0"
-			AnchorPane.topAnchor="0.0"
+			spacing="5"
+			minWidth="200"
+			maxWidth="300"
+			prefWidth="275.0"
+			prefHeight="28.0"
 		>
-			<children>
-				<Label
-					fx:id="editorTextFieldLabel"
-					layoutX="14.0"
-					layoutY="14.0"
-					prefHeight="26.0"
-					prefWidth="200.0"
-					text="Label GOES HERE"
-					HBox.hgrow="NEVER"
+			<Label
+				fx:id="editorTextFieldLabel"
+				text=""
+				HBox.hgrow="ALWAYS"
+				style="-fx-font-size: 12px;"
+			/>
+			<HBox
+				fx:id="editorTextFieldLabelInfoIcon"
+				focusTraversable="true"
+			>
+				<FontAwesomeIconView
+					styleClass="popout-icon"
+					glyphName="INFO_CIRCLE"
+					size="12px"
 				/>
-				<FloatInputControl
-					fx:id="editorTextField"
-					prefWidth="300"
-					maxWidth="300"
-					layoutX="184.0"
-					layoutY="9.0"
-					HBox.hgrow="NEVER"
-				/>
-				<HBox prefWidth="50" minWidth="50" maxWidth="50">
-					<children>
-						<FontAwesomeIconView
-							fx:id="PopoutIcon"
-							styleClass="popout-icon"
-							glyphName="EXTERNAL_LINK"
-							size="16px"
-							visible="false"
-							HBox.hgrow="NEVER"
-						>
-							<HBox.margin>
-								<Insets top="6.0" left="6.0" />
-							</HBox.margin>
-						</FontAwesomeIconView>
-					</children>
-				</HBox>
-			</children>
-			<padding>
-				<Insets bottom="5.0" top="5.0" />
-			</padding>
+			</HBox>
 		</HBox>
-	</children>
+		<FloatInputControl
+			fx:id="editorTextField"
+			prefWidth="300"
+			maxWidth="300"
+			HBox.hgrow="NEVER"
+			styleClass="ascii-field"
+		/>
+		<HBox prefWidth="15.0" prefHeight="15.0" />
+		<padding>
+			<Insets bottom="5.0" top="5.0" />
+		</padding>
+	</HBox>
 </fx:root>

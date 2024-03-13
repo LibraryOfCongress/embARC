@@ -4,7 +4,7 @@ import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 
 /**
- * Validate that the actual file name matches the specified ImageFileName column
+ * Validate that the actual filename matches the specified ImageFileName column
  *
  * @author PortalMedia
  * @since 2019-05-01

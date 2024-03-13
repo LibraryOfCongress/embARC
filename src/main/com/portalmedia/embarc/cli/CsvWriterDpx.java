@@ -14,11 +14,14 @@ import org.supercsv.io.CsvMapWriter;
 import org.supercsv.io.ICsvMapWriter;
 import org.supercsv.prefs.CsvPreference;
 
+import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
 import com.portalmedia.embarc.parser.ColumnDef;
 import com.portalmedia.embarc.parser.MetadataColumn;
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.dpx.DPXFileInformation;
 import com.portalmedia.embarc.parser.dpx.DPXMetadata;
+
+import javafx.collections.ObservableList;
 
 /**
  * Creates DPX CSV
@@ -41,6 +44,37 @@ public class CsvWriterDpx {
 		    	}
 			}
 		}
+    }
+
+	public static void writeCsvDPXFilesFromViewModel(String outputPath, ObservableList<DPXFileInformationViewModel> dpxFileList) throws IOException {
+		try(FileWriter fileWriter = new FileWriter(outputPath)){
+			try(ICsvMapWriter csvWriter = new CsvMapWriter(fileWriter, CsvPreference.STANDARD_PREFERENCE)) {
+				csvWriter.writeHeader(getHeaderColumns());
+				for (DPXFileInformationViewModel fileInfo : dpxFileList) {
+					csvDPXMetadataFromViewModel(fileInfo, csvWriter);
+				}
+			}
+		}
+    }
+
+	private static void csvDPXMetadataFromViewModel(DPXFileInformationViewModel dpxFileInfoVM, ICsvMapWriter csvWriter) throws IOException {
+		final Map<String, Object> dpxItem = new HashMap<String, Object>();
+
+		String filePath = dpxFileInfoVM.getProp("path");
+		String fileName = dpxFileInfoVM.getProp("name");
+
+		File file = new File(filePath);
+		dpxItem.put("FileName", fileName);
+		dpxItem.put("FilePath", filePath);
+		dpxItem.put("FileSize", file.length());
+
+		for (final DPXColumn c : DPXColumn.values()) {
+			ColumnDef cdef = (ColumnDef)c;
+			String value = dpxFileInfoVM.getProp(cdef);
+			dpxItem.put(cdef.getDisplayName(), value);
+		}
+
+		csvWriter.write(dpxItem, getHeaderColumns());
     }
 
     private static void setHeaderColumns() {

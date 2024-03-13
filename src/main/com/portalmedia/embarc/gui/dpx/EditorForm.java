@@ -15,6 +15,7 @@ import com.portalmedia.embarc.gui.DropDownField;
 import com.portalmedia.embarc.gui.FloatField;
 import com.portalmedia.embarc.gui.IEditorField;
 import com.portalmedia.embarc.gui.IntegerField;
+import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.PixelAspectRatioField;
 import com.portalmedia.embarc.gui.model.SelectedFilesSummary;
 import com.portalmedia.embarc.parser.DisplayType;
@@ -29,19 +30,23 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Accordion;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.stage.Modality;
 
 /**
  * UI component that sorts, displays, and allows editing of metadata
@@ -52,9 +57,6 @@ import javafx.scene.layout.VBox;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class EditorForm extends AnchorPane {
-
-	@FXML
-	private VBox userDataContainer;
 	@FXML
 	private Label sectionLabel;
 	@FXML
@@ -68,9 +70,9 @@ public class EditorForm extends AnchorPane {
 	@FXML
 	private ScrollPane sectionNotEditableFieldsContainer;
 	@FXML
-	private TitledPane editableFieldsAccordian;
+	private TitledPane editableFieldsAccordion;
 	@FXML
-	private TitledPane notEditableFieldsAccordian;
+	private TitledPane notEditableFieldsAccordion;
 	@FXML
 	private Accordion editorAccordion;
 	@FXML
@@ -78,9 +80,9 @@ public class EditorForm extends AnchorPane {
 	@FXML
 	private HBox subsectionBox;
 	@FXML
-	private Button toggleEditingButton;
-	@FXML
 	private Button applyChangesButton;
+	@FXML
+	private Button discardChangesButton;
 	@FXML
 	private Label editingSummary;
 
@@ -111,28 +113,25 @@ public class EditorForm extends AnchorPane {
 			}
 		});
 
-		toggleEditingButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent e) {
-				// if Cancel Editing is clicked, discard all edits by resetting all fields
-				final Boolean isEditing = ControllerMediatorDPX.getInstance().isEditingProperty().get();
-				if (isEditing) {
-					setSection(section, true);
-				}
-				ControllerMediatorDPX.getInstance().isEditingProperty().set(!isEditing);
+		applyChangesButton.setOnAction(event -> {
+			if (editedFieldsCount.get() == 0) {
+				showAlert("", "There are no edits to apply.");
+				return;
 			}
+			final HashMap<DPXColumn, String> changedValues = new HashMap<>();
+			for (final IEditorField field : textFields) {
+				if (field.getColumn().getEditable() && field.valueChanged()) {
+					changedValues.put(field.getColumn(), field.getValue());
+				}
+			}
+			ControllerMediatorDPX.getInstance().updateChangedValues(changedValues);
 		});
 
-		applyChangesButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent e) {
-				final HashMap<DPXColumn, String> changedValues = new HashMap<>();
-				for (final IEditorField field : textFields) {
-					if (field.getColumn().getEditable() && field.valueChanged()) {
-						changedValues.put(field.getColumn(), field.getValue());
-					}
-				}
-				ControllerMediatorDPX.getInstance().updateChangedValues(changedValues);
+		discardChangesButton.setOnAction(event -> {
+			if (editedFieldsCount.get() == 0) {
+				showAlert("", "There are no edits to discard.");
+			} else {
+				showConfirmation("Are you sure?", "Press OK to discard current changes. Press cancel to keep changes.");
 			}
 		});
 
@@ -140,30 +139,23 @@ public class EditorForm extends AnchorPane {
 			@Override
 			public void changed(ObservableValue<? extends Number> obs, Number ov, Number nv) {
 				final String[] numFiles = selectedFilesLabel.getText().split(" ");
+				String filesString = " files";
+				if ("1".equals(numFiles[0])) {
+					filesString = " file";
+				}
 				if (nv.intValue() == 0) {
-					editingSummary.setText("");
-					applyChangesButton.setDisable(true);
-					applyChangesButton.setStyle("-fx-background-color: #7EFFFE;");
+					editingSummary.setText("0 edited fields");
 				} else if (nv.intValue() == 1) {
-					editingSummary.setText("Change " + nv + " field in " + numFiles[0] + " files?");
-					applyChangesButton.setDisable(false);
-					applyChangesButton.setStyle("-fx-background-color: #AED581");
+					editingSummary.setText(nv + " edit in " + numFiles[0] + filesString);
 				} else {
-					editingSummary.setText("Change " + nv + " fields in " + numFiles[0] + " files?");
-					applyChangesButton.setDisable(false);
-					applyChangesButton.setStyle("-fx-background-color: #AED581");
+					editingSummary.setText(nv + " edits in " + numFiles[0] + filesString);
 				}
 			}
 		});
 
-		ControllerMediatorDPX.getInstance().isEditingProperty().addListener(new ChangeListener() {
-			@Override
-			public void changed(ObservableValue o, Object ov, Object nv) {
-				setIsEditingMode((Boolean) nv);
-			}
-		});
-
-		setIsEditingMode(ControllerMediatorDPX.getInstance().isEditingProperty().get());
+		notEditableFieldsAccordion.setAccessibleText("List of non editable fields");
+		editableFieldsAccordion.setAccessibleText("List of editable fields");
+		editingSummary.setFocusTraversable(true);
 	}
 
 	private void calculateEditedFields() {
@@ -193,57 +185,31 @@ public class EditorForm extends AnchorPane {
 	}
 
 	public void setEditedFieldsCount(int count) {
-		if (editedFieldsCount != null) editedFieldsCount.set(count);
-	}
-
-	private void setIsEditingMode(Boolean isEditing) {
-		if (isEditing) {
-			toggleEditingButton.setText("Stop Editing");
-			toggleEditingButton.setStyle("-fx-background-color: #FFAB91");
-			userDataContainer.setDisable(false);
-			editingSummary.setVisible(true);
-		} else {
-			toggleEditingButton.setText("Start Editing");
-			toggleEditingButton.setStyle("-fx-background-color: #7EFFFE");
-			applyChangesButton.setStyle("-fx-background-color: #7EFFFE");
-			applyChangesButton.setDisable(true);
-			userDataContainer.setDisable(true);
-			editingSummary.setVisible(false);
-			editingSummary.setText("");
-			editedFieldsCount.set(0);
+		if (editedFieldsCount != null) {
+			editedFieldsCount.set(count);
 		}
 	}
 
 	private void setNumberOfEditableFields(int num) {
-		if (num == 1) {
-			editableFieldsAccordian.setText(Integer.toString(num) + " Editable Field");
-		} else {
-			editableFieldsAccordian.setText(Integer.toString(num) + " Editable Fields");
-		}
+		editableFieldsAccordion.setText(Integer.toString(num) + " Editable Field" + (num != 1 ? "s" : ""));
 	}
 
 	private void setNumberOfNotEditableFields(int num) {
-		if (num == 1) {
-			notEditableFieldsAccordian.setText(Integer.toString(num) + " Not Editable Field");
-		} else {
-			notEditableFieldsAccordian.setText(Integer.toString(num) + " Not Editable Fields");
-		}
+		notEditableFieldsAccordion.setText(Integer.toString(num) + " Not Editable Field" + (num != 1 ? "s" : ""));
 	}
 
 	private void setNumberOfSelectedFiles(int num) {
-		if (num == 1) {
-			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
-		} else {
-			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
-		}
+		selectedFilesLabel.setText(Integer.toString(num) + " file" + (num != 1? "s " : " ") + "selected");
+		selectedFilesLabel.setFocusTraversable(true);
 	}
 
-	public void setSection(SectionDef section, Boolean resetValues) {
+	public void setSection(SectionDef section, boolean resetValues) {
 		if (resetValues) {
 			for (final IEditorField field : textFields) {
 				field.resetValueChanged();
 			}
 		}
+		calculateEditedFields();
 		this.section = section;
 		final SelectedFilesSummary summary = ControllerMediatorDPX.getInstance().getSelectedFilesSummary();
 		int editableCount = 0;
@@ -270,8 +236,8 @@ public class EditorForm extends AnchorPane {
 					final ASCIIArea area = new ASCIIArea();
 					area.setColumn(c);
 					area.setVisible(subsectionVisible);
-					area.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 					area.setValue(summary.getDisplayValues(c));
+					area.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 					area.setEditable(c.getEditable());
 					area.setInvalidRuleSets(summary.getRuleSetViolations(c));
 					area.managedProperty().bind(area.visibleProperty());
@@ -297,12 +263,11 @@ public class EditorForm extends AnchorPane {
 						notEditableCount++;
 					}
 				} else {
-					// TODO: Check for display type
 					final ASCIIField field = new ASCIIField();
 					field.setColumn(c);
 					field.setVisible(subsectionVisible);
-					field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 					field.setValue(summary.getDisplayValues(c));
+					field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 					field.setEditable(c.getEditable());
 					field.setInvalidRuleSets(summary.getRuleSetViolations(c));
 					field.managedProperty().bind(field.visibleProperty());
@@ -334,8 +299,8 @@ public class EditorForm extends AnchorPane {
 				final IntegerField field = new IntegerField();
 				field.setColumn(c);
 				field.setVisible(subsectionVisible);
-				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 				field.setValue(summary.getDisplayValues(c));
+				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 				field.setEditable(c.getEditable());
 				field.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				field.managedProperty().bind(field.visibleProperty());
@@ -362,9 +327,9 @@ public class EditorForm extends AnchorPane {
 			} else if (c.getDisplayType() == DisplayType.FLOAT) {
 				final FloatField textField = new FloatField();
 				textField.setColumn(c);
+				textField.setValue(summary.getDisplayValues(c));
 				textField.setVisible(subsectionVisible);
 				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
-				textField.setValue(summary.getDisplayValues(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				textField.managedProperty().bind(textField.visibleProperty());
@@ -392,8 +357,8 @@ public class EditorForm extends AnchorPane {
 				final BorderValidityField textField = new BorderValidityField();
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 				textField.setValue(summary.getDisplayValues(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				textField.managedProperty().bind(textField.visibleProperty());
@@ -414,8 +379,8 @@ public class EditorForm extends AnchorPane {
 				final PixelAspectRatioField textField = new PixelAspectRatioField();
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 				textField.setValue(summary.getDisplayValues(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				textField.managedProperty().bind(textField.visibleProperty());
@@ -437,15 +402,15 @@ public class EditorForm extends AnchorPane {
 			sectionNotEditableFieldsContainer.setFitToWidth(true);
 			sectionEditableFieldsContainer.setFitToWidth(true);
 		}
-		editorAccordion.setExpandedPane(editableFieldsAccordian);
-		editableFieldsAccordian.setDisable(false);
+		editorAccordion.setExpandedPane(editableFieldsAccordion);
+		editableFieldsAccordion.setDisable(false);
 		if (notEditableCount == 0) {
-			notEditableFieldsAccordian.setVisible(false);
+			notEditableFieldsAccordion.setVisible(false);
 		} else if (editableCount == 0) {
 			// TODO: fix style bug when there are no editable fields
-			editableFieldsAccordian.setVisible(true);
-			editableFieldsAccordian.setDisable(true);
-			editorAccordion.setExpandedPane(notEditableFieldsAccordian);
+			editableFieldsAccordion.setVisible(true);
+//			editableFieldsAccordion.setDisable(true);
+			editorAccordion.setExpandedPane(notEditableFieldsAccordion);
 		}
 
 		if (subsections.size() > 0) {
@@ -634,13 +599,13 @@ public class EditorForm extends AnchorPane {
 			sectionNotEditableFieldsContainer.setFitToWidth(true);
 			sectionEditableFieldsContainer.setFitToWidth(true);
 		}
-		editorAccordion.setExpandedPane(editableFieldsAccordian);
+		editorAccordion.setExpandedPane(editableFieldsAccordion);
 		if (notEditableCount == 0) {
-			notEditableFieldsAccordian.setVisible(false);
+			notEditableFieldsAccordion.setVisible(false);
 		} else if (editableCount == 0) {
 			// TODO: fix style bug when there are no editable fields
-			editableFieldsAccordian.setVisible(false);
-			editorAccordion.setExpandedPane(notEditableFieldsAccordian);
+			editableFieldsAccordion.setVisible(false);
+			editorAccordion.setExpandedPane(notEditableFieldsAccordion);
 		}
 
 		setNumberOfSelectedFiles(summary.getFileCount());
@@ -650,6 +615,8 @@ public class EditorForm extends AnchorPane {
 
 	public void setTitle(String title) {
 		sectionLabel.setText(title);
+		sectionLabel.setAccessibleText(title);
+		sectionLabel.setFocusTraversable(true);
 	}
 
 	public void setVisibility(String subsectionDisplayName) {
@@ -659,6 +626,61 @@ public class EditorForm extends AnchorPane {
 				setSectionSecond(section);
 				break;
 			}
+		}
+	}
+	
+	private void showAlert(String modalTitle, String alertText) {
+		final Alert alert = new Alert(AlertType.NONE);
+		alert.setTitle(modalTitle);
+		alert.setHeaderText(null);
+		alert.setContentText(null);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.initOwner(Main.getPrimaryStage());
+
+		final ButtonType[] buttonList = new ButtonType[1];
+		buttonList[0] = ButtonType.CLOSE;
+		alert.getButtonTypes().setAll(buttonList);
+
+		final GridPane grid = new GridPane();
+		final Text text = new Text(alertText);
+		text.setStyle("-fx-font-size: 14.0");
+		text.setFocusTraversable(true);
+		grid.add(text, 0, 0);
+		grid.setVgap(15);
+		alert.getDialogPane().setContent(grid);
+
+		alert.showAndWait();
+		if (alert.getResult() == ButtonType.CLOSE) {
+			alert.close();
+		}
+	}
+	
+	private void showConfirmation(String modalTitle, String confirmationText) {
+		final Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle(modalTitle);
+		alert.setHeaderText(null);
+		alert.setContentText(null);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.initOwner(Main.getPrimaryStage());
+
+		final ButtonType[] buttonList = new ButtonType[2];
+		buttonList[0] = ButtonType.CANCEL;
+		buttonList[1] = ButtonType.OK;
+		alert.getButtonTypes().setAll(buttonList);
+
+		final GridPane grid = new GridPane();
+		final Text text = new Text(confirmationText);
+		text.setStyle("-fx-font-size: 14.0");
+		text.setFocusTraversable(true);
+		grid.add(text, 0, 0);
+		grid.setVgap(15);
+		alert.getDialogPane().setContent(grid);
+
+		alert.showAndWait();
+		if (alert.getResult() == ButtonType.CANCEL) {
+			alert.close();
+		} else if (alert.getResult() == ButtonType.OK) {
+			setSection(section, true);
 		}
 	}
 }

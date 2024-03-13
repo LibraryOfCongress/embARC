@@ -1,91 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.control.ProgressBar?>
 
-<AnchorPane fx:id="sessionSummaryContainer"
-	maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0"
-	prefWidth="706.0" style="-fx-background-color: grey;"
-	xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-	fx:controller="com.portalmedia.embarc.gui.mxf.SessionSummaryController">
-	<children>
-		<HBox layoutX="244.0" layoutY="-34.0" prefHeight="30.0"
-			prefWidth="706.0" style="-fx-padding: 5 15;"
-			AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-			AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-			<children>
-				<Pane prefHeight="20.0" prefWidth="167.0">
-					<children>
-						<HBox layoutX="-6.0" layoutY="-7.0" prefHeight="30.0"
-							prefWidth="158.0">
-							<children>
-								<Pane maxWidth="1.7976931348623157E308" prefHeight="30.0">
-									<children>
-										<Label fx:id="totalNumberOfFilesLabel" layoutX="0.0"
-											layoutY="7.0" prefHeight="20.0" text="0"
-											textAlignment="CENTER" textFill="#f8f5f5" wrapText="true" />
-									</children>
-								</Pane>
-								<Pane maxWidth="-Infinity" prefHeight="30.0"
-									prefWidth="100.0">
-									<children>
-										<Label fx:id="totalFilesLabel" layoutX="6.0"
-											layoutY="7.0" prefHeight="20.0" prefWidth="100.0"
-											text="files imported" textFill="#f8f5f5" />
-									</children>
-								</Pane>
-							</children>
-						</HBox>
-					</children>
-				</Pane>
-				<Pane prefHeight="20.0" prefWidth="166.0">
-					<children>
-						<HBox prefHeight="20.0" prefWidth="150.0">
-							<children>
-								<Pane prefHeight="20.0">
-									<children>
-										<Label fx:id="numberOfSelectedFilesLabel" prefHeight="20.0"
-											text="0" textFill="#f8f5f5" />
-									</children>
-								</Pane>
-								<Pane prefHeight="20.0" prefWidth="88.0">
-									<children>
-										<Label fx:id="filesSelectedLabel" layoutX="4.0"
-											prefHeight="20.0" prefWidth="92.0" text="files selected"
-											textFill="#f8f5f5" />
-									</children>
-								</Pane>
-							</children>
-						</HBox>
-					</children>
-				</Pane>
-				<Pane prefHeight="200.0" prefWidth="200.0">
-					<children>
-						<Label fx:id="selectAllFilesLabel" layoutX="18.0"
-							onMouseClicked="#selectAllFiles" prefHeight="20.0"
-							prefWidth="66.0" text="Select All" textFill="#f8f5f5"
-							underline="true" />
-						<Label fx:id="deselectAllFilesLabel" layoutX="97.0"
-							onMouseClicked="#deselectAllFiles" prefHeight="20.0"
-							prefWidth="107.0" text="Deselect All" textFill="#f8f5f5"
-							underline="true" />
-					</children>
-				</Pane>
-				<Pane prefHeight="200.0" prefWidth="200.0">
-					<children>
-						<Label fx:id="removeSelectedFilesLabel" layoutX="25.0"
-							onMouseClicked="#removeSelectedFiles" prefHeight="20.0"
-							prefWidth="144.0" text="Remove Selected" textFill="#f8f5f5"
-							underline="true" />
-					</children>
-				</Pane>
-			</children>
+<AnchorPane
+	xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
+	maxHeight="-Infinity"
+	minHeight="-Infinity"
+	fx:controller="com.portalmedia.embarc.gui.mxf.SessionSummaryController"
+>
+	<HBox
+		spacing="20"
+		AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0"
+		AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0"
+		style="-fx-padding: 5 5 5 5"
+	>
+		<Pane prefWidth="150.0">
+			<Label
+				fx:id="totalFilesLabel"
+				text=""
+			/>
+		</Pane>
+		<Pane minWidth="150.00">
+			<Label
+				fx:id="filesSelectedLabel"
+				text="0 files selected"
+			/>
+		</Pane>
+		<HBox spacing="20">
+			<Label
+				fx:id="selectAllFilesLabel"
+				text="Select All"
+				underline="true"
+			/>
+			<Label
+				fx:id="deselectAllFilesLabel"
+				text="Deselect All"
+				underline="true"
+			/>
+			<Label
+				fx:id="removeSelectedFilesLabel"
+				text="Remove Selected"
+				underline="true"
+			/>
 		</HBox>
-	</children>
+	</HBox>
 </AnchorPane>

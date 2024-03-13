@@ -8,6 +8,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -25,6 +26,7 @@ import org.apache.commons.cli.ParseException;
 
 import com.portalmedia.embarc.gui.helper.DPXFileListHelper;
 import com.portalmedia.embarc.gui.helper.MXFFileList;
+import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
 import com.portalmedia.embarc.gui.mxf.MXFProfileULMap;
 import com.portalmedia.embarc.parser.ColumnDef;
 import com.portalmedia.embarc.parser.FileFormat;
@@ -32,6 +34,10 @@ import com.portalmedia.embarc.parser.FileFormatDetection;
 import com.portalmedia.embarc.parser.FileInformation;
 import com.portalmedia.embarc.parser.MetadataColumn;
 import com.portalmedia.embarc.parser.MetadataColumnDef;
+import com.portalmedia.embarc.parser.dpx.DPXParseJsonChangesToApplyResult;
+import com.portalmedia.embarc.parser.dpx.DPXParseJsonChangesToApplyService;
+import com.portalmedia.embarc.parser.dpx.DPXService;
+import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.dpx.DPXFileInformation;
 import com.portalmedia.embarc.parser.dpx.DPXMetadata;
 import com.portalmedia.embarc.parser.mxf.DescriptorHelper;
@@ -57,7 +63,6 @@ import tv.amwa.maj.model.impl.AS07DMSIdentifierSetImpl;
 * @version 1.0
 * @since 2020-01-20
 */
-@SuppressWarnings("ucd")
 public class Main {
 
 	static PrintStream consolePrintStream;
@@ -94,6 +99,7 @@ public class Main {
 			Option outputJSONOption = Option.builder("json").desc("DPX: JSON formatted output").hasArg().build();
 			Option conformanceInputJSON = Option.builder("conformanceInputJSON").desc("DPX: Input validation json file").hasArg().build();
 			Option conformanceOutputCSV = Option.builder("conformanceOutputCSV").desc("DPX: Output validation report csv file").hasArg().build();
+			Option applyChangesFromJSON = Option.builder("applyChangesFromJSON").desc("DPX: Apply metadata changes from JSON file").hasArg().build();
 			Option downloadTDStream = Option.builder("downloadTDStream").desc("MXF: Select a text stream to download").hasArg().build();
 			Option downloadBDStream = Option.builder("downloadBDStream").desc("MXF: Select a binary stream to download").hasArg().build();
 			Option downloadStreamOutputPath = Option.builder("streamOutputPath").desc("MXF: Output directory for selected stream").hasArg().build();
@@ -104,6 +110,7 @@ public class Main {
 			options.addOption(outputJSONOption);
 			options.addOption(conformanceInputJSON);
 			options.addOption(conformanceOutputCSV);
+			options.addOption(applyChangesFromJSON);
 			options.addOption(downloadTDStream);
 			options.addOption(downloadBDStream);
 			options.addOption(downloadStreamOutputPath);
@@ -184,14 +191,20 @@ public class Main {
 			BatchProcessorDpx.processBatch(dpxTreeMap);
 		}
 
-		if (!csvPath.isEmpty()) CsvWriterDpx.writeCsvDPXFiles(csvPath, dpxTreeMap);
+		if (!csvPath.isEmpty()) {
+			CsvWriterDpx.writeCsvDPXFiles(csvPath, dpxTreeMap);
+		}
 
-		if (!jsonPath.isEmpty()) JsonWriterDpx.writeJsonDPXFiles(jsonPath, dpxTreeMap);
+		if (!jsonPath.isEmpty()) {
+			JsonWriterDpx.writeJsonDPXFiles(jsonPath, dpxTreeMap);
+		}
 
 		if (line.hasOption("print")) {
 			hasOption = true;
 			System.out.println("\n-- DPX FILE METADATA --");
-			for (DPXFileInformation dpxFile : dpxTreeMap.values()) printDPXMetadata(dpxFile);
+			for (DPXFileInformation dpxFile : dpxTreeMap.values()) {
+				printDPXMetadata(dpxFile);
+			}
 		}
 
 		if (line.hasOption("conformanceInputJSON")) {
@@ -202,6 +215,119 @@ public class Main {
 				outputCSVPath = line.getOptionValue("conformanceOutputCSV");
 			}
 			CustomValidationRuleService.readRuleSet(inputJSONPath, outputCSVPath, dpxTreeMap);
+		}
+
+		if (line.hasOption("applyChangesFromJSON")) {
+			System.out.println("\n-- APPLYING CHANGES FROM INPUT JSON --\n");
+			hasOption = true;
+			String templateJsonPath = line.getOptionValue("applyChangesFromJSON");
+			DPXParseJsonChangesToApplyResult applyJsonResult = DPXParseJsonChangesToApplyService.getApplyChangesJsonResult(templateJsonPath);
+
+			if (applyJsonResult == null) {
+				System.out.println("Empty JSON supplied. Exiting.");
+			}
+
+			HashMap<DPXColumn, String> validPairs = applyJsonResult.getValidPairs();
+			HashMap<String, String> invalidPairs = applyJsonResult.getInvalidPairs();
+
+			if (invalidPairs != null && invalidPairs.size() > 0) {
+				System.out.println("Invalid entries in supplied JSON template:");
+				for (Map.Entry<String, String> entry : invalidPairs.entrySet()) {
+					System.out.format("%-2s%-8s\n", "", entry.getKey() + ": " + entry.getValue());
+				}
+				System.out.println("\nFix invalid JSON entries and try again. Exiting.");
+				return;
+			}
+
+			if (validPairs == null || validPairs.isEmpty()) {
+				System.out.println("No valid entries in supplied JSON template. Exiting.");
+				return;
+			}
+
+			System.out.println("Applying the following edits:");
+			for (Map.Entry<DPXColumn, String> entry : validPairs.entrySet()) {
+				System.out.format("%-2s%-8s\n", "", entry.getKey() + ": " + entry.getValue());
+			}
+
+			int totalFileCount = dpxTreeMap.size();
+			int editSuccessCount = 0;
+			List<String> mismatchList = new ArrayList<String>();
+
+			for (DPXFileInformation dpxFile : dpxTreeMap.values()) {
+				DPXFileInformationViewModel viewModel = DPXFileListHelper.toFileInformationViewModel(dpxFile);
+				for (Map.Entry<DPXColumn, String> entry : validPairs.entrySet()) {
+					viewModel.setProp(entry.getKey(), entry.getValue());
+				}
+				
+				// Create original image hash
+				final String imageDataStartString = viewModel.getProp(DPXColumn.OFFSET_TO_IMAGE_DATA);
+				final int imageDataStart = Integer.parseInt(imageDataStartString);
+				final byte[] originalImageData = DPXFileListHelper.getBytesFromFile(dpxFile.getPath(),
+						imageDataStart);
+				final String originalHash = DPXFileListHelper.getCrc32Hash(originalImageData);
+				
+				try {
+					String originalPath = dpxFile.getPath();
+					// Create a temp file.  Temporarily avoid duplicating logic by passing in a temp file name.
+					// Only copy to original destination if the hashes match
+					String tempPath = dpxFile.getPath() + ".tmp2";
+
+					int offsetToImageData = viewModel.getOffsetToImageData();
+					// Write the file
+					boolean writeFileSuccess = DPXService.writeFile(viewModel, originalPath, tempPath);
+					
+					// Create hash of the new file
+					final byte[] newImageData = DPXFileListHelper.getBytesFromFile(tempPath,
+							offsetToImageData);
+					final String newHash = DPXFileListHelper.getCrc32Hash(newImageData);
+
+					boolean hashesMatch = newHash.equals(originalHash);
+					if (!hashesMatch) {
+						mismatchList.add(dpxFile.getName() + " - Original: " + originalHash + " New: " + newHash);
+					}
+					
+					// If the hashes match, and we successfully wrote the file, copy to original location
+					if(writeFileSuccess && hashesMatch) {
+						final Path tempFile = new File(tempPath).toPath();
+						try {
+							Files.copy(tempFile, new File(originalPath).toPath(), StandardCopyOption.REPLACE_EXISTING);
+							editSuccessCount++;
+						} catch (final Exception ex) {
+							System.out.println("Error copying temp file to original path: " + originalPath);
+						}
+						try {
+							Files.delete(tempFile);
+						} catch (final Exception ex) {
+							System.out.println("Error deleting temp file for dpx file: " + dpxFile.getPath());
+						}
+					}
+					else {
+						// Otherwise, cleanup temp file if it exists
+						try {
+							if(new File(tempPath).exists()) {
+								final Path tempFile = new File(tempPath).toPath();
+								Files.delete(tempFile);
+							}
+						} catch (final Exception ex) {
+							System.out.println("Error deleting temp file for dpx file: " + dpxFile.getPath());
+						}
+					}
+				} catch (Exception e) {
+					System.out.println("Error writing file: " + dpxFile.getPath());
+				}
+			}
+
+			System.out.format("\n%-35s%-1s\n", "Total DPX files processed:", totalFileCount);
+			System.out.format("%-35s%-1s\n", "Successful edit count:", editSuccessCount);
+			System.out.format("%-35s%-1s\n", "Hash before/after match count:", totalFileCount - mismatchList.size());
+			System.out.format("%-35s%-1s\n", "Hash before/after mismatch count:", mismatchList.size());
+			
+			if (mismatchList.size() > 0) {
+				System.out.println("\nMismatched hashes:");
+				for (String entry : mismatchList) {
+					System.out.format("%-2s%-8s\n", "", entry);
+				}
+			}
 		}
 
 		if (!hasOption) noOptionsSpecified();
@@ -218,7 +344,9 @@ public class Main {
 		if (line.hasOption("print")) {
 			hasOption = true;
 			System.out.println("\n-- MXF FILE METADATA --");
-			for (FileInformation<MXFMetadata> mxfFile : mxfTreeMap.values()) printMXFMetadata(mxfFile);
+			for (FileInformation<MXFMetadata> mxfFile : mxfTreeMap.values()) {
+				printMXFMetadata(mxfFile);
+			}
 		}
 
 		if (line.hasOption("downloadTDStream")) {
@@ -243,7 +371,9 @@ public class Main {
 			downloadGenericStream(streamId, streamOutputPath);
 		}
 
-		if (!hasOption) noOptionsSpecified();
+		if (!hasOption) {
+			noOptionsSpecified();
+		}
 	}
 
 	private static void noOptionsSpecified() {

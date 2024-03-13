@@ -1,60 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import com.portalmedia.embarc.gui.*?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 
-<fx:root type="javafx.scene.layout.AnchorPane"
-	xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
-	<children>
-		<SplitPane dividerPositions="0.5" layoutX="7.0"
-			orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0"
-			AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-			AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-			<items>
-				<AnchorPane fx:id="editorPane" minHeight="0.0"
-					minWidth="0.0" prefHeight="100.0" prefWidth="160.0"
-					style="-fx-background-color: #d1d9de;">
-					<VBox fx:id="userDataContainer"
-						style="-fx-background-color: transparent;"
-						AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-						AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-						<children>
-							<VBox styleClass="editor-header-box" prefHeight="70.00"
-								AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-								AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-								<children>
-									<Label fx:id="sectionLabel" alignment="TOP_LEFT"
-										prefHeight="25.00" styleClass="editor-header"
-										VBox.vgrow="ALWAYS"></Label>
-									<Label fx:id="selectedFilesLabel" alignment="TOP_LEFT"
-										prefHeight="25.0" styleClass="editor-header"
-										VBox.vgrow="ALWAYS"></Label>
-								</children>
-							</VBox>
-							<AnchorPane fx:id="generalInfo"
-								AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-								AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-								<children></children>
-							</AnchorPane>
-						</children>
-					</VBox>
-				</AnchorPane>
-				<AnchorPane maxHeight="100.0" minHeight="100.0"
-					minWidth="0.0" prefHeight="100.0" prefWidth="160.0"
-					style="-fx-background-color: #496879;">
-					<children></children>
-				</AnchorPane>
-			</items>
-		</SplitPane>
-	</children>
+<fx:root
+	type="javafx.scene.layout.AnchorPane"
+	xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
+>
+	<VBox
+		AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0"
+		AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0"
+	>
+		<VBox styleClass="editor-header-box" spacing="10">
+			<Label
+				fx:id="sectionLabel"
+				styleClass="editor-header"
+				VBox.vgrow="ALWAYS"
+				focusTraversable="true"
+			/>
+			<Label
+				fx:id="selectedFilesLabel"
+				styleClass="editor-header-selected-files-label"
+				VBox.vgrow="ALWAYS"
+				focusTraversable="true"
+			/>
+		</VBox>
+		<AnchorPane fx:id="generalInfo" />
+	</VBox>
 </fx:root>
