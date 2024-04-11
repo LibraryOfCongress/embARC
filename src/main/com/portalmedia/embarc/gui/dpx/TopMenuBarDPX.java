@@ -45,6 +45,9 @@ public class TopMenuBarDPX {
 		MenuItem ruleSets = new MenuItem("Rule Sets");
 		MenuItem createReport = new MenuItem("Download Rule Violations");
 		MenuItem createImageChecksumReport = new MenuItem("Download Image Data Checksums");
+		MenuItem createSequenceGapAnalysisReport = new MenuItem("Download Sequence Gap Analysis Report (Simple)");
+		MenuItem createSequenceGapAnalysisReportVerbose = new MenuItem("Download Sequence Gap Analysis Report (Full)");
+		MenuItem createCSVExport = new MenuItem("Download Metadata as CSV");
 		
 		importFilesItem.setOnAction(new EventHandler<ActionEvent>() {
 		    public void handle(ActionEvent t) {
@@ -92,11 +95,26 @@ public class TopMenuBarDPX {
 		    	ControllerMediatorDPX.getInstance().createImageChecksumReport();
 		    }
 		});
+		createSequenceGapAnalysisReport.setOnAction(new EventHandler<ActionEvent>() {
+		    public void handle(ActionEvent t) {
+		    	ControllerMediatorDPX.getInstance().createSequenceGapAnalysisReport(false);
+		    }
+		});
+		createSequenceGapAnalysisReportVerbose.setOnAction(new EventHandler<ActionEvent>() {
+		    public void handle(ActionEvent t) {
+		    	ControllerMediatorDPX.getInstance().createSequenceGapAnalysisReport(true);
+		    }
+		});
+		createCSVExport.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent t) {
+				ControllerMediatorDPX.getInstance().createCSVMetadataExport();
+			}
+		});
 
 		fileMenu.getItems().addAll(importFilesItem, importDirectoryItem, writeFilesItem, aboutItem, exitItem);
 		populateSavedDataTemplates(dataTemplates);
 		optionsMenu.getItems().addAll(ruleSets, toggleColumns, dataTemplates);
-		reportsMenu.getItems().addAll(createReport, createImageChecksumReport);
+		reportsMenu.getItems().addAll(createReport, createImageChecksumReport, createSequenceGapAnalysisReport, createSequenceGapAnalysisReportVerbose, createCSVExport);
 		menuBar.getMenus().addAll(fileMenu, optionsMenu, reportsMenu);
 		return menuBar;
 	}

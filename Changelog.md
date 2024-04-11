@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file
 
+## 1.3.0 2024-02-27
+	Feature Additions:
+	- Add DPX CSV metadata export and sequence analysis
+	Improvements:
+	- Accessibility review, round 1
+		- emb-w-03: make dialog contents accessible to screen readers
+		- emb-w-05/emb-m-04: make table info and controls accessible to screen readers
+		- emb-w-06/emb-m-05: add focus indicators
+		- emb-w-07/emb-m-06: improve button color/text contrast
+		- emb-w-08: make text elements accessible to screen readers
+		- emb-w-09/emb-m-07: make sure all controls are labeled
+		- emb-w-10/emb-m-08: move start editing button before fields (fix: remove start editing button)
+		- emb-w-11/emb-m-09: make pop-out buttons accessible to screen readers
+		- emb-w-14/emb-m-12: make image dialog accessible to screen reader
+		- emb-w-15/emb-m-13: make download buttons accessible to screen reader
+
 ## 1.2.0 2023-03-23
 	Improvements:
 	- Add Text DMS manifest validation

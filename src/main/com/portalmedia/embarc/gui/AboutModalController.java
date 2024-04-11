@@ -4,7 +4,6 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.logging.Level;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

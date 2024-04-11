@@ -1,66 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.paint.*?>
-<?import java.lang.*?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import com.portalmedia.embarc.gui.*?>
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.*?>
 
-<AnchorPane fx:id="metadataEditorContainer"
-	prefHeight="360.0" prefWidth="350.0" minWidth="350.0"
-	xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+<AnchorPane
+	fx:id="metadataEditorContainer"
+	xmlns="http://javafx.com/javafx"
+	xmlns:fx="http://javafx.com/fxml"
 	fx:controller="com.portalmedia.embarc.gui.dpx.MetadataEditorController"
-	style="-fx-background-color: #d1d9de;">
-	<children>
-		<VBox layoutX="7.0" prefWidth="160.0"
-			AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-			AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-			<children>
-				<AnchorPane VBox.vgrow="ALWAYS"
-					fx:id="editorContentSwapPane" minHeight="600.0" prefWidth="350.0"
-					minWidth="350.0" style="-fx-background-color: #d1d9de;">
-					<children></children>
-				</AnchorPane>
-				<HBox maxHeight="100.0" minHeight="100.0" prefHeight="100.0"
-					style="-fx-background-color: #496879;">
-					<children>
-						<Region HBox.hgrow="ALWAYS"></Region>
-						<Pane prefWidth="80.0">
-							<ImageView layoutY="-11.0" layoutX="-20.0"
-								scaleX="0.41" scaleY="0.41">
-								<image>
-									<Image url="resources/fadgi_box.jpg" />
-								</image>
-							</ImageView>
-							<HBox.margin>
-								<Insets right="10.0" />
-							</HBox.margin>
-						</Pane>
-						<Pane prefWidth="270.0">
-							<Button layoutY="25.0" fx:id="writeFilesButton"
-								mnemonicParsing="false" prefHeight="50.0" prefWidth="250.0"
-								style="-fx-background-color: #81d4fa; -fx-font-weight: BOLD; -fx-font-size: 16px;"
-								text="Write Files" textFill="#496879">
-								<graphic>
-									<FontAwesomeIconView fill="#496879"
-										glyphName="DOWNLOAD" size="24px" />
-								</graphic>
-							</Button>
-							<HBox.margin>
-								<Insets right="10.0" />
-							</HBox.margin>
-						</Pane>
-						<Region HBox.hgrow="ALWAYS"></Region>
-					</children>
-				</HBox>
-			</children>
-		</VBox>
-	</children>
+>
+	<VBox
+		AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0"
+		AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0"
+	>
+		<AnchorPane
+			fx:id="editorContentSwapPane"
+			VBox.vgrow="ALWAYS"
+		/>
+		<AnchorPane
+			maxHeight="100.0"
+			minHeight="100.0"
+			style="-fx-background-color: #D1D9DE"
+		>
+			<HBox
+				style="-fx-padding: 10 40 10 10;"
+				AnchorPane.bottomAnchor="0.0"
+				AnchorPane.leftAnchor="0.0"
+				AnchorPane.rightAnchor="0.0"
+				AnchorPane.topAnchor="0.0"
+			>
+				<Pane HBox.hgrow="NEVER">
+					<ImageView
+						fx:id="fadgiLogoImageView"
+						scaleX="0.5"
+						scaleY="0.5"
+						layoutY="-22.0"
+					>
+						<image>
+							<Image url="resources/fadgi_box.jpg" />
+						</image>
+					</ImageView>
+				</Pane>
+				<Pane HBox.hgrow="ALWAYS"/>
+				<Pane HBox.hgrow="NEVER">
+					<Button
+						fx:id="writeFilesButton"
+						mnemonicParsing="false"
+						text="Write Files"
+						style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10px 20px;  -fx-text-fill: #304b59;"
+						prefHeight="40.0"
+						layoutY="18.0"
+					>
+						<graphic>
+							<FontAwesomeIconView
+								fill="#304b59"
+								glyphName="DOWNLOAD"
+								size="20px"
+							/>
+						</graphic>
+					</Button>
+				</Pane>
+			</HBox>
+		</AnchorPane>
+	</VBox>
 </AnchorPane>

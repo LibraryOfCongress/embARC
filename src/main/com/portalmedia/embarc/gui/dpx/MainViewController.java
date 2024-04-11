@@ -9,9 +9,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import com.portalmedia.embarc.cli.CsvWriterDpx;
 import com.portalmedia.embarc.gui.helper.DPXFileListHelper;
 import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
+import com.portalmedia.embarc.parser.dpx.DPXBatchProcessor;
+import com.portalmedia.embarc.parser.dpx.DPXSequenceError;
 import com.portalmedia.embarc.report.DPXReportService;
+import com.portalmedia.embarc.report.DPXSequenceAnalysisReportCSVWriter;
 import com.portalmedia.embarc.system.UserPreferencesService;
 
 import javafx.collections.ObservableList;
@@ -86,6 +90,23 @@ public class MainViewController implements Initializable {
 		}
 	}
 
+	// Creates a csv with all dpx metadata
+	public void createCSVMetadataExport() {
+		final FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Select a file");
+		fileChooser.setInitialFileName(
+				"DPXMetadata_" + new SimpleDateFormat("yyyyMMddHHmm").format(new Date()) + ".csv");
+		final File file = fileChooser.showSaveDialog(mainViewPane.getScene().getWindow());
+		try {
+			if (file != null) {
+				ObservableList<DPXFileInformationViewModel> allDPXFileInfoVMs = ControllerMediatorDPX.getInstance().getTable().getItems();
+				CsvWriterDpx.writeCsvDPXFilesFromViewModel(file.getAbsolutePath(), allDPXFileInfoVMs);
+			}
+		} catch (final IOException e) {
+			System.out.println("Error creating validation report");
+		}
+	}
+
 	public void deleteSelectedFiles() {
 		final ObservableList<DPXFileInformationViewModel> toDelete = ControllerMediatorDPX.getInstance()
 				.getSelectedFileList();
@@ -97,6 +118,36 @@ public class MainViewController implements Initializable {
 		}
 		for (final DPXFileInformationViewModel m : newList) {
 			DPXFileListHelper.deleteFileFromDB(m.getId());
+		}
+	}
+
+	public void createSequenceGapAnalysisReport(boolean verboseOutput) {
+		final FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Select a file");
+
+		final UserPreferencesService userPreferences = new UserPreferencesService();
+		final String initialDirectory = userPreferences.getImageChecksumReportPath();
+
+		if (initialDirectory != null && !initialDirectory.isEmpty()) {
+			fileChooser.setInitialDirectory(new File(initialDirectory));
+		}
+
+		String simpleOrVerbose = "Simple";
+		if (verboseOutput) {
+			simpleOrVerbose = "Verbose";
+		}
+
+		fileChooser.setInitialFileName(
+				"SequenceGapAnalysisReport" + simpleOrVerbose + "_" + new SimpleDateFormat("yyyyMMddHHmm").format(new Date()) + ".csv");
+		final File file = fileChooser.showSaveDialog(mainViewPane.getScene().getWindow());
+		
+		if (file != null) {
+			List<DPXSequenceError> sequenceErrors = DPXBatchProcessor.getSequenceErrorList(ControllerMediatorDPX.getInstance().getTable().getItems(), verboseOutput);
+			try {
+				DPXSequenceAnalysisReportCSVWriter.writeSequenceAnalysisReportCSV(file.getAbsolutePath(), sequenceErrors);
+			} catch (IOException e) {
+				System.out.println("Error creating sequence gap analysis report");
+			}
 		}
 	}
 	

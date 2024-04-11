@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file
 
+## 0.4.0 2024-02-27
+	Add feature to apply DPX metadata changes from input JSON
 
 ## 0.3.2 2023-03-23
 	Read second AS07 Core DMS from footer when present

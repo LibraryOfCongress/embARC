@@ -31,7 +31,7 @@ public enum DPXColumn implements Serializable, ColumnDef {
 			int.class, false, DisplayType.INTEGER),
 	USER_DEFINED_HEADER_LENGTH("User Defined Header Length", DPXSection.FILE_INFORMATION_HEADER, 4, int.class,
 			false, DisplayType.INTEGER),
-	IMAGE_FILE_NAME("Image File Name", DPXSection.FILE_INFORMATION_HEADER, 100, String.class, true,
+	IMAGE_FILE_NAME("Image Filename", DPXSection.FILE_INFORMATION_HEADER, 100, String.class, true,
 			DisplayType.ASCII),
 	CREATION_DATETIME("Creation Datetime", DPXSection.FILE_INFORMATION_HEADER, 24, String.class,
 			"yyyy:MM:dd:HH:mm:ss", true, DisplayType.DATEPICKER),

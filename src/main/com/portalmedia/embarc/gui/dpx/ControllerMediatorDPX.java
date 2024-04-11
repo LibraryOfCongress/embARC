@@ -50,8 +50,16 @@ public class ControllerMediatorDPX implements IMediateControllers {
 		mainViewController.createImageChecksumReport();
 	}
 
+	public void createSequenceGapAnalysisReport(boolean verboseOutput) {
+		mainViewController.createSequenceGapAnalysisReport(verboseOutput);
+	}
+
 	public void createReport() {
 		mainViewController.createValidationReport();
+	}
+
+	public void createCSVMetadataExport() {
+		mainViewController.createCSVMetadataExport();
 	}
 
 	@Override
@@ -198,10 +206,10 @@ public class ControllerMediatorDPX implements IMediateControllers {
 
 	public int toggleErrorsOnlyFilter(Boolean isChecked) {
 		if (isChecked) {
-			final int numWithViolations = centerPaneController.FilterByViolations();
+			final int numWithViolations = centerPaneController.filterByViolations();
 			return numWithViolations;
 		} else {
-			centerPaneController.ClearFilterByViolations();
+			centerPaneController.clearFilterByViolations();
 			return 0;
 		}
 	}

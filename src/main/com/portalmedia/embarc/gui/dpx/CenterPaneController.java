@@ -25,11 +25,13 @@ import com.portalmedia.embarc.gui.model.SelectedFilesSummary;
 import com.portalmedia.embarc.gui.model.TabSummary;
 import com.portalmedia.embarc.gui.model.TableState;
 import com.portalmedia.embarc.parser.SectionDef;
+import com.portalmedia.embarc.parser.dpx.DPXBatchProcessor;
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.dpx.DPXColumnHelpText;
 import com.portalmedia.embarc.parser.dpx.DPXImageElement;
 import com.portalmedia.embarc.parser.dpx.DPXMetadataColumnViewModelList;
 import com.portalmedia.embarc.parser.dpx.DPXSection;
+import com.portalmedia.embarc.parser.dpx.DPXSequenceError;
 import com.portalmedia.embarc.system.UserPreferencesService;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
@@ -50,6 +52,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -66,7 +69,9 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.util.Callback;
@@ -82,9 +87,25 @@ import javafx.util.Callback;
  */
 public class CenterPaneController implements Initializable {
 	@FXML
+	private BorderPane borderPane;
+	@FXML
 	private TableView<DPXFileInformationViewModel> table;
 	@FXML
 	private TabPane tabPane;
+	@FXML
+	private Tab generalTab;
+	@FXML
+	private Tab fileInformationTab;
+	@FXML
+	private Tab imageInformationTab;
+	@FXML
+	private Tab imageSourceInformationTab;
+	@FXML
+	private Tab motionPictureFilmTab;
+	@FXML
+	private Tab televisionTab;
+	@FXML
+	private Tab userDefinedTab;
 	@FXML
 	private SectionDef selectedSection;
 
@@ -97,201 +118,10 @@ public class CenterPaneController implements Initializable {
 	private TabSummary tabSummary;
 	private boolean filteredByError = false;
 	private boolean userPreferencesSet = false;
-
-	public void autoPopulateNames() {
-		final Alert alert = new Alert(AlertType.CONFIRMATION);
-		alert.initModality(Modality.APPLICATION_MODAL);
-		alert.initOwner(Main.getPrimaryStage());
-		alert.setGraphic(null);
-		alert.setTitle("Are you sure?");
-		alert.setHeaderText("Auto Populate Filenames");
-		alert.setContentText(
-				"Are you sure you want to change the Image Filename metadata to match the Filename on disk?");
-
-		final Optional<ButtonType> result = alert.showAndWait();
-		if (result.get() == ButtonType.OK) {
-
-			final ProgressSpinner spinner = new ProgressSpinner();
-
-			final Task<Void> task = new Task<Void>() {
-				@Override
-				public Void call() throws InterruptedException {
-					final ObservableList<Integer> selectedIndices = table.getSelectionModel().getSelectedIndices();
-					final ExecutorService executor = Executors
-							.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-					final List<Callable<Object>> futures = new ArrayList<>(selectedIndices.size());
-					for (final Integer i : selectedIndices) {
-						futures.add(Executors.callable(() -> {
-							try {
-								final DPXFileInformationViewModel fivm = table.getItems().get(i);
-								DPXFileListHelper.updateName(fivm);
-							} catch (final Exception e) {
-								System.out.println("Error updating file names");
-							}
-						}));
-					}
-					try {
-						executor.invokeAll(futures);
-					} catch (final InterruptedException e) {
-						System.out.println("Thread error");
-					}
-
-					setSelectedRuleSets(ControllerMediatorDPX.getInstance().getCurrentRuleSets());
-					TableState.setUpdateEditor(true);
-					TableState.setUpdateSummary(true);
-					updateData();
-					return null;
-				}
-			};
-
-			task.setOnSucceeded(event -> {
-				Platform.runLater(() -> {
-					table.refresh();
-					updateTable();
-				});
-				spinner.getDialogStage().hide();
-			});
-
-			final Thread thread = new Thread(task);
-			thread.start();
-
-			spinner.getDialogStage().show();
-
-			refreshEditor(true);
-		}
-	}
-
-	public void ClearFilterByViolations() {
-		table.setItems(DPXFileListHelper.getObservableFileList());
-	}
-
-	private List<CheckBox> createColumnVisibilityCheckBoxes() {
-		final List<CheckBox> cbList = new ArrayList<>();
-		for (final TableColumn<DPXFileInformationViewModel, ?> col : table.getColumns()) {
-			String text = col.getId();
-			if (text.length() > 20) {
-				text = text.substring(0, 20) + "...";
-			}
-			final CheckBox checkbox = new CheckBox(text);
-			final Tooltip tt = new Tooltip(col.getId());
-			tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
-			checkbox.setTooltip(tt);
-
-			if (col.getUserData() instanceof String) {
-				checkbox.setUserData(col.getUserData());
-			} else {
-				final DPXMetadataColumnViewModel mcvm = (DPXMetadataColumnViewModel) col.getUserData();
-				checkbox.setUserData(mcvm.getSectionDisplayName());
-			}
-
-			if (!userHiddenColumns.contains(col)) {
-				checkbox.setSelected(true);
-			} else {
-				checkbox.setSelected(false);
-			}
-			checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-				@Override
-				public void changed(ObservableValue<? extends Boolean> obs, Boolean ov, Boolean nv) {
-					final UserPreferencesService userPreferences = new UserPreferencesService();
-					if (nv) {
-						userHiddenColumns.remove(col);
-						userPreferences.removeHiddenDPXColumn(col.getId());
-					} else {
-						userHiddenColumns.add(col);
-						userPreferences.addHiddenDPXColumn(col.getId());
-					}
-				}
-			});
-			cbList.add(checkbox);
-		}
-		return cbList;
-	}
-
-	public void deleteSelectedFiles() {
-		final ProgressSpinner spinner = new ProgressSpinner();
-
-		final Task<Void> task = new Task<Void>() {
-			@Override
-			public Void call() throws InterruptedException {
-				TableState.setDeleteFiles(true);
-				updateData();
-				Platform.runLater(() -> {
-					updateTable();
-				});
-				return null;
-			}
-		};
-
-		task.setOnSucceeded(event -> {
-			spinner.getDialogStage().hide();
-			ControllerMediatorDPX.getInstance().setFiles();
-		});
-		spinner.activateProgressBar(task);
-		final Thread thread = new Thread(task);
-		thread.start();
-
-		spinner.getDialogStage().show();
-	}
-
-	public void deselectAllFiles() {
-		final ProgressSpinner spinner = new ProgressSpinner();
-
-		final Task<Void> task = new Task<Void>() {
-			@Override
-			public Void call() throws InterruptedException {
-				DPXFileListHelper.setSelectAll(false);
-				TableState.setSelectAll(false);
-				TableState.setDeselectAll(true);
-				TableState.setUpdateSummary(true);
-				TableState.setUpdateEditor(true);
-				updateData();
-				return null;
-			}
-		};
-
-		task.setOnSucceeded(event -> {
-			Platform.runLater(() -> {
-				updateTable();
-			});
-			spinner.getDialogStage().hide();
-		});
-
-		final Thread thread = new Thread(task);
-		thread.start();
-
-		spinner.getDialogStage().show();
-	}
-
-	public int FilterByViolations() {
-
-		final FilteredList<DPXFileInformationViewModel> filteredList = new FilteredList<>(table.getItems());
-		filteredList.setPredicate(new Predicate<DPXFileInformationViewModel>() {
-			@Override
-			public boolean test(DPXFileInformationViewModel t) {
-				return t.hasError(ControllerMediatorDPX.getInstance().getCurrentRuleSets()); // or true
-			}
-		});
-		table.setItems(filteredList);
-
-		return filteredList.size();
-	}
-
-	public ObservableList<DPXFileInformationViewModel> getSelectedFiles() {
-		final ObservableList<DPXFileInformationViewModel> list = table.getSelectionModel().getSelectedItems();
-		return list;
-	}
-
-	public SelectedFilesSummary getSelectedFilesSummary() {
-		return selectedFilesSummary;
-	}
-
-	public TableView<DPXFileInformationViewModel> getTable() {
-		return table;
-	}
-
-	public int getTableSize() {
-		return table.getItems().size();
-	}
+	private List<DPXSequenceError> filenameSequenceErrorList = new ArrayList<DPXSequenceError>();
+	private List<DPXSequenceError> imageFilenameSequenceErrorList = new ArrayList<DPXSequenceError>();
+	private List<DPXSequenceError> sourceImageFilenameSequenceErrorList = new ArrayList<DPXSequenceError>();
+	private List<DPXSequenceError> framePositionSequenceErrorList = new ArrayList<DPXSequenceError>();
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -358,6 +188,7 @@ public class CenterPaneController implements Initializable {
 					.createSelectedFilesSummary(table.getSelectionModel().getSelectedItems());
 			setSelectedRuleSets(ControllerMediatorDPX.getInstance().getCurrentRuleSets());
 			setTabWarnings();
+			setColumnSequenceGapWarnings();
 		}
 		final int selectedRowCount = table.getSelectionModel().getSelectedItems().size();
 		if (selectedRowCount > 0 && selectedSection != null) {
@@ -402,7 +233,7 @@ public class CenterPaneController implements Initializable {
 		spinner.getDialogStage().show();
 	}
 
-	public void selectSection(SectionDef section) {
+	private void selectSection(SectionDef section) {
 		this.selectedSection = section;
 		refreshEditor(false);
 	}
@@ -420,7 +251,7 @@ public class CenterPaneController implements Initializable {
 		col.setContextMenu(cm);
 	}
 
-	public void setColumns() {
+	private void setColumns() {
 		if (table.getItems().size() != 0) {
 			setGeneralColumns();
 			TableColumn<DPXFileInformationViewModel, String> headerColumn = new TableColumn<>();
@@ -455,7 +286,7 @@ public class CenterPaneController implements Initializable {
 						setColumnContextMenu(col);
 					}
 					setColumnWidth(col);
-					setColumnToolTip(col, helpText);
+					setColumnHeader(col, helpText, mcvm.getColumn().getDisplayName());
 					col.setSortable(true);
 					col.setId(mcvm.getDisplayName());
 					setColumnStyles(col, mcvm);
@@ -509,17 +340,51 @@ public class CenterPaneController implements Initializable {
 		}
 	}
 
-	private void setColumnToolTip(TableColumn<DPXFileInformationViewModel, String> col, String helpText) {
-		final String headerName = col.textProperty().get();
-		final Label title = new Label(headerName);
-		final Tooltip tt = new Tooltip(headerName + "\n\n" + helpText);
+	private void setColumnHeader(TableColumn<DPXFileInformationViewModel, ?> col, String helpText, String columnDisplayName) {
+		HBox hbox = new HBox();
+		final Label title = new Label(columnDisplayName);
+		final Tooltip tt = new Tooltip(columnDisplayName + "\n\n" + helpText);
 		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
 		tt.setPrefWidth(500);
 		tt.setWrapText(true);
 		tt.setAutoHide(false);
 		title.setTooltip(tt);
-		col.setGraphic(title);
+		setColumnHeaderSequenceErrorIndicator(columnDisplayName, title, hbox);
+		hbox.getChildren().add(title);
+		hbox.setAlignment(Pos.CENTER);
+		col.setGraphic(hbox);
 		col.setText("");
+		col.setStyle("-fx-padding: 0 0 0 5;");
+	}
+	
+	private void setColumnHeaderSequenceErrorIndicator(String columnDisplayName, Label title, HBox hbox) {
+		if (columnDisplayName == "Filename" &&
+			!filenameSequenceErrorList.isEmpty()
+		) {
+			setSequenceErrorIcon(title, hbox);
+		}
+		if (columnDisplayName == DPXColumn.IMAGE_FILE_NAME.getDisplayName() &&
+			!imageFilenameSequenceErrorList.isEmpty()
+		) {
+			setSequenceErrorIcon(title, hbox);
+		}
+		if (columnDisplayName == DPXColumn.SOURCE_IMAGE_FILENAME.getDisplayName() &&
+			!sourceImageFilenameSequenceErrorList.isEmpty()
+		) {
+			setSequenceErrorIcon(title, hbox);
+		}
+		if (columnDisplayName == DPXColumn.FRAME_POSITION_IN_SEQUENCE.getDisplayName() &&
+			!framePositionSequenceErrorList.isEmpty()
+		) {
+			setSequenceErrorIcon(title, hbox);
+		}
+	}
+	
+	private void setSequenceErrorIcon(Label title, HBox hbox) {
+		title.setStyle("-fx-padding: 0 0 0 5;");
+		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
+		icon.setStyleClass("fadgi-sr-warning");
+		hbox.getChildren().add(icon);
 	}
 
 	private void setColumnWidth(TableColumn<DPXFileInformationViewModel, String> col) {
@@ -540,6 +405,7 @@ public class CenterPaneController implements Initializable {
 		SortedList<DPXFileInformationViewModel> sortedData = new SortedList<>(filteredList);
 		sortedData.comparatorProperty().bind(table.comparatorProperty());
 		table.setItems(sortedData);
+		setSequenceErrorLists();
 		if (!columnsHaveBeenSet) {
 			setColumns();
 		}
@@ -565,7 +431,7 @@ public class CenterPaneController implements Initializable {
 				});
 		idCol.setSortable(false);
 		idCol.setPrefWidth(50);
-		setColumnToolTip(idCol, "");
+		setColumnHeader(idCol, "", "Row");
 
 		final TableColumn<DPXFileInformationViewModel, String> nameCol = new TableColumn<>("Filename");
 		nameCol.setId("Filename");
@@ -573,7 +439,7 @@ public class CenterPaneController implements Initializable {
 		nameCol.setUserData("General");
 		nameCol.getStyleClass().add("general-section");
 		setColumnWidth(nameCol);
-		setColumnToolTip(nameCol, "");
+		setColumnHeader(nameCol, "", "Filename");
 
 		final TableColumn<DPXFileInformationViewModel, String> pathCol = new TableColumn<>("File Path");
 		pathCol.setId("File Path");
@@ -581,7 +447,7 @@ public class CenterPaneController implements Initializable {
 		pathCol.setUserData("General");
 		pathCol.getStyleClass().add("general-section");
 		setColumnWidth(pathCol);
-		setColumnToolTip(pathCol, "");
+		setColumnHeader(pathCol, "", "File Path");
 
 		table.getColumns().add(idCol);
 		table.getColumns().add(nameCol);
@@ -593,9 +459,9 @@ public class CenterPaneController implements Initializable {
 			@Override
 			public void changed(ObservableValue<?> o, Object ov, Object nv) {
 				if ((boolean) nv) {
-					table.setDisable(true);
+//					table.setDisable(true);
 				} else {
-					table.setDisable(false);
+//					table.setDisable(false);
 				}
 			}
 		});
@@ -616,6 +482,7 @@ public class CenterPaneController implements Initializable {
 			@Override
 			public void run() {
 				setTabWarnings();
+				setColumnSequenceGapWarnings();
 			}
 		});
 	}
@@ -695,7 +562,7 @@ public class CenterPaneController implements Initializable {
 		col.setContextMenu(cm);
 	}
 
-	public void setTabClickListener() {
+	private void setTabClickListener() {
 		tabPane.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
 			if (table.getItems().size() > 0) {
 				switch (newTab.getId()) {
@@ -902,6 +769,35 @@ public class CenterPaneController implements Initializable {
 		});
 	}
 
+	private void setColumnSequenceGapWarnings() {
+		setSequenceErrorLists();
+		for (final TableColumn<DPXFileInformationViewModel, ?> tableColumn : table.getColumns()) {
+			final String tmpValue = tableColumn.getUserData().toString();
+			if (tmpValue.equals("General")) {
+				if (tableColumn.getId() == "Filename") {
+					tableColumn.setGraphic(null);
+					setColumnHeader(tableColumn, "", "Filename");
+				}
+				continue;
+			}
+			final DPXMetadataColumnViewModel mcvm = (DPXMetadataColumnViewModel)tableColumn.getUserData();
+			if (mcvm == null) {
+				continue;
+			}
+			if (mcvm.getDisplayName() == DPXColumn.IMAGE_FILE_NAME.getDisplayName() ||
+				mcvm.getDisplayName() == DPXColumn.SOURCE_IMAGE_FILENAME.getDisplayName() ||
+				mcvm.getDisplayName() == DPXColumn.FRAME_POSITION_IN_SEQUENCE.getDisplayName()
+			) {
+				tableColumn.setGraphic(null);
+				setColumnHeader(
+					tableColumn,
+					DPXColumnHelpText.getInstance().getHelpText(mcvm.getColumn()),
+					mcvm.getDisplayName()
+				);
+			}
+		}
+	}
+	
 	public void setTabWarnings() {
 		final ObservableList<Tab> tabs = tabPane.getTabs();
 
@@ -1137,7 +1033,7 @@ public class CenterPaneController implements Initializable {
 		spinner.getDialogStage().show();
 	}
 
-	public void updateData() {
+	private void updateData() {
 		final boolean sa = TableState.isSelectAll();
 		DPXFileListHelper.setSelectAll(sa);
 
@@ -1158,14 +1054,18 @@ public class CenterPaneController implements Initializable {
 		}
 	}
 
-	public void updateTable() {
+	private void updateTable() {
 		if (TableState.getDeleteFiles()) {
 			ControllerMediatorDPX.getInstance().getSelectedFileList();
 			ControllerMediatorDPX.getInstance().setFileList();
 			table.getSelectionModel().clearSelection();
 			TableState.setDeleteFiles(false);
 		} else if (TableState.isSelectAll()) {
-			tableSelectionModel.selectAll();
+			try {
+				tableSelectionModel.selectAll();
+			} catch(Exception ex) {
+				System.out.println("Caught exception attempting to select all items in table");
+			}
 		} else if (TableState.getDeselectAll()) {
 			tableSelectionModel.clearSelection();
 			TableState.setDeselectAll(false);
@@ -1183,6 +1083,224 @@ public class CenterPaneController implements Initializable {
 			}
 			TableState.setUpdateEditor(false);
 		}
+	}
+	
+	private void setSequenceErrorLists() {
+		List<DPXSequenceError> sequenceErrors = DPXBatchProcessor.getSequenceErrorList(getTable().getItems(), false);
+		filenameSequenceErrorList.clear();
+		imageFilenameSequenceErrorList.clear();
+		sourceImageFilenameSequenceErrorList.clear();
+		framePositionSequenceErrorList.clear();
+
+		for (DPXSequenceError seqError : sequenceErrors) {
+			if (seqError.getColumn() == "Filename") {
+				filenameSequenceErrorList.add(seqError);
+			}
+			if (seqError.getColumn() == "Image Filename") {
+				imageFilenameSequenceErrorList.add(seqError);
+			}
+			if (seqError.getColumn() == "Source Image Filename") {
+				sourceImageFilenameSequenceErrorList.add(seqError);
+			}
+			if (seqError.getColumn() == "Frame Position in Sequence") {
+				framePositionSequenceErrorList.add(seqError);
+			}
+		}
+	}
+
+	public void autoPopulateNames() {
+		final Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.initOwner(Main.getPrimaryStage());
+		alert.setGraphic(null);
+		alert.setTitle("Are you sure?");
+		alert.setHeaderText("Auto Populate Filenames");
+		alert.setContentText(
+				"Are you sure you want to change the Image Filename metadata to match the Filename on disk?");
+
+		final Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK) {
+
+			final ProgressSpinner spinner = new ProgressSpinner();
+
+			final Task<Void> task = new Task<Void>() {
+				@Override
+				public Void call() throws InterruptedException {
+					final ObservableList<Integer> selectedIndices = table.getSelectionModel().getSelectedIndices();
+					final ExecutorService executor = Executors
+							.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+					final List<Callable<Object>> futures = new ArrayList<>(selectedIndices.size());
+					for (final Integer i : selectedIndices) {
+						futures.add(Executors.callable(() -> {
+							try {
+								final DPXFileInformationViewModel fivm = table.getItems().get(i);
+								DPXFileListHelper.updateName(fivm);
+							} catch (final Exception e) {
+								System.out.println("Error updating filenames");
+							}
+						}));
+					}
+					try {
+						executor.invokeAll(futures);
+					} catch (final InterruptedException e) {
+						System.out.println("Thread error");
+					}
+
+					setSelectedRuleSets(ControllerMediatorDPX.getInstance().getCurrentRuleSets());
+					TableState.setUpdateEditor(true);
+					TableState.setUpdateSummary(true);
+					updateData();
+					return null;
+				}
+			};
+
+			task.setOnSucceeded(event -> {
+				Platform.runLater(() -> {
+					table.refresh();
+					updateTable();
+				});
+				spinner.getDialogStage().hide();
+			});
+
+			final Thread thread = new Thread(task);
+			thread.start();
+
+			spinner.getDialogStage().show();
+
+			refreshEditor(true);
+		}
+	}
+
+	public void clearFilterByViolations() {
+		table.setItems(DPXFileListHelper.getObservableFileList());
+	}
+
+	private List<CheckBox> createColumnVisibilityCheckBoxes() {
+		final List<CheckBox> cbList = new ArrayList<>();
+		for (final TableColumn<DPXFileInformationViewModel, ?> col : table.getColumns()) {
+			String text = col.getId();
+			if (text.length() > 20) {
+				text = text.substring(0, 20) + "...";
+			}
+			final CheckBox checkbox = new CheckBox(text);
+			final Tooltip tt = new Tooltip(col.getId());
+			tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
+			checkbox.setTooltip(tt);
+
+			if (col.getUserData() instanceof String) {
+				checkbox.setUserData(col.getUserData());
+			} else {
+				final DPXMetadataColumnViewModel mcvm = (DPXMetadataColumnViewModel) col.getUserData();
+				checkbox.setUserData(mcvm.getSectionDisplayName());
+			}
+
+			if (!userHiddenColumns.contains(col)) {
+				checkbox.setSelected(true);
+			} else {
+				checkbox.setSelected(false);
+			}
+			checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+				@Override
+				public void changed(ObservableValue<? extends Boolean> obs, Boolean ov, Boolean nv) {
+					final UserPreferencesService userPreferences = new UserPreferencesService();
+					if (nv) {
+						userHiddenColumns.remove(col);
+						userPreferences.removeHiddenDPXColumn(col.getId());
+					} else {
+						userHiddenColumns.add(col);
+						userPreferences.addHiddenDPXColumn(col.getId());
+					}
+				}
+			});
+			cbList.add(checkbox);
+		}
+		return cbList;
+	}
+
+	public void deleteSelectedFiles() {
+		final ProgressSpinner spinner = new ProgressSpinner();
+
+		final Task<Void> task = new Task<Void>() {
+			@Override
+			public Void call() throws InterruptedException {
+				TableState.setDeleteFiles(true);
+				updateData();
+				Platform.runLater(() -> {
+					updateTable();
+				});
+				return null;
+			}
+		};
+
+		task.setOnSucceeded(event -> {
+			spinner.getDialogStage().hide();
+			ControllerMediatorDPX.getInstance().setFiles();
+		});
+		spinner.activateProgressBar(task);
+		final Thread thread = new Thread(task);
+		thread.start();
+
+		spinner.getDialogStage().show();
+	}
+
+	public void deselectAllFiles() {
+		final ProgressSpinner spinner = new ProgressSpinner();
+
+		final Task<Void> task = new Task<Void>() {
+			@Override
+			public Void call() throws InterruptedException {
+				DPXFileListHelper.setSelectAll(false);
+				TableState.setSelectAll(false);
+				TableState.setDeselectAll(true);
+				TableState.setUpdateSummary(true);
+				TableState.setUpdateEditor(true);
+				updateData();
+				return null;
+			}
+		};
+
+		task.setOnSucceeded(event -> {
+			Platform.runLater(() -> {
+				updateTable();
+			});
+			spinner.getDialogStage().hide();
+		});
+
+		final Thread thread = new Thread(task);
+		thread.start();
+
+		spinner.getDialogStage().show();
+	}
+
+	public int filterByViolations() {
+
+		final FilteredList<DPXFileInformationViewModel> filteredList = new FilteredList<>(table.getItems());
+		filteredList.setPredicate(new Predicate<DPXFileInformationViewModel>() {
+			@Override
+			public boolean test(DPXFileInformationViewModel t) {
+				return t.hasError(ControllerMediatorDPX.getInstance().getCurrentRuleSets()); // or true
+			}
+		});
+		table.setItems(filteredList);
+
+		return filteredList.size();
+	}
+
+	public ObservableList<DPXFileInformationViewModel> getSelectedFiles() {
+		final ObservableList<DPXFileInformationViewModel> list = table.getSelectionModel().getSelectedItems();
+		return list;
+	}
+
+	public SelectedFilesSummary getSelectedFilesSummary() {
+		return selectedFilesSummary;
+	}
+
+	public TableView<DPXFileInformationViewModel> getTable() {
+		return table;
+	}
+
+	public int getTableSize() {
+		return table.getItems().size();
 	}
 
 }

@@ -10,10 +10,12 @@ import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.AccessibleRole;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 
 /**
  * Drop down component for fields with specific set values
@@ -24,9 +26,13 @@ import javafx.scene.layout.AnchorPane;
  */
 public class DropDownField extends AnchorPane implements IEditorField {
 	@FXML
-	private ComboBox<String> comboBoxField;
+	private HBox editorTextFieldContainer;
 	@FXML
 	private Label editorTextFieldLabel;
+	@FXML
+	private HBox editorTextFieldLabelInfoIcon;
+	@FXML
+	private ComboBox<String> comboBoxField;
 
 	private DPXColumn column;
 	private String originalValue;
@@ -41,6 +47,11 @@ public class DropDownField extends AnchorPane implements IEditorField {
 		} catch (final IOException exception) {
 			throw new RuntimeException(exception);
 		}
+		comboBoxField.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.SPACE) {
+				comboBoxField.show();
+			}
+		});
 	}
 
 	public void setComboBoxValues(Collection<String> vals) {
@@ -130,6 +141,7 @@ public class DropDownField extends AnchorPane implements IEditorField {
 	@Override
 	public void setLabel(String text) {
 		editorTextFieldLabel.setText(text);
+		editorTextFieldLabel.setLabelFor(comboBoxField);
 	}
 
 	/*
@@ -139,13 +151,18 @@ public class DropDownField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void setLabel(String labelText, String helpText) {
-		final Tooltip tt = new Tooltip(labelText + "\n\n" + helpText);
-		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
-		tt.setPrefWidth(500);
-		tt.setWrapText(true);
-		tt.setAutoHide(false);
-		editorTextFieldLabel.setText(labelText);
-		editorTextFieldLabel.setTooltip(tt);
+		editorTextFieldLabelInfoIcon.setOnKeyPressed(event -> {
+			if (event.getCode() != KeyCode.SPACE) {
+				return;
+			}
+			DataFieldInfoAlert.showFieldInfoAlert(labelText, helpText);
+		});
+		editorTextFieldLabelInfoIcon.setOnMouseClicked(event -> {
+			DataFieldInfoAlert.showFieldInfoAlert(labelText, helpText);
+		});
+		setLabel(labelText);
+		editorTextFieldLabelInfoIcon.setAccessibleRole(AccessibleRole.BUTTON);
+		editorTextFieldLabelInfoIcon.setAccessibleText("Open modal with field specification.");
 	}
 
 	/*
@@ -154,9 +171,7 @@ public class DropDownField extends AnchorPane implements IEditorField {
 	 * @see com.portalmedia.embarc.gui.IEditorField#setPopoutIcon()
 	 */
 	@Override
-	public void setPopoutIcon() {
-
-	}
+	public void setPopoutIcon() {}
 
 	/*
 	 * (non-Javadoc)
@@ -208,5 +223,4 @@ public class DropDownField extends AnchorPane implements IEditorField {
 	public MXFColumn getMXFColumn() {
 		return mxfColumn;
 	}
-
 }

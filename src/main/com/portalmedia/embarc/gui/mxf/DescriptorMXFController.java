@@ -25,21 +25,17 @@ import com.portalmedia.embarc.parser.mxf.MXFFileDescriptorResult;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TitledPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import tv.amwa.maj.enumeration.AlphaTransparencyType;
 import tv.amwa.maj.enumeration.ColorSitingType;
 import tv.amwa.maj.enumeration.ElectroSpatialFormulation;
@@ -67,15 +63,26 @@ import tv.amwa.maj.record.Rational;
  * @since 2020-07-02
  */
 public class DescriptorMXFController extends AnchorPane {
-
 	@FXML
 	private Label sectionLabel;
 	@FXML
-	private VBox descriptorsVBox;
+	private Label selectedFilesLabel;
 	@FXML
 	private Accordion descriptorsAccordion;
 	@FXML
-	private Label selectedFilesLabel;
+	private TitledPane pictureTitledPane;
+	@FXML
+	private TitledPane soundTitledPane;
+	@FXML
+	private TitledPane otherTitledPane;
+	@FXML
+	private VBox pictureVBox;
+	@FXML
+	private VBox soundVBox;
+	@FXML
+	private VBox otherVBox;
+
+	private String pnp = "PROPERTY NOT PRESENT";
 
 	public DescriptorMXFController() {
 		ControllerMediatorMXF.getInstance().registerDescriptorMXFController(this);
@@ -87,25 +94,14 @@ public class DescriptorMXFController extends AnchorPane {
 		} catch (final IOException exception) {
 			throw new RuntimeException(exception);
 		}
-		descriptorsAccordion = new Accordion();
-		Label requiredFieldsLabel = new Label("* = required field");
-		requiredFieldsLabel.styleProperty().set("-fx-padding: 0 0 10 0;");
-		descriptorsVBox.getChildren().add(requiredFieldsLabel);
-		descriptorsVBox.getChildren().add(descriptorsAccordion);
-		descriptorsVBox.getStyleClass().add("descriptors-vbox");
-		descriptorsAccordion.setMaxHeight(1000);
-		descriptorsAccordion.setPrefHeight(700);
 		final MXFSelectedFilesSummary summary = ControllerMediatorMXF.getInstance().getSelectedFilesSummary();
 		setFileDescriptors(summary);
 		setNumberOfSelectedFiles(summary.getFileCount());
+		descriptorsAccordion.setExpandedPane(pictureTitledPane);
 	}
 
 	private void setNumberOfSelectedFiles(int num) {
-		if (num == 1) {
-			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
-		} else {
-			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
-		}
+		selectedFilesLabel.setText(Integer.toString(num) + " file" + (num == 1 ? " " : "s ") + "selected");
 	}
 
 	public void setTitle(String title) {
@@ -114,7 +110,11 @@ public class DescriptorMXFController extends AnchorPane {
 
 	private void setFileDescriptors(MXFSelectedFilesSummary summary) {
 		MXFFileDescriptorResult descriptors = summary.getFileDescriptors();
-		if (Objects.isNull(descriptors)) {
+		if (!Objects.isNull(descriptors)) {
+			setPictureDescriptors(descriptors);
+			setSoundDescriptors(descriptors);
+			setOtherDescriptors(descriptors);
+		} else {
 			Label label = new Label();
 			int fileCount = summary.getFileCount();
 			if (fileCount == 0) {
@@ -122,12 +122,7 @@ public class DescriptorMXFController extends AnchorPane {
 			} else if (fileCount > 1) {
 				label.setText("Multiple files selected, please select only one file.");
 			}
-			descriptorsVBox.getChildren().clear();
-			descriptorsVBox.getChildren().add(label);
-		} else {
-			setPictureDescriptors(descriptors);
-			setSoundDescriptors(descriptors);
-			setOtherDescriptors(descriptors);
+			// TODO: Set this label somewhere
 		}
 	}
 
@@ -136,26 +131,24 @@ public class DescriptorMXFController extends AnchorPane {
 		//List<RGBADescriptorImpl> rgbaDescriptors = descriptors.getRGBADescriptors();
 		//List<PictureDescriptorImpl> pictureDescriptors = descriptors.getPictureDescriptors();
 
-		ListView<BorderPane> pictureList = new ListView<BorderPane>();
-
-		if (cdciDescriptors.size() == 0) {
-			BorderPane noPicturePane = new BorderPane();
-			Label noPicture = new Label("No Picture Descriptors Present");
-			noPicturePane.getChildren().add(noPicture);
-			pictureList.getItems().add(noPicturePane);
-		} else {
-			int index = 1;
+		int index = 1;
+		if (cdciDescriptors.size() > 0) {
 			for (CDCIDescriptorImpl cdci : cdciDescriptors) {
-				BorderPane card = createCDCICard(cdci, index);
-				pictureList.getItems().add(card);
+				VBox card = createCDCICard(cdci, index);
+				card.setStyle("-fx-background-color: #e6ecf0;");
+				pictureVBox.getChildren().add(card);
 				index++;
 			}
+		} else {
+			VBox noPicturePane = new VBox();
+			noPicturePane.getChildren().add(new Text("No Picture Descriptors Present"));
+			pictureVBox.getChildren().add(noPicturePane);
 		}
 
-		String title = "Picture Descriptors (" + pictureList.getItems().size() + ")";
-		TitledPane tPane = new TitledPane(title, pictureList);
-		descriptorsAccordion.getPanes().add(tPane);
-		pictureList.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+		pictureTitledPane.setText("Picture Descriptors (" + (index - 1) + ")");
+
+		// TODO: needed?
+		pictureVBox.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) { event.consume(); }
 		});
@@ -165,26 +158,23 @@ public class DescriptorMXFController extends AnchorPane {
 		List<WAVEPCMDescriptorImpl> wavePCMDescriptors = descriptors.getWavePCMDescriptors();
 		//List<SoundDescriptorImpl> soundDescriptors = descriptors.getSoundDescriptors();
 
-		ListView<BorderPane> soundList = new ListView<BorderPane>();
-
-		if (wavePCMDescriptors.size() == 0) {
-			BorderPane noWavePane = new BorderPane();
-			Label noWave = new Label("No Sound Descriptors Present");
-			noWavePane.getChildren().add(noWave);
-			soundList.getItems().add(noWavePane);
-		} else {
-			int index = 1;
+		int index = 1;
+		if (wavePCMDescriptors.size() > 0) {
 			for (WAVEPCMDescriptorImpl wave : wavePCMDescriptors) {
-				BorderPane card = createWAVECard(wave, index);
-				soundList.getItems().add(card);
+				VBox card = createWaveCard(wave, index);
+				soundVBox.getChildren().add(card);
 				index++;
 			}
+		} else {
+			BorderPane noWavePane = new BorderPane();
+			noWavePane.getChildren().add(new Text("No Sound Descriptors Present"));
+			soundVBox.getChildren().add(noWavePane);
 		}
+		
+		soundTitledPane.setText("Sound Descriptors (" + (index - 1) + ")");
 
-		String title = "Sound Descriptors (" + soundList.getItems().size() + ")";
-		TitledPane tPane = new TitledPane(title, soundList);
-		descriptorsAccordion.getPanes().add(tPane);
-		soundList.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+		// TODO: needed?
+		soundVBox.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) { event.consume(); }
 		});
@@ -197,121 +187,177 @@ public class DescriptorMXFController extends AnchorPane {
 //		List<VBIDescriptorImpl> vbiDescriptors = descriptors.getVBIDescriptors();
 		List<AS07DateTimeDescriptorImpl> dateTimeDescriptors = descriptors.getAS07DateTimeDescriptor();
 
-		ListView<BorderPane> otherList = new ListView<BorderPane>();
 		int totalOtherDescriptors = (int)ancillaryDescriptors.size() + (int)dateTimeDescriptors.size() + (int)timedTextDescriptors.size();
 
-		if (totalOtherDescriptors == 0) {
-			BorderPane noOtherPane = new BorderPane();
-			Label noOther = new Label("No Other Descriptors Present");
-			noOtherPane.getChildren().add(noOther);
-			otherList.getItems().add(noOtherPane);
-		} else {
-			int index = 1;
+		int index = 1;
+		if (totalOtherDescriptors > 0) {
 			for (AS07DateTimeDescriptorImpl dateTime : dateTimeDescriptors) {
-				BorderPane card = createDateTimeCard(dateTime, index);
-				otherList.getItems().add(card);
+				VBox card = createDateTimeCard(dateTime, index);
+				otherVBox.getChildren().add(card);
 				index++;
 			}
 			for (AncillaryPacketsDescriptorImpl ancillary : ancillaryDescriptors) {
-				BorderPane card = createAncillaryCard(ancillary, index);
-				otherList.getItems().add(card);
+				VBox card = createAncillaryCard(ancillary, index);
+				otherVBox.getChildren().add(card);
 				index++;
 			}
 			for (TimedTextDescriptorImpl timedText : timedTextDescriptors) {
-				BorderPane card = createTimedTextCard(timedText, index);
-				otherList.getItems().add(card);
+				VBox card = createTimedTextCard(timedText, index);
+				otherVBox.getChildren().add(card);
 				index++;
 			}
+		} else {
+			BorderPane noOtherPane = new BorderPane();
+			noOtherPane.getChildren().add(new Text("No Other Descriptors Present"));
+			otherVBox.getChildren().add(noOtherPane);
 		}
 
-		String title = "Other Descriptors (" + otherList.getItems().size() + ")";
-		TitledPane tPane = new TitledPane(title, otherList);
-		descriptorsAccordion.getPanes().add(tPane);
-		otherList.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+		otherTitledPane.setText("Other Descriptors (" + (index - 1) + ")");
+
+		// TODO: needed?
+		otherVBox.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) { event.consume(); }
 		});
 	}
 
-	private BorderPane createCDCICard(CDCIDescriptorImpl cdci, int index) {
-		BorderPane bp = new BorderPane();
-		bp.setPadding(new Insets(10,0,10,0));
-		GridPane topGrid = new GridPane();
-		topGrid.setPadding(new Insets(10,10,10,10));
-		Label label = new Label("CDCI Descriptor");
-		label.setStyle("-fx-font-weight: bold;");
-		topGrid.add(label, 0, 0);
-		bp.setTop(topGrid);
+	/* 
+	 * CDCI 
+	 */
+	private VBox createCDCICard(CDCIDescriptorImpl cdci, int index) {
+		VBox vbox = new VBox();
+		
+		Label cardTitle = new Label("CDCI Descriptor");
+		cardTitle.setFocusTraversable(true);
+		cardTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14.0;");
+		vbox.getChildren().add(cardTitle);
 
-		GridPane centerGrid = new GridPane();
-		centerGrid.setPadding(new Insets(0,10,10,10));
-		ColumnConstraints cc = new ColumnConstraints();
-		cc.setHalignment(HPos.CENTER);
-		cc.setPrefWidth(220);
-		centerGrid.getColumnConstraints().add(cc);
+		BorderPane filePane = new BorderPane();
+		Label filePaneTitle = new Label("File Descriptors");
+		filePaneTitle.setUnderline(true);
+		filePaneTitle.setFocusTraversable(true);
+		filePaneTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane fileGridPane = new GridPane();
+		populateCDCIFileDescriptorsGrid(fileGridPane, cdci);
+		filePane.setTop(filePaneTitle);
+		filePane.setCenter(fileGridPane);
+		filePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(filePane);
+
+		BorderPane pictureEssencePane = new BorderPane();
+		Label pictureEssenceTitle = new Label("Picture Essence Descriptors");
+		pictureEssenceTitle.setUnderline(true);
+		pictureEssenceTitle.setFocusTraversable(true);
+		pictureEssenceTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane pictureEssenceGridPane = new GridPane();
+		populateCDCIPictureEssenceGrid(pictureEssenceGridPane, cdci);
+		pictureEssencePane.setTop(pictureEssenceTitle);
+		pictureEssencePane.setCenter(pictureEssenceGridPane);
+		pictureEssencePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(pictureEssencePane);
+
+		BorderPane cdciPane = new BorderPane();
+		Label cdciTitle = new Label("CDCI Descriptors");
+		cdciTitle.setUnderline(true);
+		cdciTitle.setFocusTraversable(true);
+		cdciTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane cdciGridPane = new GridPane();
+		populateCDCIGrid(cdciGridPane, cdci);
+		cdciPane.setTop(cdciTitle);
+		cdciPane.setCenter(cdciGridPane);
+		cdciPane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(cdciPane);
+
+		BorderPane ffv1Pane = new BorderPane();
+		Label ffv1Title = new Label("FFV1");
+		ffv1Title.setUnderline(true);
+		ffv1Title.setFocusTraversable(true);
+		ffv1Title.setStyle("-fx-font-size: 13.0;");
+		GridPane ffv1GridPane = new GridPane();
+		populateCDCIFFV1Grid(ffv1GridPane, cdci);
+		ffv1Pane.setTop(ffv1Title);
+		ffv1Pane.setCenter(ffv1GridPane);
+		ffv1Pane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(ffv1Pane);
+
+		BorderPane calculatedPane = new BorderPane();
+		Label calculatedTitle = new Label("Calculated");
+		calculatedTitle.setUnderline(true);
+		calculatedTitle.setFocusTraversable(true);
+		calculatedTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane calculatedGridPane = new GridPane();
+		populateCDCICalculatedGrid(calculatedGridPane, cdci);
+		calculatedPane.setTop(calculatedTitle);
+		calculatedPane.setCenter(calculatedGridPane);
+		calculatedPane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(calculatedPane);
+
+		return vbox;
+	}
+
+	private void populateCDCIFileDescriptorsGrid(GridPane gp, CDCIDescriptorImpl cdci) {
 		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
 
-		// File Descriptors Section
-		centerGrid.add(getCellPane("File Descriptors"), 0, row);
-
-		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Instance UID *"), 1, row);
 		try {
 			AUID instanceUID = cdci.getOriginalAUID();
-			centerGrid.add(getDescriptorLabel("" + instanceUID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + instanceUID, "Instance UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Instance UID"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Generation UID"), 1, row);
 		try {
 			AUID generation = cdci.getLinkedGenerationID();
-			centerGrid.add(getDescriptorLabel("" + generation, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + generation, "Generation UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Generation UID"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Linked Track ID"), 1, row);
+		gp.add(getValueLabel("" + cdci.getLinkedTrackID(), "Linked Track ID"), 2, row);
 		row += 1;
 
 		try {
-			centerGrid.add(getDescriptorLabel("Essence Length", "#e3e3e3", 200, ""), 1, row);
-			centerGrid.add(getDescriptorLabel("" + cdci.getEssenceLength(), "#e3e3e3", 400, ""), 2, row);
+			gp.add(getKeyLabel("Essence Length"), 1, row);
+			gp.add(getValueLabel("" + cdci.getEssenceLength(), "Essence Length"), 2, row);
 			row += 1;
-		}
-		catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+		} catch (PropertyNotPresentException e) {
+			gp.add(getValueLabel(pnp, "Essence Length"), 2, row);
 		}
 
-		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getSampleRateString(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Sample Rate *"), 1, row);
+		gp.add(getValueLabel("" + cdci.getSampleRateString(), "Sample Rate"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getEssenceLength(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Container Duration"), 1, row);
+		gp.add(getValueLabel("" + cdci.getEssenceLength(), "Container Duration"), 2, row);
 		row += 1;
-
+		
 		/* TODO: essence container
-			centerGrid.add(getDescriptorLabel("Essence Container *", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
-			centerGrid.add(getDescriptorLabel("" + cdci.??, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getDescriptorLabel("Essence Container *", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+			gp.add(getDescriptorLabel("" + cdci.??, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
 			row += 1;
 		*/
+	}
 
-		// Picture Essence Descriptor Section
-		centerGrid.add(getCellPane("Picture Essence Descriptors"), 0, row);
+	private void populateCDCIPictureEssenceGrid(GridPane gp, CDCIDescriptorImpl cdci) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
 
-		centerGrid.add(getDescriptorLabel("Signal Standard", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Signal Standard"), 1, row);
 		try {
 			SignalStandardType signalStandard = cdci.getSignalStandard();
-			centerGrid.add(getDescriptorLabel("" + signalStandard, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + signalStandard, "Signal Standard"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Signal Standard"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Picture Encoding", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Picture Encoding"), 1, row);
 		try {
 			String picEncodingStr = cdci.getPictureCompression().toString();
 			String stripped = picEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
@@ -319,83 +365,82 @@ public class DescriptorMXFController extends AnchorPane {
 			String value = picEncodingMap.get(stripped);
 			if (value == null || "".equals(value)) {
 				value = picEncodingStr;
-				centerGrid.add(getDescriptorLabel(value, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(value, "Picture Encoding"), 2, row);
 			} else {
-				centerGrid.add(getDescriptorLabel(value, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(value, "Picture Encoding"), 2, row);
 				row += 1;
-				centerGrid.add(getDescriptorLabel("", "#e3e3e3", 200, ""), 1, row);
-				centerGrid.add(getDescriptorLabel("(" + stripped + ")", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel("", "Picture Encoding"), 1, row);
+				gp.add(getValueLabel("(" + stripped + ")", "Picture Encoding"), 2, row);
 			}
 		} catch(PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Picture Encoding"), 2, row);
 		} catch (Exception ex) {
-
 			System.out.println("Error getting crc32");
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Stored Height", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getStoredHeight(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Stored Height"), 1, row);
+		gp.add(getValueLabel("" + cdci.getStoredHeight(), "Stored Height"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Stored Width", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getStoredWidth(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Stored Width"), 1, row);
+		gp.add(getValueLabel("" + cdci.getStoredWidth(), "Stored Width"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled Height", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getSampledHeight(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Sampled Height"), 1, row);
+		gp.add(getValueLabel("" + cdci.getSampledHeight(), "Sampled Height"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled Width", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getSampledWidth(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Sampled Width"), 1, row);
+		gp.add(getValueLabel("" + cdci.getSampledWidth(), "Sampled Width"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled X Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Sampled X Offset"), 1, row);
 		try {
 			int sampledXOffset = cdci.getSampledXOffset();
-			centerGrid.add(getDescriptorLabel("" + sampledXOffset, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + sampledXOffset, "Sampled X Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Sampled X Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sampled Y Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Sampled Y Offset"), 1, row);
 		try {
 			int sampledYOffset = cdci.getSampledYOffset();
-			centerGrid.add(getDescriptorLabel("" + sampledYOffset, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + sampledYOffset, "Sampled Y Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Sampled Y Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display Height", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getDisplayHeight(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Display Height"), 1, row);
+		gp.add(getValueLabel("" + cdci.getDisplayHeight(), "Display Height"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display Width", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getDisplayWidth(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Display Width"), 1, row);
+		gp.add(getValueLabel("" + cdci.getDisplayWidth(), "Display Width"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display X Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Display X Offset"), 1, row);
 		try {
 			int displayXOffset = cdci.getDisplayXOffset();
-			centerGrid.add(getDescriptorLabel("" + displayXOffset, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + displayXOffset, "Display X Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Display X Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display Y Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Display Y Offset"), 1, row);
 		try {
 			int displayYOffset = cdci.getDisplayYOffset();
-			centerGrid.add(getDescriptorLabel("" + displayYOffset, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + displayYOffset, "Display Y Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Display Y Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Frame Layout", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getFrameLayout(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Frame Layout"), 1, row);
+		gp.add(getValueLabel("" + cdci.getFrameLayout(), "Frame Layout"), 2, row);
 		row += 1;
 
 		String videoLineMap = "";
@@ -407,323 +452,357 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 		}
 
-		centerGrid.add(getDescriptorLabel("Video Line Map", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + videoLineMap, "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Video Line Map"), 1, row);
+		gp.add(getValueLabel("" + videoLineMap, "Video Line Map"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image Aspect Ratio", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getImageAspectRatioString(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Image Aspect Ratio"), 1, row);
+		gp.add(getValueLabel("" + cdci.getImageAspectRatioString(), "Image Aspect Ratio"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Alpha Transparency", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Alpha Transparency"), 1, row);
 		try {
 			AlphaTransparencyType alphaTransparency = cdci.getAlphaTransparency();
-			centerGrid.add(getDescriptorLabel("" + alphaTransparency, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + alphaTransparency, "Alpha Transparency"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Alpha Transparency"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image Alignment Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Image Alignment Offset"), 1, row);
 		try {
 			int alignmentFactor = cdci.getImageAlignmentFactor();
-			centerGrid.add(getDescriptorLabel("" + alignmentFactor, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + alignmentFactor, "Image Alignment Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Image Alignment Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image Start Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Image Start Offset"), 1, row);
 		try {
 			int imageStartOffset = cdci.getImageStartOffset();
-			centerGrid.add(getDescriptorLabel("" + imageStartOffset, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + imageStartOffset, "Image Start Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Image Start Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Image End Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Image End Offset"), 1, row);
 		try {
 			int imageEndOffset = cdci.getImageEndOffset();
-			centerGrid.add(getDescriptorLabel("" + imageEndOffset, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + imageEndOffset, "Image End Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Image End Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Field Dominance", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Field Dominance"), 1, row);
 		try {
 			FieldNumber fieldDominance = cdci.getFieldDominance();
-			centerGrid.add(getDescriptorLabel("" + fieldDominance.value(), "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + fieldDominance.value(), "Field Dominance"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Field Dominance"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Display F2 Offset", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Display F2 Offset"), 1, row);
 		try {
 			int displayOffset = cdci.getDisplayF2Offset();
-			centerGrid.add(getDescriptorLabel("" + displayOffset, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + displayOffset, "Display F2 Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Display F2 Offset"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Stored F2 Offset", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		gp.add(getKeyLabel("Stored F2 Offset"), 1, row);
 		try {
 			int storedOffset = cdci.getStoredF2Offset();
-			centerGrid.add(getDescriptorLabel("" + storedOffset, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel("" + storedOffset, "Stored F2 Offset"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel(pnp, "Stored F2 Offset"), 2, row);
 		}
 		row += 1;
+	}
 
-
-		// CDCI Descriptor Section
-		centerGrid.add(getCellPane("CDCI Descriptors"), 0, row);
+	private void populateCDCIGrid(GridPane gp, CDCIDescriptorImpl cdci) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
 		
-		centerGrid.add(getDescriptorLabel("Active Format Descriptor", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Active Format Descriptor"), 1, row);
 		try {
 			byte activeFormatDescriptor = cdci.getActiveFormatDescriptor();
-			centerGrid.add(getDescriptorLabel("" + activeFormatDescriptor, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + activeFormatDescriptor, "Active Format Descriptor"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Active Format Descriptor"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Alpha Sample Depth", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Alpha Sample Depth"), 1, row);
 		try {
 			int alphaSampleDepth = cdci.getAlphaSampleDepth();
-			centerGrid.add(getDescriptorLabel("" + alphaSampleDepth, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + alphaSampleDepth, "Alpha Sample Depth"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Alpha Sample Depth"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Black Reference Level", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Black Reference Level"), 1, row);
 		try {
 			int blackRefLevel = cdci.getBlackRefLevel();
-			centerGrid.add(getDescriptorLabel("" + blackRefLevel, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + blackRefLevel, "Black Reference Level"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Black Reference Level"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Color Range", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Color Range"), 1, row);
 		try {
 			int colorRange = cdci.getColorRange();
-			centerGrid.add(getDescriptorLabel("" + colorRange, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + colorRange, "Color Range"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Color Range"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Color Siting", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Color Siting"), 1, row);
 		try {
 			ColorSitingType colorSiting = cdci.getColorSiting();
-			centerGrid.add(getDescriptorLabel("" + colorSiting, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + colorSiting, "Color Siting"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Color Siting"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Component Depth", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Component Depth"), 1, row);
 		try {
 			int componentDepth = cdci.getComponentDepth();
-			centerGrid.add(getDescriptorLabel("" + componentDepth, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + componentDepth, "Component Depth"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Component Depth"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Horizontal Subsampling", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Horizontal Subsampling"), 1, row);
 		try {
 			int horizontalSubsampling = cdci.getHorizontalSubsampling();
-			centerGrid.add(getDescriptorLabel("" + horizontalSubsampling, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + horizontalSubsampling, "Horizontal Subsampling"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Horizontal Subsampling"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Padding Bits", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Padding Bits"), 1, row);
 		try {
 			int paddingBits = cdci.getPaddingBits();
-			centerGrid.add(getDescriptorLabel("" + paddingBits, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + paddingBits, "Padding Bits"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Padding Bits"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Reversed Byte Order", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getReversedByteOrder(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Reversed Byte Order"), 1, row);
+		gp.add(getValueLabel("" + cdci.getReversedByteOrder(), "Reversed Byte Order"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Vertical Subsampling", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getVerticalSubsampling(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Vertical Subsampling"), 1, row);
+		gp.add(getValueLabel("" + cdci.getVerticalSubsampling(), "Vertical Subsampling"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("White Reference Level", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		gp.add(getKeyLabel("White Reference Level"), 1, row);
 		try {
 			int whiteRefLevel = cdci.getWhiteRefLevel();
-			centerGrid.add(getDescriptorLabel("" + whiteRefLevel, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel("" + whiteRefLevel, "White Reference Level"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel(pnp, "White Reference Level"), 2, row);
 		}
 		row += 1;
+	}
 
-		// FFV1
+	private void populateCDCIFFV1Grid(GridPane gp, CDCIDescriptorImpl cdci) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+		
 		FFV1PictureSubDescriptorImpl ffv1 = null;
 		try {
 			List<SubDescriptor> subdescriptors = cdci.getSubDescriptors();
 			ffv1 = GetFFV1Subdescriptor(subdescriptors);
 		} catch(Exception ex) {}
-		if (ffv1 != null) {
-			centerGrid.add(getCellPane("FFV1"), 0, row);
 
-			centerGrid.add(getDescriptorLabel("FFV1 Initialization Metadata *", "#e3e3e3", 200, ""), 1, row);
+		if (ffv1 != null) {
+			gp.add(getKeyLabel("FFV1 Initialization Metadata *"), 1, row);
 			try {
 				byte[] initMetadata = ffv1.getFFV1InitializationMetadata();
 				List<String> intMetadataUnsigned = new ArrayList<String>();
 				for(Byte b : initMetadata) intMetadataUnsigned.add(String.format("%02X", Byte.toUnsignedInt(b)));
 				
-				Label initMetadataLabel = getDescriptorLabel("" + intMetadataUnsigned, "#e3e3e3", 400, "");
+				Label initMetadataLabel = getValueLabel("" + intMetadataUnsigned, "FFV1 Initialization Metadata");
 				initMetadataLabel.setWrapText(true);
-				centerGrid.add(initMetadataLabel, 2, row);
+				gp.add(initMetadataLabel, 2, row);
 			} catch (PropertyNotPresentException e) {
-				centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(pnp, "FFV1 Initialization Metadata"), 2, row);
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Identical GOP", "#e3e3e3", 200, ""), 1, row);
+			gp.add(getKeyLabel("FFV1 Identical GOP"), 1, row);
 			try {
 				boolean isIdenticalGOP = ffv1.getFFV1IdenticalGOP();
-				centerGrid.add(getDescriptorLabel("" + isIdenticalGOP, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel("" + isIdenticalGOP, "FFV1 Identical GOP"), 2, row);
 			} catch (PropertyNotPresentException e) {
-				centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(pnp, "FFV1 Identical GOP"), 2, row);
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Max GOP", "#e3e3e3", 200, ""), 1, row);
+			gp.add(getKeyLabel("FFV1 Max GOP"), 1, row);
 			try {
 				short maxGOP = ffv1.getFFV1MaxGOP();
-				centerGrid.add(getDescriptorLabel("" + maxGOP, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel("" + maxGOP, "FFV1 Max GOP"), 2, row);
 				row += 1;
 			} catch (PropertyNotPresentException e) {
-				centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(pnp, "FFV1 Max GOP"), 2, row);
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Maximum Bit Rate", "#e3e3e3", 200, ""), 1, row);
+			gp.add(getKeyLabel("FFV1 Maximum Bit Rate"), 1, row);
 			try {
 				int maxBitRate = ffv1.getFFV1MaximumBitRate();
-				centerGrid.add(getDescriptorLabel("" + maxBitRate, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel("" + maxBitRate, "FFV1 Maximum Bit Rate"), 2, row);
 				row += 1;
 			} catch (PropertyNotPresentException e) {
-				centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(pnp, "FFV1 Maximum Bit Rate"), 2, row);
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Version", "#e3e3e3", 200, ""), 1, row);
+			gp.add(getKeyLabel("FFV1 Version"), 1, row);
 			try {
 				short version = ffv1.getFFV1Version();
-				centerGrid.add(getDescriptorLabel("" + version, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel("" + version, "FFV1 Version"), 2, row);
 				row += 1;
 			} catch (PropertyNotPresentException e) {
-				centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(pnp, "FFV1 Version"), 2, row);
 			}
 			row += 1;
 
-			centerGrid.add(getDescriptorLabel("FFV1 Micro Version", "#e3e3e3", 200, ""), 1, row);
+			gp.add(getKeyLabel("FFV1 Micro Version"), 1, row);
 			try {
 				short microVersion = ffv1.getFFV1MicroVersion();
-				centerGrid.add(getDescriptorLabel("" + microVersion, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel("" + microVersion, "FFV1 Micro Version"), 2, row);
 				row += 1;
 			} catch (PropertyNotPresentException e) {
-				centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(pnp, "FFV1 Micro Version"), 2, row);
 			}
 			row += 1;
 		}
+	}
 
-		// Calculated Values
-		centerGrid.add(getDescriptorLabel("", "", 220, ""), 0, row);
-		row += 1;
-		centerGrid.add(getCellPane("Calculated Values"), 0, row);
+	private void populateCDCICalculatedGrid(GridPane gp, CDCIDescriptorImpl cdci) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
 
-		centerGrid.add(getDescriptorLabel("Duration (seconds)", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Duration (seconds)"), 1, row);
 		try {
 			long essenceLength = cdci.getEssenceLength();
 			Rational sampleRate = cdci.getSampleRate();
-			centerGrid.add(getDescriptorLabel("" + essenceLength/sampleRate.doubleValue(), "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + essenceLength/sampleRate.doubleValue(), "Duration (seconds)"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("N/A", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("N/A", "Duration (seconds)"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Samples Per Second", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + cdci.getSampleRate().doubleValue(), "#e3e3e3", 400, ""), 2, row);
-
-		bp.setCenter(centerGrid);
-
-		return bp;
+		gp.add(getKeyLabel("Samples Per Second"), 1, row);
+		gp.add(getValueLabel("" + cdci.getSampleRate().doubleValue(), "Samples Per Second"), 2, row);
 	}
 
-	private BorderPane createWAVECard(WAVEPCMDescriptorImpl wave, int index) {
-		BorderPane bp = new BorderPane();
-		bp.setPadding(new Insets(10,0,10,0));
-		GridPane topGrid = new GridPane();
-		topGrid.setPadding(new Insets(10,10,10,10));
-		Label label = new Label("Wave Descriptor");
-		label.setStyle("-fx-font-weight: bold;");
-		topGrid.add(label, 0, 0);
-		bp.setTop(topGrid);
-
-		GridPane centerGrid = new GridPane();
-		centerGrid.setPadding(new Insets(0,10,10,10));
-		ColumnConstraints cc = new ColumnConstraints();
-		cc.setPrefWidth(220);
-		centerGrid.getColumnConstraints().add(cc);
-		int row = 0;
-
-		// File Descriptors Section
-		centerGrid.add(getCellPane("File Descriptors"), 0, row);
+	/* 
+	 * WAVE 
+	 */
+	private VBox createWaveCard(WAVEPCMDescriptorImpl wave, int index) {
+		VBox vbox = new VBox();
 		
-		centerGrid.add(getDescriptorLabel("Instance UID", "#e3e3e3", 200, ""), 1, row);
+		Label cardTitle = new Label("WAVE Descriptor");
+		cardTitle.setFocusTraversable(true);
+		cardTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14.0;");
+		vbox.getChildren().add(cardTitle);
+
+		BorderPane filePane = new BorderPane();
+		Label filePaneTitle = new Label("File Descriptors");
+		filePaneTitle.setUnderline(true);
+		filePaneTitle.setFocusTraversable(true);
+		filePaneTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane fileGridPane = new GridPane();
+		populateWaveFileDescriptorsGrid(fileGridPane, wave);
+		filePane.setTop(filePaneTitle);
+		filePane.setCenter(fileGridPane);
+		filePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(filePane);
+
+		BorderPane soundPane = new BorderPane();
+		Label soundTitle = new Label("Sound Descriptors");
+		soundTitle.setUnderline(true);
+		soundTitle.setFocusTraversable(true);
+		soundTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane soundGridPane = new GridPane();
+		populateWaveSoundGrid(soundGridPane, wave);
+		soundPane.setTop(soundTitle);
+		soundPane.setCenter(soundGridPane);
+		soundPane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(soundPane);
+
+		BorderPane wavePane = new BorderPane();
+		Label waveTitle = new Label("Wave Descriptors");
+		waveTitle.setUnderline(true);
+		waveTitle.setFocusTraversable(true);
+		waveTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane waveGridPane = new GridPane();
+		populateWaveGrid(waveGridPane, wave);
+		wavePane.setTop(waveTitle);
+		wavePane.setCenter(waveGridPane);
+		wavePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(wavePane);
+
+		return vbox;
+	}
+
+	private void populateWaveFileDescriptorsGrid(GridPane gp, WAVEPCMDescriptorImpl wave) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+		
+		gp.add(getKeyLabel("Instance UID"), 1, row);
 		try {
 			AUID instanceUID = wave.getOriginalAUID();
-			centerGrid.add(getDescriptorLabel("" + instanceUID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + instanceUID, "Instance UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Instance UID"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Generation UID"), 1, row);
 		try {
 			AUID generation = wave.getLinkedGenerationID();
-			centerGrid.add(getDescriptorLabel("" + generation, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + generation, "Generation UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Generation UID"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Linked Track ID"), 1, row);
 		try {
 			int linkedTrackID = wave.getLinkedTrackID();
-			centerGrid.add(getDescriptorLabel("" + linkedTrackID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + linkedTrackID, "Linked Track ID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Linked Track ID"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + wave.getSampleRateString(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Sample Rate *"), 1, row);
+		gp.add(getValueLabel("" + wave.getSampleRateString(), "Sample Rate"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Container Duration"), 1, row);
 		try {
 			long essenceLength = wave.getEssenceLength();
-			centerGrid.add(getDescriptorLabel("" + essenceLength, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + essenceLength, "Container Duration"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Container Duration"), 2, row);
 		}
 		row += 1;
 
@@ -733,27 +812,29 @@ public class DescriptorMXFController extends AnchorPane {
 			row += 1;
 		 */
 
-		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		gp.add(getKeyLabel("Codec"), 1, row);
 		try {
 			ContainerDefinition containerFormat = wave.getContainerFormat();
-			centerGrid.add(getDescriptorLabel("" + containerFormat.getDescription(), "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel("" + containerFormat.getDescription(), "Codec"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel(pnp, "Codec"), 2, row);
 		}
 		row += 1;
-		
-		// Sound Descriptors Section
-		centerGrid.add(getCellPane("Sound Descriptors"), 0, row);
+	}
 
-		centerGrid.add(getDescriptorLabel("Audio Sample Rate", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + wave.getAudioSampleRateString(), "#e3e3e3", 400, ""), 2, row);
+	private void populateWaveSoundGrid(GridPane gp, WAVEPCMDescriptorImpl wave) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+
+		gp.add(getKeyLabel("Audio Sample Rate"), 1, row);
+		gp.add(getValueLabel("" + wave.getAudioSampleRateString(), "Audio Sample Rate"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Channel Count", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + wave.getChannelCount(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Channel Count"), 1, row);
+		gp.add(getValueLabel("" + wave.getChannelCount(), "Channel Count"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sound Encoding", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Sound Encoding"), 1, row);
 		try {
 			String soundEncodingStr = wave.getSoundCompression().toString();
 			String stripped = soundEncodingStr.replace("urn:smpte:ul:", "").toUpperCase();
@@ -761,121 +842,154 @@ public class DescriptorMXFController extends AnchorPane {
 			String value = soundEncodingMap.get(stripped);
 			if (value == null || "".equals(value)) {
 				value = soundEncodingStr;
-				centerGrid.add(getDescriptorLabel(value, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(value, "Sound Encoding"), 2, row);
 			} else {
-				centerGrid.add(getDescriptorLabel(value, "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel(value, "Sound Encoding"), 2, row);
 				row += 1;
-				centerGrid.add(getDescriptorLabel("", "#e3e3e3", 200, ""), 1, row);
-				centerGrid.add(getDescriptorLabel("(" + stripped + ")", "#e3e3e3", 400, ""), 2, row);
+				gp.add(getValueLabel("", "Sound Encoding"), 1, row);
+				gp.add(getValueLabel("(" + stripped + ")", "Sound Encoding"), 2, row);
 			}
 		} catch(PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Sound Encoding"), 2, row);
 		} catch (Exception ex) {
 			System.out.println("Error adding sound encoding");
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Bit Depth", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + wave.getQuantizationBits(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Bit Depth"), 1, row);
+		gp.add(getValueLabel("" + wave.getQuantizationBits(), "Bit Depth"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Locked *", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + wave.getLocked(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Locked *"), 1, row);
+		gp.add(getValueLabel("" + wave.getLocked(), "Locked"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Audio Reference Level", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Audio Reference Level"), 1, row);
 		try {
 			byte audioRefLevel = wave.getAudioReferenceLevel();
-			centerGrid.add(getDescriptorLabel("" + audioRefLevel, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + audioRefLevel, "Audio Reference Level"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Audio Reference Level"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Electro-Spatial Formulation", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Electro-Spatial Formulation"), 1, row);
 		try {
 			ElectroSpatialFormulation electroForm = wave.getElectrospatialFormulation();
-			centerGrid.add(getDescriptorLabel("" + electroForm, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + electroForm, "Electro-Spatial Formulation"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Electro-Spatial Formulation"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Dial Norm", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		gp.add(getKeyLabel("Dial Norm"), 1, row);
 		try {
 			byte dialNorm = wave.getDialNorm();
-			centerGrid.add(getDescriptorLabel("" + dialNorm, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel("" + dialNorm, "Dial Norm"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel(pnp, "Dial Norm"), 2, row);
 		}
 		row += 1;
-
-		// WAVE Descriptors Section
-		centerGrid.add(getCellPane("WAVE Descriptors"), 0, row);
-
-		centerGrid.add(getDescriptorLabel("Average Bytes Per Second", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + wave.getAverageBytesPerSecond(), "#e3e3e3", 400, ""), 2, row);
-		row += 1;
-
-		centerGrid.add(getDescriptorLabel("Block Align", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + wave.getBlockAlign(), "#e3e3e3", 400, ""), 2, row);
-
-		bp.setCenter(centerGrid);
-		return bp;
 	}
 
-	private BorderPane createDateTimeCard(AS07DateTimeDescriptorImpl dateTime, int index) {
-		BorderPane bp = new BorderPane();
-		bp.setPadding(new Insets(10,0,10,0));
-		GridPane topGrid = new GridPane();
-		topGrid.setPadding(new Insets(10,10,10,10));
-		Label label = new Label("AS07 DateTime Descriptor");
-		label.setStyle("-fx-font-weight: bold;");
-		topGrid.add(label, 0, 0);
-		bp.setTop(topGrid);
-
-		GridPane centerGrid = new GridPane();
-		centerGrid.setPadding(new Insets(0,10,10,10));
-		ColumnConstraints cc = new ColumnConstraints();
-		cc.setPrefWidth(220);
-		centerGrid.getColumnConstraints().add(cc);
+	private void populateWaveGrid(GridPane gp, WAVEPCMDescriptorImpl wave) {
 		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+		
+		gp.add(getKeyLabel("Average Bytes Per Second"), 1, row);
+		gp.add(getValueLabel("" + wave.getAverageBytesPerSecond(), "Average Bytes Per Second"), 2, row);
+		row += 1;
 
-		// File Descriptor Section
-		centerGrid.add(getCellPane("File Descriptors"), 0, row);
+		gp.add(getKeyLabel("Block Align"), 1, row);
+		gp.add(getValueLabel("" + wave.getBlockAlign(), "Block Align"), 2, row);
+	}
 
-		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
+	/* 
+	 * DATETIME 
+	 */
+	private VBox createDateTimeCard(AS07DateTimeDescriptorImpl dateTime, int index) {
+		VBox vbox = new VBox();
+		
+		Label cardTitle = new Label("AS07 DateTime Descriptor");
+		cardTitle.setFocusTraversable(true);
+		cardTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14.0;");
+		vbox.getChildren().add(cardTitle);
+
+		BorderPane filePane = new BorderPane();
+		Label filePaneTitle = new Label("File Descriptors");
+		filePaneTitle.setUnderline(true);
+		filePaneTitle.setFocusTraversable(true);
+		filePaneTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane fileGridPane = new GridPane();
+		populateDateTimeFileDescriptorsGrid(fileGridPane, dateTime);
+		filePane.setTop(filePaneTitle);
+		filePane.setCenter(fileGridPane);
+		filePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(filePane);
+
+		BorderPane dateTimePane = new BorderPane();
+		Label dateTimeTitle = new Label("DateTime Descriptors");
+		dateTimeTitle.setUnderline(true);
+		dateTimeTitle.setFocusTraversable(true);
+		dateTimeTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane dateTimeGridPane = new GridPane();
+		populateDateTimeDescriptorGrid(dateTimeGridPane, dateTime);
+		dateTimePane.setTop(dateTimeTitle);
+		dateTimePane.setCenter(dateTimeGridPane);
+		dateTimePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(dateTimePane);
+
+		BorderPane dateTimeSubdescriptorsPane = new BorderPane();
+		Label dateTimeSubdescriptorsTitle = new Label("DateTime Subdescriptors");
+		dateTimeSubdescriptorsTitle.setUnderline(true);
+		dateTimeSubdescriptorsTitle.setFocusTraversable(true);
+		dateTimeSubdescriptorsTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane dateTimeSubdescriptorsGridPane = new GridPane();
+		populateDateTimeSubdescriptorsGrid(dateTimeSubdescriptorsGridPane, dateTime);
+		dateTimeSubdescriptorsPane.setTop(dateTimeSubdescriptorsTitle);
+		dateTimeSubdescriptorsPane.setCenter(dateTimeSubdescriptorsGridPane);
+		dateTimeSubdescriptorsPane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(dateTimeSubdescriptorsPane);
+
+		return vbox;
+	}
+
+	private void populateDateTimeFileDescriptorsGrid(GridPane gp, AS07DateTimeDescriptorImpl dateTime) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+		
+		gp.add(getKeyLabel("Instance UID *"), 1, row);
 		try {
 			AUID originalAUID = dateTime.getOriginalAUID();
-			centerGrid.add(getDescriptorLabel("" + originalAUID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + originalAUID, "Instance UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Instance UID"), 2, row);
 		}
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Generation UID"), 1, row);
 		try {
 			AUID linkedGenerationID = dateTime.getLinkedGenerationID();
-			centerGrid.add(getDescriptorLabel("" + linkedGenerationID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + linkedGenerationID, "Generation UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Generation UID"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + dateTime.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Linked Track ID"), 1, row);
+		gp.add(getValueLabel("" + dateTime.getLinkedTrackID(), "Linked Track ID"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + dateTime.getSampleRateString(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Sample Rate *"), 1, row);
+		gp.add(getValueLabel("" + dateTime.getSampleRateString(), "Sample Rate"), 2, row);
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Container Duration"), 1, row);
 		try {
 			long essenceLength = dateTime.getEssenceLength();
-			centerGrid.add(getDescriptorLabel("" + essenceLength, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + essenceLength, "Container Duration"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Container Duration"), 2, row);
 		}
 		row += 1;
 
@@ -885,120 +999,146 @@ public class DescriptorMXFController extends AnchorPane {
 		row += 1;
 		*/
 
-		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Codec"), 1, row);
 		try {
 			ContainerDefinition containerFormat = dateTime.getContainerFormat();
-			centerGrid.add(getDescriptorLabel("" + containerFormat, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + containerFormat, "Codec"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Codec"), 2, row);
 		}
 		row += 1;
 
 		// TODO: iterate locators
-		centerGrid.add(getDescriptorLabel("Locators", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		gp.add(getKeyLabel("Locators"), 1, row);
 		try {
 			List<Locator> locators = dateTime.getLocators();
-			centerGrid.add(getDescriptorLabel("" + locators, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel("" + locators, "Locators"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel(pnp, "Locators"), 2, row);
 		}
 		row += 1;
-
-		// DateTime Descriptor Section
-		centerGrid.add(getCellPane("DateTime Descriptors"), 0, row);
-
-		centerGrid.add(getDescriptorLabel("DateTime Rate", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeRate(), "#e3e3e3", 400, ""), 2, row);
-		row += 1;
-
-		centerGrid.add(getDescriptorLabel("DateTime Drop Frame", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeDropFrame(), "#e3e3e3", 400, ""), 2, row);
-		row += 1;
-
-		centerGrid.add(getDescriptorLabel("DateTime Embedded", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeEmbedded(), "#e3e3e3", 400, ""), 2, row);
-		row += 1;
-
-		centerGrid.add(getDescriptorLabel("DateTime Kind *", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
-		centerGrid.add(getDescriptorLabel("" + dateTime.getDateTimeKind(), "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
-		row += 1;
-
-		// DateTime Descriptor Section
-		if (dateTime.getSubDescriptors().size() > 0) {
-			for (SubDescriptor sub : dateTime.getSubDescriptors()) {
-				centerGrid.add(getCellPane("Subdescriptor"), 0, row);
-				AS07TimecodeLabelSubdescriptor parsedSub = parseDateTimeSubDescriptor(sub.toString());
-
-				if (parsedSub == null) {
-					continue;
-				}
-
-				centerGrid.add(getDescriptorLabel("DateTime Symbol *", "#e3e3e3", 200, ""), 1, row);
-				centerGrid.add(getDescriptorLabel("" + parsedSub.getDateTimeSymbol(), "#e3e3e3", 400, ""), 2, row);
-				row += 1;
-				
-				centerGrid.add(getDescriptorLabel("DateTime Essence Track ID", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
-				centerGrid.add(getDescriptorLabel("" + parsedSub.getDateTimeEssenceTrackID(), "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
-				row += 1;
-			}
-		}
-
-		bp.setCenter(centerGrid);
-		return bp;
 	}
 
-	private BorderPane createAncillaryCard(AncillaryPacketsDescriptorImpl ancillary, int index) {
-		BorderPane bp = new BorderPane();
-		bp.setPadding(new Insets(10,0,10,0));
-		GridPane topGrid = new GridPane();
-		topGrid.setPadding(new Insets(10,10,10,10));
-		Label label = new Label("Ancillary Packets Descriptor (ANC)");
-		label.setStyle("-fx-font-weight: bold;");
-		topGrid.add(label, 0, 0);
-		bp.setTop(topGrid);
-
-		GridPane centerGrid = new GridPane();
-		centerGrid.setPadding(new Insets(0,10,10,10));
-		ColumnConstraints cc = new ColumnConstraints();
-		cc.setPrefWidth(220);
-		centerGrid.getColumnConstraints().add(cc);
+	private void populateDateTimeDescriptorGrid(GridPane gp, AS07DateTimeDescriptorImpl dateTime) {
 		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
 
-		// File Descriptors Section
-		centerGrid.add(getCellPane("File Descriptors"), 0, row);
+		gp.add(getKeyLabel("DateTime Rate"), 1, row);
+		gp.add(getValueLabel("" + dateTime.getDateTimeRate(), "DateTime Rate"), 2, row);
+		row += 1;
+
+		gp.add(getKeyLabel("DateTime Drop Frame"), 1, row);
+		gp.add(getValueLabel("" + dateTime.getDateTimeDropFrame(), "DateTime Drop Frame"), 2, row);
+		row += 1;
+
+		gp.add(getKeyLabel("DateTime Embedded"), 1, row);
+		gp.add(getValueLabel("" + dateTime.getDateTimeEmbedded(), "DateTime Embedded"), 2, row);
+		row += 1;
+
+		gp.add(getKeyLabel("DateTime Kind *"), 1, row);
+		gp.add(getValueLabel("" + dateTime.getDateTimeKind(), "DateTime Kind"), 2, row);
+		row += 1;
+	}
+
+	private void populateDateTimeSubdescriptorsGrid(GridPane gp, AS07DateTimeDescriptorImpl dateTime) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+
+		if (dateTime.getSubDescriptors().size() == 0) {
+			return;
+		}
+
+		for (SubDescriptor sub : dateTime.getSubDescriptors()) {
+			AS07TimecodeLabelSubdescriptor parsedSub = parseDateTimeSubDescriptor(sub.toString());
+
+			if (parsedSub == null) {
+				continue;
+			}
+
+			gp.add(getKeyLabel("DateTime Symbol *"), 1, row);
+			gp.add(getValueLabel("" + parsedSub.getDateTimeSymbol(), "DateTime Symbol"), 2, row);
+			row += 1;
+			
+			gp.add(getKeyLabel("DateTime Essence Track ID"), 1, row);
+			gp.add(getValueLabel("" + parsedSub.getDateTimeEssenceTrackID(), "DateTime Essence Track ID"), 2, row);
+			row += 1;
+		}
+	}
+
+	/* 
+	 * ANCILLARY 
+	 */
+	private VBox createAncillaryCard(AncillaryPacketsDescriptorImpl ancillary, int index) {
+		VBox vbox = new VBox();
 		
-		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
+		Label cardTitle = new Label("Ancillary Packets Descriptor (ANC)");
+		cardTitle.setFocusTraversable(true);
+		cardTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14.0;");
+		vbox.getChildren().add(cardTitle);
+
+		BorderPane filePane = new BorderPane();
+		Label filePaneTitle = new Label("File Descriptors");
+		filePaneTitle.setUnderline(true);
+		filePaneTitle.setFocusTraversable(true);
+		filePaneTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane fileGridPane = new GridPane();
+		populateAncillaryFileDescriptorsGrid(fileGridPane, ancillary);
+		filePane.setTop(filePaneTitle);
+		filePane.setCenter(fileGridPane);
+		filePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(filePane);
+
+		BorderPane ancillaryPane = new BorderPane();
+		Label ancillaryTitle = new Label("Generic Data Essence Descriptor");
+		ancillaryTitle.setUnderline(true);
+		ancillaryTitle.setFocusTraversable(true);
+		ancillaryTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane ancillaryGridPane = new GridPane();
+		populateAncillaryDescriptorGrid(ancillaryGridPane, ancillary);
+		ancillaryPane.setTop(ancillaryTitle);
+		ancillaryPane.setCenter(ancillaryGridPane);
+		ancillaryPane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(ancillaryPane);
+
+		return vbox;
+	}
+
+	private void populateAncillaryFileDescriptorsGrid(GridPane gp, AncillaryPacketsDescriptorImpl ancillary) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+		
+		gp.add(getKeyLabel("Instance UID *"), 1, row);
 		try {
 			AUID originalAUID = ancillary.getOriginalAUID();
-			centerGrid.add(getDescriptorLabel("" + originalAUID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + originalAUID, "Instance UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Instance UID"), 2, row);
 		}
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Generation UID"), 1, row);
 		try {
 			AUID generationID = ancillary.getLinkedGenerationID();
-			centerGrid.add(getDescriptorLabel("" + generationID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + generationID, "Generation UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Generation UID"), 2, row);
 		}
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + ancillary.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Linked Track ID"), 1, row);
+		gp.add(getValueLabel("" + ancillary.getLinkedTrackID(), "Linked Track ID"), 2, row);
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + ancillary.getSampleRate(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Sample Rate *"), 1, row);
+		gp.add(getValueLabel("" + ancillary.getSampleRate(), "Sample Rate"), 2, row);
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Container Duration"), 1, row);
 		try {
 			long essenceLength = ancillary.getEssenceLength();
-			centerGrid.add(getDescriptorLabel("" + essenceLength, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + essenceLength, "Container Duration"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Container Duration"), 2, row);
 		}
 		row += 1;
 
@@ -1008,70 +1148,90 @@ public class DescriptorMXFController extends AnchorPane {
 			row += 1;
 		 */
 
-		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		gp.add(getKeyLabel("Codec"), 1, row);
 		try {
 			CodecDefinition codec = ancillary.getCodec();
-			centerGrid.add(getDescriptorLabel("" + codec, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel("" + codec, "Codec"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel(pnp, "Codec"), 2, row);
 		}
 		row += 1;
-
-		// Ancillary Descriptors Section
-		centerGrid.add(getCellPane("Generic Data Essence Descriptor"), 0, row);
-
-		centerGrid.add(getDescriptorLabel("Data Essence Coding", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
-//		centerGrid.add(getDescriptorLabel("" + ancillary.???, "#e3e3e3", 400, ""), 2, row); // data essence coding ??
-
-		bp.setCenter(centerGrid);
-		return bp;
 	}
 
-	private BorderPane createTimedTextCard(TimedTextDescriptorImpl timedText, int index) {
-		BorderPane bp = new BorderPane();
-		bp.setPadding(new Insets(10,0,10,0));
-		GridPane topGrid = new GridPane();
-		topGrid.setPadding(new Insets(10,10,10,10));
-		Label label = new Label("Timed Text Descriptor");
-		label.setStyle("-fx-font-weight: bold;");
-		topGrid.add(label, 0, 0);
-		bp.setTop(topGrid);
-
-		GridPane centerGrid = new GridPane();
-		centerGrid.setPadding(new Insets(0,10,10,10));
-		ColumnConstraints cc = new ColumnConstraints();
-		cc.setPrefWidth(220);
-		centerGrid.getColumnConstraints().add(cc);
+	private void populateAncillaryDescriptorGrid(GridPane gp, AncillaryPacketsDescriptorImpl ancillary) {
 		int row = 0;
-		
-		// File Descriptors Section
-		centerGrid.add(getCellPane("File Descriptors"), 0, row);
-		
+		gp.setStyle("-fx-background-color: transparent;");
 
-		centerGrid.add(getDescriptorLabel("Instance UID *", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Data Essence Coding"), 1, row);
+		gp.add(getValueLabel(pnp, "Data Essence Coding"), 2, row);
+		//gp.add(getDescriptorLabel("" + ancillary.???, "#e3e3e3", 400, ""), 2, row); // data essence coding ??
+	}
+
+	/* 
+	 * TIMED TEXT 
+	 */
+	private VBox createTimedTextCard(TimedTextDescriptorImpl timedText, int index) {
+		VBox vbox = new VBox();
+		
+		Label cardTitle = new Label("Timed Text Descriptor");
+		cardTitle.setFocusTraversable(true);
+		cardTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14.0;");
+		vbox.getChildren().add(cardTitle);
+
+		BorderPane filePane = new BorderPane();
+		Label filePaneTitle = new Label("File Descriptors");
+		filePaneTitle.setUnderline(true);
+		filePaneTitle.setFocusTraversable(true);
+		filePaneTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane fileGridPane = new GridPane();
+		populateTimedTextFileDescriptorsGrid(fileGridPane, timedText);
+		filePane.setTop(filePaneTitle);
+		filePane.setCenter(fileGridPane);
+		filePane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(filePane);
+
+		BorderPane timedTextPane = new BorderPane();
+		Label timedTextTitle = new Label("Timed Text Descriptors");
+		timedTextTitle.setUnderline(true);
+		timedTextTitle.setFocusTraversable(true);
+		timedTextTitle.setStyle("-fx-font-size: 13.0;");
+		GridPane timedTextGridPane = new GridPane();
+		populateTimedTextGrid(timedTextGridPane, timedText);
+		timedTextPane.setTop(timedTextTitle);
+		timedTextPane.setCenter(timedTextGridPane);
+		timedTextPane.setPadding(new Insets(0, 0, 10, 5));
+		vbox.getChildren().add(timedTextPane);
+
+		return vbox;
+	}
+
+	private void populateTimedTextFileDescriptorsGrid(GridPane gp, TimedTextDescriptorImpl timedText) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+		
+		gp.add(getKeyLabel("Instance UID *"), 1, row);
 		try {
 			AUID originalAUID = timedText.getOriginalAUID();
-			centerGrid.add(getDescriptorLabel("" + originalAUID, "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + originalAUID, "Instance UID"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Instance UID"), 2, row);
 		}
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Generation UID", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + timedText.getLinkedGenerationID(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Generation UID"), 1, row);
+		gp.add(getValueLabel("" + timedText.getLinkedGenerationID(), "Generation UID"), 2, row);
 		row += 1;
 		
-		centerGrid.add(getDescriptorLabel("Linked Track ID", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + timedText.getLinkedTrackID(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Linked Track ID"), 1, row);
+		gp.add(getValueLabel("" + timedText.getLinkedTrackID(), "Linked Track ID"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Sample Rate *", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + timedText.getSampleRate(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Sample Rate *"), 1, row);
+		gp.add(getValueLabel("" + timedText.getSampleRate(), "Sample Rate"), 2, row);
 		row += 1;
 
-		centerGrid.add(getDescriptorLabel("Container Duration", "#e3e3e3", 200, ""), 1, row);
-		centerGrid.add(getDescriptorLabel("" + timedText.getEssenceLength(), "#e3e3e3", 400, ""), 2, row);
+		gp.add(getKeyLabel("Container Duration"), 1, row);
+		gp.add(getValueLabel("" + timedText.getEssenceLength(), "Container Duration"), 2, row);
 		row += 1;
 
 		/* TODO: essence container
@@ -1080,84 +1240,78 @@ public class DescriptorMXFController extends AnchorPane {
 			row += 1;
 		 */
 
-		centerGrid.add(getDescriptorLabel("Codec", "#e3e3e3", 200, ""), 1, row);
+		gp.add(getKeyLabel("Codec"), 1, row);
 		try {
 			ContainerDefinition containerFormat = timedText.getContainerFormat();
-			centerGrid.add(getDescriptorLabel("" + containerFormat.getDescription(), "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel("" + containerFormat.getDescription(), "Codec"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
+			gp.add(getValueLabel(pnp, "Codec"), 2, row);
 		}
 		row += 1;
 
 		// need to iterate locators array
-		centerGrid.add(getDescriptorLabel("Locators", "#e3e3e3", 200, "descriptor-border-bottom"), 1, row);
+		gp.add(getKeyLabel("Locators"), 1, row);
 		try {
 			List<Locator> locators = timedText.getLocators();
-			centerGrid.add(getDescriptorLabel("" + locators, "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel("" + locators, "Locators"), 2, row);
 		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, "descriptor-border-bottom"), 2, row);
+			gp.add(getValueLabel(pnp, "Locators"), 2, row);
 		}
 		row += 1;
-
-
-		// Timed Text Descriptors Section
-		centerGrid.add(getCellPane("Timed Text Descriptors"), 0, row);
-
-		centerGrid.add(getDescriptorLabel("Text Encoding Format", "#e3e3e3", 200, ""), 1, row);
-		try {
-			String ucsEncoding = timedText.getUcsEncoding();
-			centerGrid.add(getDescriptorLabel("" + ucsEncoding, "#e3e3e3", 400, ""), 2, row);
-		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
-		}
-		row += 1;
-
-		centerGrid.add(getDescriptorLabel("Namespace URI", "#e3e3e3", 200, ""), 1, row);
-		try {
-			String namespaceURI = timedText.getNamespaceURI();
-			centerGrid.add(getDescriptorLabel("" + namespaceURI, "#e3e3e3", 400, ""), 2, row);
-		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
-		}
-		row += 1;
-
-		centerGrid.add(getDescriptorLabel("Resource ID", "#e3e3e3", 200, ""), 1, row);
-		try {
-			AUID resourceID = timedText.getResourceId();
-			centerGrid.add(getDescriptorLabel("" + resourceID, "#e3e3e3", 400, ""), 2, row);
-		} catch (PropertyNotPresentException e) {
-			centerGrid.add(getDescriptorLabel("PROPERTY NOT PRESENT", "#e3e3e3", 400, ""), 2, row);
-		}
-		row += 1;
-
-		bp.setCenter(centerGrid);
-		return bp;
 	}
 
-	private Label getDescriptorLabel(String title, String color, int width, String borderClass) {
-		Label label = new Label(title);
-		Tooltip tt = new Tooltip(title);
-		tt.setMaxWidth(350);
-		tt.setWrapText(true);
-		label.setTooltip(tt);
-		if (color != "") label.setStyle("-fx-background-color: " + color);
-		label.setPrefWidth(width);
-		if (borderClass != "") label.getStyleClass().add(borderClass);
-		label.getStyleClass().add("descriptor-rounded");
-		label.setPadding(new Insets(2,5,2,5));
+	private void populateTimedTextGrid(GridPane gp, TimedTextDescriptorImpl timedText) {
+		int row = 0;
+		gp.setStyle("-fx-background-color: transparent;");
+
+		gp.add(getKeyLabel("Text Encoding Format"), 1, row);
+		try {
+			String ucsEncoding = timedText.getUcsEncoding();
+			gp.add(getValueLabel("" + ucsEncoding, "Text Encoding Format"), 2, row);
+		} catch (PropertyNotPresentException e) {
+			gp.add(getValueLabel(pnp, "Text Encoding Format"), 2, row);
+		}
+		row += 1;
+
+		gp.add(getKeyLabel("Namespace URI"), 1, row);
+		try {
+			String namespaceURI = timedText.getNamespaceURI();
+			gp.add(getValueLabel("" + namespaceURI, "Namespace URI"), 2, row);
+		} catch (PropertyNotPresentException e) {
+			gp.add(getValueLabel(pnp, "Namespace URI"), 2, row);
+		}
+		row += 1;
+
+		gp.add(getKeyLabel("Resource ID"), 1, row);
+		try {
+			AUID resourceID = timedText.getResourceId();
+			gp.add(getValueLabel("" + resourceID, "Resource ID"), 2, row);
+		} catch (PropertyNotPresentException e) {
+			gp.add(getValueLabel(pnp, "Resource ID"), 2, row);
+		}
+		row += 1;
+	}
+
+	private Label getKeyLabel(String key) {
+		Label label = new Label(key);
+		label.setPrefWidth(200);
+		label.setPadding(new Insets(2,0,2,5));
 		label.setMaxHeight(Double.MAX_VALUE);
 		label.setMaxWidth(Double.MAX_VALUE);
 		label.setAlignment(Pos.TOP_LEFT);
 		return label;
 	}
 
-	private Pane getCellPane(String title) {
-		Pane pane = new Pane();
-		Label label = getDescriptorLabel(title, "#e3e3e3", 220, "");
-		pane.getChildren().add(label);
-		pane.maxHeight(Double.MAX_VALUE);
-		pane.maxWidth(220);
-		return pane;
+	private Label getValueLabel(String value, String key) {
+		Label label = new Label(value);
+		label.setPrefWidth(400);
+		label.setPadding(new Insets(2,0,2,5));
+		label.setMaxHeight(Double.MAX_VALUE);
+		label.setMaxWidth(Double.MAX_VALUE);
+		label.setAlignment(Pos.TOP_LEFT);
+		label.setFocusTraversable(true);
+		label.setAccessibleText(key + " is " + value);
+		return label;
 	}
 
 	private AS07TimecodeLabelSubdescriptor parseDateTimeSubDescriptor(String sub) {

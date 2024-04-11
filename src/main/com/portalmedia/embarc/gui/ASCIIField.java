@@ -12,21 +12,19 @@ import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.beans.property.StringProperty;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.AccessibleRole;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 
@@ -39,9 +37,15 @@ import javafx.stage.Modality;
  */
 public class ASCIIField extends AnchorPane implements IEditorField {
 	@FXML
-	private CustomTextField editorTextField;
+	private HBox editorTextFieldContainer;
 	@FXML
 	private Label editorTextFieldLabel;
+	@FXML
+	private HBox editorTextFieldLabelInfoIcon;
+	@FXML
+	private CustomTextField editorTextField;
+	@FXML
+	private HBox popoutIconContainer;
 	@FXML
 	private FontAwesomeIconView popoutIcon;
 
@@ -121,6 +125,7 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	@Override
 	public void setEditable(boolean editable) {
 		editorTextField.setEditable(editable);
+		popoutIconContainer.setDisable(!editable);
 	}
 
 	/*
@@ -146,6 +151,7 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	@Override
 	public void setLabel(String text) {
 		editorTextFieldLabel.setText(text);
+		editorTextFieldLabel.setLabelFor(editorTextField);
 	}
 
 	/*
@@ -155,13 +161,18 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void setLabel(String labelText, String helpText) {
-		final Tooltip tt = new Tooltip(labelText + "\n\n" + helpText);
-		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
-		tt.setPrefWidth(500);
-		tt.setWrapText(true);
-		tt.setAutoHide(false);
-		editorTextFieldLabel.setText(labelText);
-		editorTextFieldLabel.setTooltip(tt);
+		editorTextFieldLabelInfoIcon.setOnKeyPressed(event -> {
+			if (event.getCode() != KeyCode.SPACE) {
+				return;
+			}
+			DataFieldInfoAlert.showFieldInfoAlert(labelText, helpText);
+		});
+		editorTextFieldLabelInfoIcon.setOnMouseClicked(event -> {
+			DataFieldInfoAlert.showFieldInfoAlert(labelText, helpText);
+		});
+		setLabel(labelText);
+		editorTextFieldLabelInfoIcon.setAccessibleRole(AccessibleRole.BUTTON);
+		editorTextFieldLabelInfoIcon.setAccessibleText("Open modal with " + labelText + " specification.");
 	}
 
 	/*
@@ -171,62 +182,21 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void setPopoutIcon() {
-		popoutIcon.setVisible(true);
-		popoutIcon.setOnMouseClicked(new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent event) {
-				final Alert alert = new Alert(AlertType.NONE);
-				alert.setTitle("Edit " + editorTextFieldLabel.getText());
-				alert.setHeaderText(null);
-				alert.setContentText(null);
-				alert.initModality(Modality.APPLICATION_MODAL);
-				alert.initOwner(Main.getPrimaryStage());
-
-				final ButtonType[] buttonList = new ButtonType[2];
-				if (column != null) {
-					if (column.getEditable()) {
-						buttonList[0] = ButtonType.APPLY;
-						buttonList[1] = ButtonType.CLOSE;
-					} else {
-						buttonList[0] = ButtonType.CLOSE;
-					}
-				} else if (mxfColumn != null) {
-					if (mxfColumn.getEditable()) {
-						buttonList[0] = ButtonType.APPLY;
-						buttonList[1] = ButtonType.CLOSE;
-					} else {
-						buttonList[0] = ButtonType.CLOSE;
-					}
-				}
-				alert.getButtonTypes().setAll(buttonList);
-
-				final Label label = new Label(editorTextFieldLabel.getText());
-
-				final TextArea textArea = new TextArea(editorTextField.getText());
-				textArea.setEditable(true);
-				textArea.setWrapText(true);
-
-				textArea.setMaxWidth(Double.MAX_VALUE);
-				textArea.setMaxHeight(Double.MAX_VALUE);
-				GridPane.setVgrow(textArea, Priority.ALWAYS);
-				GridPane.setHgrow(textArea, Priority.ALWAYS);
-
-				final GridPane expContent = new GridPane();
-				expContent.setMaxWidth(Double.MAX_VALUE);
-				expContent.add(label, 0, 0);
-				expContent.add(textArea, 0, 1);
-				alert.getDialogPane().setContent(expContent);
-
-				alert.showAndWait();
-				if (alert.getResult() == ButtonType.APPLY) {
-					final String value = textArea.getText();
-					editorTextField.setText(value);
-					alert.close();
-				} else if (alert.getResult() == ButtonType.CLOSE) {
-					alert.close();
-				}
+		if (!editorTextField.isEditable()) {
+			return;
+		}
+		popoutIconContainer.setVisible(true);
+		popoutIconContainer.setOnKeyPressed(event -> {
+			if (event.getCode() != KeyCode.SPACE) {
+				return;
 			}
+			showPopoutAlert();
 		});
+		popoutIconContainer.setOnMouseClicked(event -> {
+			showPopoutAlert();
+		});
+		popoutIconContainer.setAccessibleRole(AccessibleRole.BUTTON);
+		popoutIconContainer.setAccessibleText("Open modal to edit " + editorTextFieldLabel.getText());
 	}
 
 	/*
@@ -292,6 +262,59 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 		ValidationChangeListenerMXF validationListener = new ValidationChangeListenerMXF(editorTextField, mxfColumn);
 		validationListener.setMissingRequiredField(originalValue);
 		editorTextField.textProperty().addListener(validationListener);
+	}
+	
+	private void showPopoutAlert() {
+		final Alert alert = new Alert(AlertType.NONE);
+		alert.setTitle("Edit " + editorTextFieldLabel.getText());
+		alert.setHeaderText(null);
+		alert.setContentText(null);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.initOwner(Main.getPrimaryStage());
+
+		final ButtonType[] buttonList = new ButtonType[2];
+		if (column != null) {
+			if (column.getEditable()) {
+				buttonList[0] = ButtonType.APPLY;
+				buttonList[1] = ButtonType.CLOSE;
+			} else {
+				buttonList[0] = ButtonType.CLOSE;
+			}
+		} else if (mxfColumn != null) {
+			if (mxfColumn.getEditable()) {
+				buttonList[0] = ButtonType.APPLY;
+				buttonList[1] = ButtonType.CLOSE;
+			} else {
+				buttonList[0] = ButtonType.CLOSE;
+			}
+		}
+		alert.getButtonTypes().setAll(buttonList);
+
+		final Label label = new Label(editorTextFieldLabel.getText());
+
+		final TextArea textArea = new TextArea(editorTextField.getText());
+		textArea.setEditable(true);
+		textArea.setWrapText(true);
+
+		textArea.setMaxWidth(Double.MAX_VALUE);
+		textArea.setMaxHeight(Double.MAX_VALUE);
+		GridPane.setVgrow(textArea, Priority.ALWAYS);
+		GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+		final GridPane expContent = new GridPane();
+		expContent.setMaxWidth(Double.MAX_VALUE);
+		expContent.add(label, 0, 0);
+		expContent.add(textArea, 0, 1);
+		alert.getDialogPane().setContent(expContent);
+
+		alert.showAndWait();
+		if (alert.getResult() == ButtonType.APPLY) {
+			final String value = textArea.getText();
+			editorTextField.setText(value);
+			alert.close();
+		} else if (alert.getResult() == ButtonType.CLOSE) {
+			alert.close();
+		}
 	}
 	
 }

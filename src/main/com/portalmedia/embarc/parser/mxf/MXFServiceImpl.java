@@ -1374,10 +1374,6 @@ public class MXFServiceImpl implements MXFService {
 			
 			AS07GSPDMSObject binaryObject = bd.getTextBasedObject();
 			
-			List<AS07DMSIdentifierSetImpl> identSet = binaryObject.getIdentifiers();
-			String objIdentifiers = idSetHelper.identifiersToString(identSet);
-			cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));	
-			
 			try {cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, binaryObject.getTextBasedMetadataPayloadSchemeID().toString()));
 			}catch(PropertyNotPresentException ex) {
 				cols.put(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, new StringMetadataColumn(MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier, "PROPERTY NOT PRESENT"));
@@ -1415,6 +1411,10 @@ public class MXFServiceImpl implements MXFService {
 			catch(PropertyNotPresentException ex) {
 				cols.put(MXFColumn.AS_07_Object_GenericStreamID, new StringMetadataColumn(MXFColumn.AS_07_Object_GenericStreamID, "PROPERTY NOT PRESENT"));
 			}
+			
+			List<AS07DMSIdentifierSetImpl> identSet = binaryObject.getIdentifiers();
+			String objIdentifiers = idSetHelper.identifiersToString(identSet);
+			cols.put(MXFColumn.AS_07_Object_Identifiers, new StringMetadataColumn(MXFColumn.AS_07_Object_Identifiers, objIdentifiers));	
 
 			try {bdColumns.put(Integer.toString(binaryObject.getGenericStreamId()), cols);}
 			catch(PropertyNotPresentException ex) {

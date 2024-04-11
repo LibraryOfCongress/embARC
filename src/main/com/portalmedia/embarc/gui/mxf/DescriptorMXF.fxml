@@ -4,64 +4,88 @@
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.paint.*?>
+<?import javafx.scene.text.Text?>
 
 <fx:root
 	type="javafx.scene.layout.AnchorPane" 
 	xmlns="http://javafx.com/javafx"
 	xmlns:fx="http://javafx.com/fxml"
-	style="-fx-background-color: #FFF;"
 >
-	<children>
-		<BorderPane
-			prefHeight="433.0"
-			prefWidth="989.0"
-			AnchorPane.bottomAnchor="0.0"
-			AnchorPane.leftAnchor="0.0"
-			AnchorPane.rightAnchor="0.0"
-			AnchorPane.topAnchor="0.0"
-		>
-			<top>
-				<VBox
-					styleClass="editor-header-box"
-					AnchorPane.bottomAnchor="0.0"
-					AnchorPane.leftAnchor="0.0"
-					AnchorPane.rightAnchor="0.0"
-					AnchorPane.topAnchor="0.0"
-				>
-					<children>
-						<Label
-							fx:id="sectionLabel"
-							alignment="TOP_LEFT"
-							styleClass="editor-header"
-							VBox.vgrow="ALWAYS"
-						/>
-						<Label
-							fx:id="selectedFilesLabel"
-							alignment="TOP_LEFT"
-							styleClass="editor-header"
-							VBox.vgrow="ALWAYS"
-						/>
-					</children>
-				</VBox>
-			</top>
-			<center>
-				<VBox
-					fx:id="descriptorsVBox"
-					AnchorPane.bottomAnchor="0.0"
-					AnchorPane.leftAnchor="0.0"
-					AnchorPane.rightAnchor="0.0"
-					AnchorPane.topAnchor="0.0"
-				>
-					<children>
-					</children>
-				</VBox>
-			</center>
-		</BorderPane>
-	</children>
+	<VBox
+		AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0"
+		AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0"
+	>
+		<VBox styleClass="editor-header-box" spacing="10">
+			<Label
+				fx:id="sectionLabel"
+				styleClass="editor-header"
+				VBox.vgrow="ALWAYS"
+				focusTraversable="true"
+			/>
+			<Label
+				fx:id="selectedFilesLabel"
+				styleClass="editor-header-selected-files-label"
+				VBox.vgrow="ALWAYS"
+				focusTraversable="true"
+			/>
+		</VBox>
+		<VBox>
+			<HBox style="-fx-padding: 10 10 0 10">
+				<Label
+					text="* = required field"
+					focusTraversable="true"
+					accessibleText="A * denotes a required field"
+				/>
+			</HBox>
+			<Accordion
+				fx:id="descriptorsAccordion"
+				style="-fx-padding: 10 10 10 10"
+			>
+				<panes>
+					<TitledPane
+						fx:id="pictureTitledPane"
+						text="Picture Descriptors"
+						animated="false"
+					>
+						<content>
+							<ScrollPane styleClass="light-blue-bg">
+								<content>
+									<VBox fx:id="pictureVBox" />
+								</content>
+							</ScrollPane>
+						</content>
+					</TitledPane>
+					<TitledPane
+						fx:id="soundTitledPane"
+						text="Sound Descriptors"
+						animated="false"
+					>
+						<content>
+							<ScrollPane styleClass="light-blue-bg">
+								<content>
+									<VBox fx:id="soundVBox" />
+								</content>
+							</ScrollPane>
+						</content>
+					</TitledPane>
+					<TitledPane
+						fx:id="otherTitledPane"
+						text="Other Descriptors"
+						animated="false"
+					>
+						<content>
+							<ScrollPane styleClass="light-blue-bg">
+								<content>
+									<VBox fx:id="otherVBox" />
+								</content>
+							</ScrollPane>
+						</content>
+					</TitledPane>
+				</panes>
+			</Accordion>
+		</VBox>
+	</VBox>
 </fx:root>
-

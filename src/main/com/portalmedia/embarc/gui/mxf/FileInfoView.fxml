@@ -1,78 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
-<?import javafx.scene.text.TextFlow?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
 <fx:root
 	type="javafx.scene.layout.AnchorPane"
 	xmlns="http://javafx.com/javafx"
 	xmlns:fx="http://javafx.com/fxml"
 >
-	<children>
-		<AnchorPane
-			minHeight="0.0"
-			minWidth="0.0"
-			style="-fx-background-color: #d1d9de;"
-			AnchorPane.bottomAnchor="0.0"
-			AnchorPane.leftAnchor="0.0"
-			AnchorPane.rightAnchor="0.0"
-			AnchorPane.topAnchor="0.0"
+	<VBox
+		AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0"
+		AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0"
+	>
+		<VBox styleClass="editor-header-box" spacing="10">
+			<Label
+				fx:id="sectionLabel"
+				styleClass="editor-header"
+				VBox.vgrow="ALWAYS"
+				focusTraversable="true"
+			/>
+			<Label
+				fx:id="selectedFilesLabel"
+				styleClass="editor-header-selected-files-label"
+				VBox.vgrow="ALWAYS"
+				focusTraversable="true"
+			/>
+		</VBox>
+		<VBox
+			style="-fx-padding: 10 10 10 10;"
+			VBox.vgrow="ALWAYS"
 		>
-			<children>
-				<VBox
-					fx:id="dataContainer"
-					style="-fx-background-color: transparent;"
-					AnchorPane.bottomAnchor="0.0"
-					AnchorPane.leftAnchor="0.0"
-					AnchorPane.rightAnchor="0.0"
-					AnchorPane.topAnchor="0.0"
-				>
-				<children>
-					<VBox
-						styleClass="editor-header-box"
-						AnchorPane.bottomAnchor="0.0"
-						AnchorPane.leftAnchor="0.0"
-						AnchorPane.rightAnchor="0.0"
-						AnchorPane.topAnchor="0.0"
+			<ScrollPane styleClass="light-blue-bg" VBox.vgrow="ALWAYS">
+				<content>
+					<GridPane
+						alignment="TOP_CENTER"
+						hgap="10.0"
+						vgap="10.0"
 					>
+						<padding>
+							<Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+						</padding>
+						<columnConstraints>
+							<ColumnConstraints hgrow="ALWAYS" prefWidth="130.0" minWidth="80.0" />
+						</columnConstraints>
+						<rowConstraints>
+							<RowConstraints vgrow="ALWAYS" prefHeight="30.0" minHeight="30.0" />
+			       		</rowConstraints>
 						<children>
-							<Label
-								fx:id="fileInfoAreaLabel"
-								alignment="TOP_LEFT"
-								styleClass="editor-header"
-								VBox.vgrow="ALWAYS"
-							/>
-							<Label
-								fx:id="selectedFilesLabel"
-								alignment="TOP_LEFT"
-								styleClass="editor-header"
-								VBox.vgrow="ALWAYS"
-							/>
+							<Label text="Filename" alignment="TOP_LEFT" />
+							<Label fx:id="fileNameLabel" alignment="TOP_LEFT"  GridPane.columnIndex="1" />
+							<Label text="File Path" alignment="TOP_LEFT" GridPane.rowIndex="1" />
+							<Label fx:id="filePathLabel" alignment="TOP_LEFT" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+							<Label text="Format" alignment="TOP_LEFT" GridPane.rowIndex="2" />
+							<Label fx:id="formatLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+							<Label text="Version" alignment="TOP_LEFT" GridPane.rowIndex="3" />
+							<Label fx:id="versionLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+							<Label text="Profile" alignment="TOP_LEFT" GridPane.rowIndex="4" />
+							<Label fx:id="profileLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+							<Label text="File Size" alignment="TOP_LEFT" GridPane.rowIndex="5" />
+							<Label fx:id="fileSizeLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+							<Label text="Picture Track Count" alignment="TOP_LEFT" GridPane.rowIndex="6" />
+							<Label fx:id="pictureTrackCountLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+							<Label text="Sound Track Count" alignment="TOP_LEFT" GridPane.rowIndex="7" />
+							<Label fx:id="soundTrackCountLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+							<Label text="Other Track Count" alignment="TOP_LEFT" GridPane.rowIndex="8" />
+							<Label fx:id="otherTrackCountLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+							<Label text="TD Count" alignment="TOP_LEFT" GridPane.rowIndex="9" />
+							<Label fx:id="tdCountLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+							<Label text="BD Count" alignment="TOP_LEFT" GridPane.rowIndex="10" />
+							<Label fx:id="bdCountLabel" alignment="TOP_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="10" />
 						</children>
-					</VBox>
-					<AnchorPane
-						fx:id="fileInfoAnchorPane"
-						minHeight="0.0"
-						minWidth="0.0"
-						prefHeight="200.0"
-						prefWidth="160.0"
-						style="-fx-background-color: #d1d9de;"
-						AnchorPane.bottomAnchor="0.0"
-						AnchorPane.leftAnchor="0.0"
-						AnchorPane.rightAnchor="0.0"
-						AnchorPane.topAnchor="0.0"
-					>
-						<children>
-						</children>
-					</AnchorPane>
-				</children>
-			</VBox>
-			</children>
-		</AnchorPane>
-	</children>
+					</GridPane>
+				</content>
+			</ScrollPane>
+		</VBox>
+	</VBox>
 </fx:root>

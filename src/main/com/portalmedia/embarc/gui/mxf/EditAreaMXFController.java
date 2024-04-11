@@ -19,7 +19,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SplitPane;
+import javafx.scene.image.ImageView;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
@@ -41,7 +41,7 @@ public class EditAreaMXFController implements Initializable {
 	@FXML
 	private Button writeMXFFilesButton;
 	@FXML
-	private SplitPane writeMXFFilesControlWrapper;
+	private ImageView fadgiLogoImageView;
 
 	CoreMXFController coreView;
 	WriteMXFController writeViewMXF;
@@ -53,6 +53,9 @@ public class EditAreaMXFController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorMXF.getInstance().registerEditAreaController(this);
+
+		fadgiLogoImageView.setFocusTraversable(true);
+		fadgiLogoImageView.setAccessibleText("FADGI logo. F A D G I stands for Federal Agencies Digital Guidelines Initiative.");
 
 		writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -112,7 +115,6 @@ public class EditAreaMXFController implements Initializable {
 
 	public void setWriteControl() {
 		writeViewMXF = new WriteMXFController();
-		writeViewMXF.setMaxWidth(Double.MAX_VALUE);
 		writeViewMXF.setContent();
 		AnchorPane.setTopAnchor(writeViewMXF, 0.0);
 		AnchorPane.setLeftAnchor(writeViewMXF, 0.0);
@@ -128,9 +130,8 @@ public class EditAreaMXFController implements Initializable {
 		if (editAreaContainer.getChildren().size() > 0) {
 			editAreaContainer.getChildren().removeAll(editAreaContainer.getChildren());
 		}
-		coreView.setSection();
+		coreView.setSection(false);
 		coreView.setTitle("Core DMS");
-		coreView.setMaxWidth(Double.MAX_VALUE);
 		AnchorPane.setTopAnchor(coreView, 0.0);
 		AnchorPane.setLeftAnchor(coreView, 0.0);
 		AnchorPane.setRightAnchor(coreView, 0.0);
@@ -142,7 +143,6 @@ public class EditAreaMXFController implements Initializable {
 		if (section != MXFSection.TD && section != MXFSection.BD) return; // TODO: set file info?
 		tdbdView = new TDBDController();
 		tdbdView.setContent(section);
-		tdbdView.setMaxWidth(Double.MAX_VALUE);
 		AnchorPane.setTopAnchor(tdbdView, 0.0);
 		AnchorPane.setLeftAnchor(tdbdView, 0.0);
 		AnchorPane.setRightAnchor(tdbdView, 0.0);
@@ -153,7 +153,6 @@ public class EditAreaMXFController implements Initializable {
 	public void setFileInfoControl() {
 		fileInfoView = new FileInfoController();
 		fileInfoView.setContent();
-		fileInfoView.setMaxWidth(Double.MAX_VALUE);
 		AnchorPane.setTopAnchor(fileInfoView, 0.0);
 		AnchorPane.setLeftAnchor(fileInfoView, 0.0);
 		AnchorPane.setRightAnchor(fileInfoView, 0.0);
@@ -168,8 +167,7 @@ public class EditAreaMXFController implements Initializable {
 		if (editAreaContainer.getChildren().size() > 0) {
 			editAreaContainer.getChildren().removeAll(editAreaContainer.getChildren());
 		}
-		descriptorMXF.setTitle("Descriptor Data");
-		descriptorMXF.setMaxWidth(Double.MAX_VALUE);
+		descriptorMXF.setTitle("Descriptors");
 		AnchorPane.setTopAnchor(descriptorMXF, 0.0);
 		AnchorPane.setLeftAnchor(descriptorMXF, 0.0);
 		AnchorPane.setRightAnchor(descriptorMXF, 0.0);

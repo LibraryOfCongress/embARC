@@ -3,7 +3,6 @@ package com.portalmedia.embarc.parser.dpx;
 import java.util.Date;
 import java.util.HashMap;
 
-
 /**
  * DPX data template
  *

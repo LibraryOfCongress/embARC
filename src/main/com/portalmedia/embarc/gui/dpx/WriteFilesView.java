@@ -12,7 +12,6 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -21,6 +20,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 /**
@@ -31,7 +31,6 @@ import javafx.scene.layout.VBox;
  * @since 2018-05-08
  */
 public class WriteFilesView extends AnchorPane {
-
 	@FXML
 	private AnchorPane writeFilesSummaryPane;
 	private CheckBox smptcCB;
@@ -86,109 +85,134 @@ public class WriteFilesView extends AnchorPane {
 	}
 
 	public void setMessage(SectionDef section) {
-		final VBox header = new VBox();
-		header.getStyleClass().add("editor-header-box");
-		header.setPrefWidth(70);
-		AnchorPane.setTopAnchor(header, 0.00);
-		AnchorPane.setLeftAnchor(header, 0.00);
-		AnchorPane.setRightAnchor(header, 0.00);
-		final Label l = new Label("File Summary \rSelect one or more files to view and edit data");
-		l.prefHeight(25);
-		l.getStyleClass().add("editor-header");
-		header.getChildren().add(l);
+		
+		final VBox container = new VBox();
+		AnchorPane.setTopAnchor(container, 0.00);
+		AnchorPane.setRightAnchor(container, 0.00);
+		AnchorPane.setBottomAnchor(container, 0.00);
+		AnchorPane.setLeftAnchor(container, 0.00);
+		writeFilesSummaryPane.getChildren().add(container);
+		
+		final VBox headerBox = new VBox();
+		headerBox.getStyleClass().add("editor-header-box");
+		headerBox.setSpacing(10);
+		AnchorPane.setTopAnchor(headerBox, 0.00);
+		AnchorPane.setRightAnchor(headerBox, 0.00);
+		AnchorPane.setBottomAnchor(headerBox, 0.00);
+		AnchorPane.setLeftAnchor(headerBox, 0.00);
+		final Label l1 = new Label("File Summary");
+		l1.setFocusTraversable(true);
+		l1.getStyleClass().add("editor-header");
+		headerBox.getChildren().add(l1);
+		final Label l2 = new Label("Select one or more files to view and edit data");
+		l2.setFocusTraversable(true);
+		l2.getStyleClass().add("editor-header-selected-files-label");
+		headerBox.getChildren().add(l2);
 
-		writeFilesSummaryPane.getChildren().add(header);
+		final HBox gridBox = new HBox();
+		gridBox.setPadding(new Insets(10, 0, 0, 10));
 		final GridPane grid = new GridPane();
+		gridBox.getChildren().add(grid);
 		grid.setAlignment(Pos.CENTER);
-		grid.setHgap(10);
-		grid.setVgap(10);
-		grid.setPadding(new Insets(75, 25, 25, 25));
+		grid.setHgap(15);
+		grid.setVgap(15);
 
-		writeFilesSummaryPane.getChildren().add(grid);
+		container.getChildren().addAll(headerBox, gridBox);
 
 		final Label totalFilesLabel = new Label("Total Files:");
-		final FontAwesomeIconView icon0 = new FontAwesomeIconView(FontAwesomeIcon.FILE_IMAGE_ALT);
-		totalFilesLabel.setGraphic(icon0);
-		grid.add(totalFilesLabel, 1, 0);
+		grid.add(totalFilesLabel, 0, 0);
 
 		final Label totalFilesText = new Label(String.valueOf(DatabaseSummary.getFileCount()));
-		grid.add(totalFilesText, 2, 0);
-
-		final EventHandler<ActionEvent> cbEventHandler = new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				if (event.getSource() instanceof CheckBox) {
-					final CheckBox cb = (CheckBox) event.getSource();
-					final String id = cb.getId();
-					if ("SMPTE_C".equals(id)) {
-						ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.SMPTE_C);
-					} else if ("FADGI_SR".equals(id)) {
-						ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.FADGI_SR);
-					} else if ("FADGI_R".equals(id)) {
-						ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.FADGI_R);
-					} else if ("FADGI_O".equals(id)) {
-						ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.FADGI_O);
-					}
-				}
-			}
-		};
+		grid.add(totalFilesText, 1, 0);
+		totalFilesLabel.setAccessibleText(totalFilesText.getText() + " total files");
+		totalFilesLabel.setFocusTraversable(true);
 
 		smptcCB.setId("SMPTE_C");
-		smptcCB.setOnAction(cbEventHandler);
-		grid.add(smptcCB, 0, 1);
-
-		final Label smptc = new Label("Files with SMPTE-C Violations:"); // grey square
+		final Label smptcLabel = new Label("Files with SMPTE-C Violations"); // grey square
+		smptcLabel.setLabelFor(smptcCB);
 		final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_BOX);
 		icon.setStyleClass("smpte-c-warning");
 		icon.setSize("18");
-		smptc.setGraphic(icon);
-
-		grid.add(smptc, 1, 1);
-		final int violations = DatabaseSummary.getErrorCount(ValidationRuleSetEnum.SMPTE_C);
-		final Label smptcText = new Label(String.valueOf(violations));
-		grid.add(smptcText, 2, 1);
+		smptcLabel.setGraphic(icon);
+		HBox smptcHBox = new HBox();
+		smptcHBox.setSpacing(10);
+		smptcHBox.getChildren().add(smptcCB);
+		smptcHBox.getChildren().add(smptcLabel);
+		grid.add(smptcHBox, 0, 1);
+		int smptcErrors = DatabaseSummary.getErrorCount(ValidationRuleSetEnum.SMPTE_C);
+		grid.add(new Label(String.valueOf(smptcErrors)), 1, 1);
+		smptcLabel.setAccessibleText(smptcErrors + " files with SMPTE-C Violations.");
+		smptcCB.setOnAction(event -> handleCheckboxEvent(event));
 
 		fsrCB.setId("FADGI_SR");
-		fsrCB.setOnAction(cbEventHandler);
-		grid.add(fsrCB, 0, 2);
-
-		final Label fsr = new Label("Files with FADGI-SR Violations:"); // red octagon
+		final Label fsrLabel = new Label("Files with FADGI-SR violations"); // red octagon
+		fsrLabel.setLabelFor(fsrCB);
 		final MaterialDesignIconView icon1 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
 		icon1.setStyleClass("fadgi-sr-warning");
 		icon1.setSize("18");
-		fsr.setGraphic(icon1);
-		grid.add(fsr, 1, 2);
-
-		final Label fsrText = new Label(String.valueOf(DatabaseSummary.getErrorCount(ValidationRuleSetEnum.FADGI_SR)));
-		grid.add(fsrText, 2, 2);
+		fsrLabel.setGraphic(icon1);
+		HBox fsrHBox = new HBox();
+		fsrHBox.setSpacing(10);
+		fsrHBox.getChildren().add(fsrCB);
+		fsrHBox.getChildren().add(fsrLabel);
+		grid.add(fsrHBox, 0, 2);
+		int fsrErrors = DatabaseSummary.getErrorCount(ValidationRuleSetEnum.FADGI_SR);
+		grid.add(new Label(String.valueOf(fsrErrors)), 1, 2);
+		fsrLabel.setAccessibleText(fsrErrors + " files with FADGI-SR violations.");
+		fsrCB.setOnAction(event -> handleCheckboxEvent(event));
 
 		frCB.setId("FADGI_R");
-		frCB.setOnAction(cbEventHandler);
-		grid.add(frCB, 0, 3);
-
-		final Label fr = new Label("Files with FADGI-R Violations:"); // orange triangle
+		final Label frLabel = new Label("Files with FADGI-R Violations"); // orange triangle
+		frLabel.setLabelFor(frCB);
 		final FontAwesomeIconView icon2 = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_TRIANGLE);
 		icon2.setStyleClass("fadgi-r-warning");
 		icon2.setSize("16");
-		fr.setGraphic(icon2);
-		grid.add(fr, 1, 3);
-
-		final Label frText = new Label(String.valueOf(DatabaseSummary.getErrorCount(ValidationRuleSetEnum.FADGI_R)));
-		grid.add(frText, 2, 3);
+		frLabel.setGraphic(icon2);
+		HBox frHBox = new HBox();
+		frHBox.setSpacing(10);
+		frHBox.getChildren().add(frCB);
+		frHBox.getChildren().add(frLabel);
+		grid.add(frHBox, 0, 3);
+		int frErrors = DatabaseSummary.getErrorCount(ValidationRuleSetEnum.FADGI_R);
+		grid.add(new Label(String.valueOf(frErrors)), 1, 3);
+		frLabel.setAccessibleText(frErrors + " files with FADGI-R violations.");
+		frCB.setOnAction(event -> handleCheckboxEvent(event));
 
 		foCB.setId("FADGI_O");
-		foCB.setOnAction(cbEventHandler);
-		grid.add(foCB, 0, 4);
-
-		final Label fo = new Label("Files with FADGI-O Violations:"); // yellow circle
+		final Label foLabel = new Label("Files with FADGI-O Violations"); // yellow circle
+		foLabel.setLabelFor(foCB);
 		final MaterialDesignIconView icon3 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_CIRCLE);
 		icon3.setStyleClass("fadgi-o-warning");
 		icon3.setSize("18");
-		fo.setGraphic(icon3);
-		grid.add(fo, 1, 4);
-
-		final Label foText = new Label(String.valueOf(DatabaseSummary.getErrorCount(ValidationRuleSetEnum.FADGI_O)));
-		grid.add(foText, 2, 4);
+		foLabel.setGraphic(icon3);
+		HBox foHBox = new HBox();
+		foHBox.setSpacing(10);
+		foHBox.getChildren().add(foCB);
+		foHBox.getChildren().add(foLabel);
+		grid.add(foHBox, 0, 4);
+		int foErrors = DatabaseSummary.getErrorCount(ValidationRuleSetEnum.FADGI_O);
+		grid.add(new Label(String.valueOf(foErrors)), 1, 4);
+		foLabel.setAccessibleText(foErrors + " files with FADGI-O violations.");
+		foCB.setOnAction(event -> handleCheckboxEvent(event));
 	}
 
+	private void handleCheckboxEvent(ActionEvent event) {
+		if (event.getSource() instanceof CheckBox) {
+			final CheckBox cb = (CheckBox) event.getSource();
+			final String id = cb.getId();
+			handleCheckboxEventId(id);
+		}
+	}
+
+	private void handleCheckboxEventId(String id) {
+		if ("SMPTE_C".equals(id)) {
+			ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.SMPTE_C);
+		} else if ("FADGI_SR".equals(id)) {
+			ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.FADGI_SR);
+		} else if ("FADGI_R".equals(id)) {
+			ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.FADGI_R);
+		} else if ("FADGI_O".equals(id)) {
+			ControllerMediatorDPX.getInstance().toggleRuleSet(ValidationRuleSetEnum.FADGI_O);
+		}
+	}
 }

@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
 <?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import com.portalmedia.embarc.gui.*?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.paint.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.text.Text?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import com.portalmedia.embarc.gui.*?>
 
 <AnchorPane
 	fx:id="editAreaAnchorPane"
@@ -23,89 +17,60 @@
 	xmlns:fx="http://javafx.com/fxml"
 	fx:controller="com.portalmedia.embarc.gui.mxf.EditAreaMXFController"
 >
-	<children>
-		<SplitPane
-			dividerPositions="0.9"
-			orientation="VERTICAL"
-			AnchorPane.bottomAnchor="0.0"
-			AnchorPane.leftAnchor="0.0"
-			AnchorPane.rightAnchor="0.0"
-			AnchorPane.topAnchor="0.0"
+	<VBox
+		AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0"
+		AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0"
+	>
+		<AnchorPane
+			fx:id="editAreaContainer"
+			VBox.vgrow="ALWAYS"
+		/>
+		<AnchorPane
+			maxHeight="100.0"
+			minHeight="100.0"
+			style="-fx-background-color: #D1D9DE"
 		>
-			<items>
-				<AnchorPane
-					fx:id="editAreaContainer"
-					VBox.vgrow="ALWAYS"
-				>
-					<children>
-					</children>
-				</AnchorPane>
-				<AnchorPane
-					maxHeight="100.0"
-				>
-					<children>
-						<HBox
-							AnchorPane.leftAnchor="0.0"
-							AnchorPane.rightAnchor="0.0"
-							AnchorPane.bottomAnchor="0.0"
-							AnchorPane.topAnchor="0.0"
-							style="-fx-background-color: #496879;"
-							prefHeight="100.0"
-							maxHeight="100.0"
-							minHeight="100.0"
-							alignment="CENTER"
-						>
-							<children>
-								<Region HBox.hgrow="ALWAYS"/>
-								<Pane prefWidth="80.0">
-									<ImageView
-										layoutY="-11.0"
-										layoutX="-20.0"
-										scaleX="0.41"
-										scaleY="0.41"
-									>
-										<image>
-											<Image url="resources/fadgi_box.jpg" />
-										</image>
-									</ImageView>
-									<HBox.margin>
-										<Insets right="10.0" />
-									</HBox.margin>
-								</Pane>
-								<SplitPane
-									fx:id="writeMXFFilesControlWrapper"
-									style="-fx-background-color: #496879;"
-									maxHeight="50.0"
-								>
-									<Button
-										fx:id="writeMXFFilesButton"
-										layoutY="25.0"
-										mnemonicParsing="false"
-										prefHeight="50.0"
-										prefWidth="250.0"
-										style="-fx-background-color: #81d4fa; -fx-font-weight: BOLD; -fx-font-size: 16px;"
-										text="Write Files"
-										textFill="#496879"
-									>
-										<graphic>
-											<FontAwesomeIconView
-												fill="#496879"
-												glyphName="DOWNLOAD"
-												size="24px"
-											/>
-										</graphic>
-									</Button>
-									<HBox.margin>
-										<Insets right="10.0" />
-									</HBox.margin>
-								</SplitPane>
-								<Region HBox.hgrow="ALWAYS"/>
-							</children>
-						</HBox>
-					</children>
-				</AnchorPane>
-			</items>
-		</SplitPane>
-	</children>
+			<HBox
+				style="-fx-padding: 10 40 10 10;"
+				AnchorPane.bottomAnchor="0.0"
+				AnchorPane.leftAnchor="0.0"
+				AnchorPane.rightAnchor="0.0"
+				AnchorPane.topAnchor="0.0"
+			>
+				<Pane HBox.hgrow="NEVER">
+					<ImageView
+						fx:id="fadgiLogoImageView"
+						scaleX="0.5"
+						scaleY="0.5"
+						layoutY="-22.0"
+					>
+						<image>
+							<Image url="resources/fadgi_box.jpg" />
+						</image>
+					</ImageView>
+				</Pane>
+				<Pane HBox.hgrow="ALWAYS"/>
+				<Pane HBox.hgrow="NEVER">
+					<Button
+						fx:id="writeMXFFilesButton"
+						mnemonicParsing="false"
+						text="Write Files"
+						style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10px 20px;  -fx-text-fill: #304b59;"
+						prefHeight="40.0"
+						layoutY="18.0"
+					>
+						<graphic>
+							<FontAwesomeIconView
+								fill="#304b59"
+								glyphName="DOWNLOAD"
+								size="20px"
+							/>
+						</graphic>
+					</Button>
+				</Pane>
+			</HBox>
+		</AnchorPane>
+	</VBox>
 </AnchorPane>
-

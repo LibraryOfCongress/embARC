@@ -7,11 +7,8 @@ import com.portalmedia.embarc.parser.mxf.MXFFileInfo;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 
 /**
  * File info pane view
@@ -22,11 +19,31 @@ import javafx.scene.layout.GridPane;
  */
 public class FileInfoController extends AnchorPane {
 	@FXML
-	private Label fileInfoAreaLabel;
+	private Label sectionLabel;
 	@FXML
 	private Label selectedFilesLabel;
 	@FXML
-	private AnchorPane fileInfoAnchorPane;
+	private Label fileNameLabel;
+	@FXML
+	private Label filePathLabel;
+	@FXML
+	private Label formatLabel;
+	@FXML
+	private Label versionLabel;
+	@FXML
+	private Label profileLabel;
+	@FXML
+	private Label fileSizeLabel;
+	@FXML
+	private Label pictureTrackCountLabel;
+	@FXML
+	private Label soundTrackCountLabel;
+	@FXML
+	private Label otherTrackCountLabel;
+	@FXML
+	private Label tdCountLabel;
+	@FXML
+	private Label bdCountLabel;
 
 	public FileInfoController() {
 		ControllerMediatorMXF.getInstance().registerFileInfoController(this);
@@ -41,74 +58,58 @@ public class FileInfoController extends AnchorPane {
 	}
 
 	public void setContent() {
-		fileInfoAreaLabel.setText("File Information");
-
+		sectionLabel.setText("File Information");
 		final MXFSelectedFilesSummary summary = ControllerMediatorMXF.getInstance().getSelectedFilesSummary();
 
-		String fileName = summary.getFileName();
-		String filePath = summary.getFilePath();
-		String pictureTrackCount = summary.getFileInfoDisplayValues(MXFFileInfo.PICTURE_TRACK_COUNT);
-		String soundTrackCount = summary.getFileInfoDisplayValues(MXFFileInfo.SOUND_TRACK_COUNT);
-		String otherTrackCount = summary.getFileInfoDisplayValues(MXFFileInfo.OTHER_TRACK_COUNT);
-		String tdCount = summary.getFileInfoDisplayValues(MXFFileInfo.TD_COUNT);
-		String bdCount = summary.getFileInfoDisplayValues(MXFFileInfo.BD_COUNT);
+		fileNameLabel.setText(summary.getFileName());
+		fileNameLabel.setFocusTraversable(true);
+		fileNameLabel.setAccessibleText("Filename is " + summary.getFileName());
 
-		final GridPane grid = new GridPane();
-		grid.setAlignment(Pos.TOP_CENTER);
-		grid.setHgap(10);
-		grid.setVgap(10);
-		grid.setPadding(new Insets(25, 25, 25, 25));
+		filePathLabel.setText(summary.getFilePath());
+		filePathLabel.setFocusTraversable(true);
+		filePathLabel.setAccessibleText("File path is " + summary.getFilePath());
 
-		grid.add(new Label("Filename: "), 0, 0);
-		Label fileNameLabel = new Label(fileName);
-		fileNameLabel.setWrapText(true);
-		grid.add(fileNameLabel, 1, 0);
+		formatLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.FORMAT));
+		formatLabel.setFocusTraversable(true);
+		formatLabel.setAccessibleText("Format is " + summary.getFileInfoDisplayValues(MXFFileInfo.FORMAT));
 
-		grid.add(new Label("File Path: "), 0, 1);
-		Label filePathLabel = new Label(filePath);
-		filePathLabel.setWrapText(true);
-		grid.add(filePathLabel, 1, 1);
+		versionLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.VERSION));
+		versionLabel.setFocusTraversable(true);
+		versionLabel.setAccessibleText("Version is " + summary.getFileInfoDisplayValues(MXFFileInfo.VERSION));
 
-		grid.add(new Label("Format: "), 0, 2);
-		grid.add(new Label(summary.getFileInfoDisplayValues(MXFFileInfo.FORMAT)), 1, 2);
+		profileLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.PROFILE));
+		profileLabel.setFocusTraversable(true);
+		profileLabel.setAccessibleText("Profile is " + summary.getFileInfoDisplayValues(MXFFileInfo.PROFILE));
 
-		grid.add(new Label("Version: "), 0, 3);
-		grid.add(new Label(summary.getFileInfoDisplayValues(MXFFileInfo.VERSION)), 1, 3);
+		fileSizeLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.FILE_SIZE));
+		fileSizeLabel.setFocusTraversable(true);
+		fileSizeLabel.setAccessibleText("File size is " + summary.getFileInfoDisplayValues(MXFFileInfo.FILE_SIZE));
 
-		grid.add(new Label("Profile: "), 0, 4);
-		Label profileLabel = new Label(summary.getFileInfoDisplayValues(MXFFileInfo.PROFILE));
-		profileLabel.setWrapText(true);
-		grid.add(profileLabel, 1, 4);
+		pictureTrackCountLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.PICTURE_TRACK_COUNT));
+		pictureTrackCountLabel.setFocusTraversable(true);
+		pictureTrackCountLabel.setAccessibleText("Picture track count " + summary.getFileInfoDisplayValues(MXFFileInfo.PICTURE_TRACK_COUNT));
 
-		grid.add(new Label("File Size: "), 0, 5);
-		grid.add(new Label(summary.getFileInfoDisplayValues(MXFFileInfo.FILE_SIZE)), 1, 5);
+		soundTrackCountLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.SOUND_TRACK_COUNT));
+		soundTrackCountLabel.setFocusTraversable(true);
+		soundTrackCountLabel.setAccessibleText("Sound track count " + summary.getFileInfoDisplayValues(MXFFileInfo.SOUND_TRACK_COUNT));
 
-		grid.add(new Label("Picture Track Count: "), 0, 6);
-		grid.add(new Label(pictureTrackCount), 1, 6);
+		otherTrackCountLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.OTHER_TRACK_COUNT));
+		otherTrackCountLabel.setFocusTraversable(true);
+		otherTrackCountLabel.setAccessibleText("Other track count " + summary.getFileInfoDisplayValues(MXFFileInfo.OTHER_TRACK_COUNT));
 
-		grid.add(new Label("Sound Track Count: "), 0, 7);
-		grid.add(new Label(soundTrackCount), 1, 7);
+		tdCountLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.TD_COUNT));
+		tdCountLabel.setFocusTraversable(true);
+		tdCountLabel.setAccessibleText("Text data count " + summary.getFileInfoDisplayValues(MXFFileInfo.TD_COUNT));
 
-		grid.add(new Label("Other Track Count: "), 0, 8);
-		grid.add(new Label(otherTrackCount), 1, 8);
-
-		grid.add(new Label("TD Count: "), 0, 9);
-		grid.add(new Label(tdCount), 1, 9);
-
-		grid.add(new Label("BD Count: "), 0, 10);
-		grid.add(new Label(bdCount), 1, 10);
-
-		fileInfoAnchorPane.getChildren().add(grid);
+		bdCountLabel.setText(summary.getFileInfoDisplayValues(MXFFileInfo.BD_COUNT));
+		bdCountLabel.setFocusTraversable(true);
+		bdCountLabel.setAccessibleText("Binary data count " + summary.getFileInfoDisplayValues(MXFFileInfo.BD_COUNT));
 
 		setNumberOfSelectedFiles(summary.getFileCount());
 	}
 
 	private void setNumberOfSelectedFiles(int num) {
-		if (num == 1) {
-			selectedFilesLabel.setText(Integer.toString(num) + " file selected");
-		} else {
-			selectedFilesLabel.setText(Integer.toString(num) + " files selected");
-		}
+		selectedFilesLabel.setText(Integer.toString(num) + " file" + (num > 1 ? "s " : " ") + "selected");
 	}
 
 }
