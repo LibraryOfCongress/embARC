@@ -5,3 +5,7 @@
 src/tests/.DS_Store
 *.mxf
 embarc-logfile.log
+/node_modules/
+package-lock.json
+package.json
+src/main/resources/version.properties

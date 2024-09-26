@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file
 
+
+## 1.3.1 2024-08-28
+	Accessibility Tasks:
+	 - emb-w-01: make splash screen text accessible to screen readers
+	 - emb-w-01: make splash screen text accessible to screen readers
+	 - emb-m-01: make splash screen text accessible to screen readers (same as emb-w-01)
+	 - emb-w-04: make tables navigable & sortable with screen reader
+	 - emb-m-03: make tables navigable & sortable with screen reader (same as emb-w-04)
+
+
 ## 1.3.0 2024-02-27
 	Feature Additions:
 	- Add DPX CSV metadata export and sequence analysis

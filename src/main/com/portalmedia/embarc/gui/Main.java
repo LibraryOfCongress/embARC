@@ -2,6 +2,7 @@ package com.portalmedia.embarc.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URISyntaxException;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,16 +21,20 @@ import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import com.fasterxml.jackson.core.util.VersionUtil;
 import com.portalmedia.embarc.database.DBService;
 import com.portalmedia.embarc.gui.dpx.TopMenuBarDPX;
 import com.portalmedia.embarc.gui.helper.CleanInputPathHelper;
 import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
 import com.portalmedia.embarc.gui.mxf.TopMenuBarMXF;
+import com.portalmedia.embarc.system.UserPreferences;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -39,9 +45,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -65,23 +74,134 @@ public class Main extends Application {
 	private static String programType = "";
 	static Handler fileHandler = null;
 	private static final Logger LOGGER = Logger.getLogger(Main.class.getClass().getName());
-	private static final String embARCVersion = "v1.3.0";
+	public static String embARCVersion = "";
 
 	public static void main(String[] args) throws Exception {
 		try {
+			String os = System.getProperty("os.name");
+			if (os != null && os.startsWith("Mac")) {
+				System.setProperty("apple.laf.useScreenMenuBar", "true");
+				System.setProperty("apple.awt.application.name", "embARC");
+			}
 			RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
 			List<String> arguments = runtimeMxBean.getInputArguments();
 			for(String a : arguments){
 				LOGGER.info(a);
 			}
 			setupLogger();
+			embARCVersion = getVersion();
 			LOGGER.info("Starting embARC " + embARCVersion);
 			launch(args);
-		}
-		catch(Exception ex) {
+		} catch (Exception ex) {
 			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in Main.  Rethrowing", ex);
 			throw ex;
 		}
+	}
+
+	@Override
+	public void init() {
+		try {
+			splashLayout = new DragBoard();
+			splashLayout.setFocusTraversable(false);
+			splashLayout.setAccessibleText("embARC " + embARCVersion + ". embARC stands for: Metadata Embedded for Archival Content.");
+			splashLayout.setAccessibleHelp("Start the app by dragging and dropping DPX or MXF files here or use the file menu to import files");
+			
+			StackPane stack = new StackPane();
+			stack.setFocusTraversable(false);
+			
+			ImageView splashImage = new ImageView(getClass().getResource("embARC.png").toURI().toString());
+			splashImage.setFitHeight(600);
+			splashImage.setFitWidth(600);
+			splashImage.setFocusTraversable(false);
+			
+			VBox labelVBox = new VBox();
+			labelVBox.setAlignment(Pos.CENTER);
+			labelVBox.setFocusTraversable(false);
+			
+			Pane emptyPane = new Pane();
+			emptyPane.setPrefHeight(200);
+			emptyPane.setFocusTraversable(false);
+			labelVBox.getChildren().add(emptyPane);
+			
+			Pane embarcLabelPane = new Pane();
+			embarcLabelPane.setPrefHeight(200);
+			embarcLabelPane.setPrefWidth(600);
+			embarcLabelPane.setFocusTraversable(false);
+
+			Label embarcLabel = new Label("embARC " + embARCVersion);
+			embarcLabel.setFocusTraversable(true);
+			embarcLabel.setFont(Font.font ("Verdana", 14));
+			embarcLabel.setLayoutX(430);
+			embarcLabel.setLayoutY(160);
+
+			embarcLabelPane.getChildren().add(embarcLabel);
+			labelVBox.getChildren().add(embarcLabelPane);
+
+			Pane dropFilesLabelPane = new Pane();
+			dropFilesLabelPane.setPrefHeight(200);
+			dropFilesLabelPane.setPrefWidth(600);
+
+			Label dropFilesLabel = new Label("Drag and drop DPX or MXF files here");
+			dropFilesLabel.setFocusTraversable(true);
+			dropFilesLabel.setAccessibleHelp("Or use the file menu to import files.");
+			dropFilesLabel.setFont(Font.font ("Verdana", 20));
+			dropFilesLabel.setTextFill(Color.rgb(0, 71, 110));
+			dropFilesLabel.setTextAlignment(TextAlignment.CENTER);
+			dropFilesLabel.setLayoutX(120);
+			dropFilesLabel.setLayoutY(80);
+
+			dropFilesLabelPane.getChildren().add(dropFilesLabel);
+			labelVBox.getChildren().add(dropFilesLabelPane);
+
+			stack.getChildren().addAll(splashImage, labelVBox);
+
+			splashLayout.setCenter(stack);
+			splashLayout.setStyle("-fx-background-color: transparent;");
+		} catch (URISyntaxException e) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
+		} catch (Exception e) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
+		}
+	}
+
+	@Override
+	public void start(final Stage initStage) throws Exception {
+		// show splash screen immediately on start up
+		showSplash(initStage);
+		primaryStage = new Stage(StageStyle.DECORATED);
+		primaryStage.setTitle("embARC primary stage title");
+
+		URL splashScreenUrl = getClass().getResource("embARC.png");
+		primaryStage.getIcons().add(new Image(splashScreenUrl.toURI().toString()));
+		
+		// setup "are you sure" modal on app quit
+		setPrimaryStageCloseEvent();
+		
+		// load root fxml file
+		FXMLLoader loader = new FXMLLoader();
+		loader.setLocation(Main.class.getResource("/com/portalmedia/embarc/gui/Root.fxml"));
+		rootLayout = loader.load();
+		rootLayout.setAccessibleText("embARC Application ally text");
+		rootLayout.setAccessibleHelp("embARC Application ally help");
+		
+		// set root scene, apply style sheet
+		Scene scene = new Scene(rootLayout);
+		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		primaryStage.setScene(scene);
+	}
+
+	private void showSplash(Stage initStage) {
+		// create splash menu bar
+		setSplashMenuBar();
+
+		// initialize splash screen scene & stage
+		Scene splashScene = new Scene(splashLayout);
+		splashScene.setFill(Color.TRANSPARENT);
+		initStage.initStyle(StageStyle.TRANSPARENT);
+		initStage.setScene(splashScene);
+		initStage.show();
+		splashStage = initStage;
+		setSplashScreenCloseRequest();
 	}
 
 	public static void setupLogger() {
@@ -109,82 +229,6 @@ public class Main extends Application {
 		} catch (IOException e) {
 			System.out.println("IO Exception Error");
 		}
-	}
-
-	@Override
-	public void init() {
-		ImageView splashImage;
-		try {
-			splashImage = new ImageView(getClass().getResource("embARC.png").toURI().toString());
-			splashImage.setFitHeight(600);
-			splashImage.setFitWidth(600);
-
-			splashLayout = new DragBoard();
-
-			StackPane stack = new StackPane();
-
-			Label embarcLabel = new Label("embARC " + embARCVersion);
-			embarcLabel.setFont(Font.font ("Verdana", 14));
-			embarcLabel.setPadding(new Insets(150,0,0,400));
-
-			Label dropFiles = new Label("Drag and drop DPX or MXF files here");
-			dropFiles.setFont(Font.font ("Verdana", 20));
-			dropFiles.setTextFill(Color.rgb(0, 71, 110));
-			dropFiles.setPadding(new Insets(400,0,0,0));
-
-			stack.getChildren().addAll(splashImage, embarcLabel, dropFiles);
-
-			splashLayout.setCenter(stack);
-			splashLayout.setStyle("-fx-background-color: transparent;");
-		} catch (URISyntaxException e) {
-			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
-			
-		}catch (Exception e) {
-			LOGGER.log(java.util.logging.Level.SEVERE, "Exception in init", e);
-		}
-	}
-
-	@Override
-	public void start(final Stage initStage) throws Exception {
-
-		// show spash screen immediately on start up
-		showSplash(initStage);
-		primaryStage = new Stage(StageStyle.DECORATED);
-		primaryStage.setTitle("embARC");
-
-		URL splashScreenUrl = getClass().getResource("embARC.png");
-
-		primaryStage.getIcons().add(new Image(splashScreenUrl.toURI().toString()));
-		
-		// setup "are you sure" modal on app quit
-		setPrimaryStageCloseEvent();
-		
-		// load root fxml file
-		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(Main.class.getResource("/com/portalmedia/embarc/gui/Root.fxml"));
-		rootLayout = loader.load();
-		rootLayout.setAccessibleText("embARC Application");
-		rootLayout.setAccessibleHelp("embARC Application");
-		
-		// set root scene, apply style sheet
-		Scene scene = new Scene(rootLayout);
-		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-		primaryStage.setScene(scene);
-	}
-
-	private void showSplash(Stage initStage) {
-		
-		// create splash menu bar
-		setSplashMenuBar();
-
-		// initialize splash screen scene & stage
-		Scene splashScene = new Scene(splashLayout);
-		splashScene.setFill(Color.TRANSPARENT);
-		initStage.initStyle(StageStyle.TRANSPARENT);
-		initStage.setScene(splashScene);
-		initStage.show();
-		splashStage = initStage;
-		setSplashScreenCloseRequest();
 	}
 
 	public static void showMainStageDPX(Boolean refresh) {
@@ -238,7 +282,11 @@ public class Main extends Application {
 				Optional<ButtonType> result = alert.showAndWait();
 				if (result.get() == ButtonType.OK) {
 					LOGGER.info("Closing embARC");
-					if ("DPX".equals(programType)) closeDatabase();
+					/*if ("DPX".equals(programType)) {
+						closeDpxFileInformationDatabase();
+						closeUserPreferenceDatabase();
+					}*/
+					System.exit(0);
 				} else {
 					e.consume();
 				}
@@ -250,12 +298,16 @@ public class Main extends Application {
 		splashStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
 			public void handle(WindowEvent e) {
-				if (!primaryStage.isShowing() || "DPX".equals(programType)) closeDatabase();
+				/*if (!primaryStage.isShowing() || "DPX".equals(programType)) {
+					closeDpxFileInformationDatabase();
+					closeUserPreferenceDatabase();
+				}*/
+				System.exit(0);
 			}
 		});
 	}
 	
-	private void closeDatabase() {
+	private void closeDpxFileInformationDatabase() {
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
 		try {
 			CompletableFuture.supplyAsync(() -> {
@@ -264,6 +316,22 @@ public class Main extends Application {
 				dbService.dropCollection();
 				dbService.closeDB();
 				System.out.println("Database closed");
+				return null;
+			}, executor).get(60, TimeUnit.SECONDS);
+		} catch (Exception ex) {
+			LOGGER.log(java.util.logging.Level.SEVERE, "Error closing database", ex);
+		}
+		executor.shutdown();
+	}
+	
+	private void closeUserPreferenceDatabase() {
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+		try {
+			CompletableFuture.supplyAsync(() -> {
+				DBService<UserPreferences> dbService = new DBService<UserPreferences>(UserPreferences.class);
+				dbService.getSize();
+				dbService.closeDB();
+				System.out.println("Database UserPreferences closed");
 				return null;
 			}, executor).get(60, TimeUnit.SECONDS);
 		} catch (Exception ex) {
@@ -323,6 +391,21 @@ public class Main extends Application {
 			splashLayout.getChildren().add(splashMenuBar);
 		} else {
 			splashLayout.setTop(splashMenuBar);
+		}
+	}
+	
+	private static String getVersion() {
+		Properties properties = new Properties();
+		
+		try (InputStream input = VersionUtil.class.getResourceAsStream("/resources/version.properties")) {
+			if (input == null) {
+				return "unknown";
+			}
+			properties.load(input);
+			return properties.getProperty("version");
+		} catch (IOException ex) {
+			LOGGER.log(java.util.logging.Level.WARNING, "Exception in Main getVersion.", ex);
+			return "unknown";
 		}
 	}
 

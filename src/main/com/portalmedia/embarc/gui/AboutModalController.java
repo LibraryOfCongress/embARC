@@ -13,6 +13,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -49,6 +50,8 @@ public class AboutModalController {
 	private Pane licensePane;
 	@FXML
 	private Hyperlink fadgiLink;
+	@FXML
+	private Label versionLabel;
 
 	public void showAboutModal(Stage stage) {
 		final Stage aboutStage = new Stage();
@@ -66,6 +69,7 @@ public class AboutModalController {
 			final Scene scene = new Scene(fxmlLoader.load());
 			aboutStage.setScene(scene);
 			aboutStage.show();
+			versionLabel.setText(Main.embARCVersion);
 			fadgiLink.setBorder(Border.EMPTY);
 			fadgiLink.setPadding(new Insets(4, 0, 4, 0));
 			fadgiLink.setOnAction(new EventHandler<ActionEvent>() {

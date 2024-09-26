@@ -79,7 +79,8 @@
 									</Pane>
 									<Pane prefHeight="50.0">
 											<Label
-												text="Version: 1.3.0"
+												fx:id="versionLabel"
+												text=""
 											/>
 											<Hyperlink
 												fx:id="fadgiLink"
