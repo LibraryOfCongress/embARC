@@ -1,9 +1,7 @@
 package com.portalmedia.embarc.gui.dpx;
 
 import java.net.URL;
-import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -66,9 +64,12 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -112,7 +113,6 @@ public class CenterPaneController implements Initializable {
 	private SelectedFilesSummary selectedFilesSummary;
 	private TableViewSelectionModel<DPXFileInformationViewModel> tableSelectionModel;
 	private Boolean columnsHaveBeenSet = false;
-	private List<String> hiddenImageElements;
 	private List<String> shownImageElements;
 	private List<TableColumn<DPXFileInformationViewModel, ?>> userHiddenColumns = new ArrayList<>();
 	private TabSummary tabSummary;
@@ -126,6 +126,27 @@ public class CenterPaneController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorDPX.getInstance().registerCenterPaneController(this);
+		table.setFocusTraversable(true);
+		
+		table.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+            	if(event.getCode().equals(KeyCode.ENTER)) {
+            		TableColumn<DPXFileInformationViewModel, ?> focusedColumn = table.getFocusModel().getFocusedCell().getTableColumn();
+            		if(focusedColumn != null && focusedColumn.isSortable()) {
+            			if(focusedColumn.getSortType() == SortType.ASCENDING) {
+            				focusedColumn.setSortType(SortType.DESCENDING);
+            			} else {
+            				focusedColumn.setSortType(SortType.ASCENDING);
+            			}
+            			table.getSortOrder().clear();
+            			table.getSortOrder().add(focusedColumn);
+            		} 		
+            		event.consume();
+            	}
+            }
+		});
+				
 		tableSelectionModel = table.getSelectionModel();
 		tableSelectionModel.getSelectedItems()
 				.addListener((ListChangeListener.Change<? extends DPXFileInformationViewModel> change) -> {
@@ -152,14 +173,13 @@ public class CenterPaneController implements Initializable {
 		tabSummary = new TabSummary();
 		shownImageElements = new LinkedList<>();
 		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_1.getDisplayName());
-		hiddenImageElements = new LinkedList<>();
-		hiddenImageElements.add(DPXImageElement.IMAGE_ELEMENT_2.getDisplayName());
-		hiddenImageElements.add(DPXImageElement.IMAGE_ELEMENT_3.getDisplayName());
-		hiddenImageElements.add(DPXImageElement.IMAGE_ELEMENT_4.getDisplayName());
-		hiddenImageElements.add(DPXImageElement.IMAGE_ELEMENT_5.getDisplayName());
-		hiddenImageElements.add(DPXImageElement.IMAGE_ELEMENT_6.getDisplayName());
-		hiddenImageElements.add(DPXImageElement.IMAGE_ELEMENT_7.getDisplayName());
-		hiddenImageElements.add(DPXImageElement.IMAGE_ELEMENT_8.getDisplayName());
+		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_2.getDisplayName());
+		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_3.getDisplayName());
+		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_4.getDisplayName());
+		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_5.getDisplayName());
+		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_6.getDisplayName());
+		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_7.getDisplayName());
+		shownImageElements.add(DPXImageElement.IMAGE_ELEMENT_8.getDisplayName());
 		setTabClickListener();
 		setIsEditingListener();
 		refreshEditor(false);
@@ -240,6 +260,7 @@ public class CenterPaneController implements Initializable {
 
 	private void setColumnContextMenu(TableColumn<DPXFileInformationViewModel, String> col) {
 		final ContextMenu cm = new ContextMenu();
+		cm.setStyle("-fx-text-fill: black; -fx-font-size: 12px");
 		final MenuItem mi1 = new MenuItem("Auto Populate Name");
 		mi1.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -254,26 +275,14 @@ public class CenterPaneController implements Initializable {
 	private void setColumns() {
 		if (table.getItems().size() != 0) {
 			setGeneralColumns();
-			TableColumn<DPXFileInformationViewModel, String> headerColumn = new TableColumn<>();
-			String currentSubsection = "";
 			String helpText;
-			boolean hasSubsection = false;
 			final DPXMetadataColumnViewModelList columnList = DPXMetadataColumnViewModelList.getInstance();
 			for (final DPXMetadataColumnViewModel mcvm : columnList.getColumns()) {
-
 				helpText = DPXColumnHelpText.getInstance().getHelpText(mcvm.getColumn());
-				final String colName;
 				if (!mcvm.getHasSubsection()) {
-					if (hasSubsection) {
-						hasSubsection = false;
-						table.getColumns().add(headerColumn);
-					}
 					final TableColumn<DPXFileInformationViewModel, String> col = new TableColumn<>(mcvm.getDisplayName());
 					String tempColName = mcvm.getDisplayName() + mcvm.getSectionDisplayName();
-					if (mcvm.getHasSubsection()) {
-						tempColName += mcvm.getSubsectionName();
-					}
-					colName = tempColName;
+					final String colName = tempColName;
 					col.setCellValueFactory(
 							cellData -> new ReadOnlyStringWrapper(cellData.getValue().getProp(colName)));
 
@@ -292,37 +301,30 @@ public class CenterPaneController implements Initializable {
 					setColumnStyles(col, mcvm);
 					table.getColumns().add(col);
 				} else {
-					hasSubsection = true;
-					if (currentSubsection != mcvm.getSubsectionName()) {
-						if (currentSubsection != "") {
-							table.getColumns().add(headerColumn);
-						}
-						headerColumn = new TableColumn<>(mcvm.getSubsectionName());
-						headerColumn.setUserData(mcvm);
-						setSubsectionContextMenu(headerColumn);
-						headerColumn.setId(mcvm.getSubsectionName());
-						headerColumn.setVisible(false);
-						headerColumn.setSortable(false);
-						headerColumn.getStyleClass().add("no-top-border");
-						currentSubsection = mcvm.getSubsectionName();
-					}
 					final TableColumn<DPXFileInformationViewModel, String> subCol = new TableColumn<>(
 							mcvm.getDisplayName());
 					String tempColName = mcvm.getDisplayName() + mcvm.getSectionDisplayName();
 					tempColName += mcvm.getSubsectionName();
-					colName = tempColName;
+					final String colName = tempColName;
 					subCol.setCellValueFactory(
 							cellData -> new ReadOnlyStringWrapper(cellData.getValue().getProp(colName)));
-					subCol.setId(mcvm.getDisplayName());
 					subCol.setUserData(mcvm);
 					subCol.setVisible(false);
-					subCol.setSortable(true);
 
 					subCol.setCellFactory(column -> {
 						return new ValidationCellFactory(column);
 					});
+					
+					setColumnWidth(subCol);
+					String sectionName = mcvm.getSubsectionName();
+					String imageNumber = sectionName.substring(sectionName.length()-1);
+					String subSecDisplayName = imageNumber.concat(" ").concat(mcvm.getDisplayName());
+					setColumnHeader(subCol, "", subSecDisplayName);
+					subCol.setSortable(true);
+					subCol.setId(subSecDisplayName);
+					setColumnStyles(subCol, mcvm);
 
-					headerColumn.getColumns().add(subCol);
+					table.getColumns().add(subCol);
 				}
 			}
 
@@ -339,10 +341,23 @@ public class CenterPaneController implements Initializable {
 			col.getStyleClass().add("uneditable-column");
 		}
 	}
-
-	private void setColumnHeader(TableColumn<DPXFileInformationViewModel, ?> col, String helpText, String columnDisplayName) {
+	
+	private void setColumnHeader(
+			TableColumn<DPXFileInformationViewModel, ?> col,
+			String helpText, 
+			String columnDisplayName) {
+		setColumnHeader(col, helpText, columnDisplayName, false);
+	}
+	
+	private void setColumnHeader(
+			TableColumn<DPXFileInformationViewModel, ?> col,
+			String helpText, 
+			String columnDisplayName,
+			boolean parentOfSubheaders) {
 		HBox hbox = new HBox();
+		final String defaultStyle = "-fx-text-fill: black; -fx-font-size: 12px";
 		final Label title = new Label(columnDisplayName);
+		title.setStyle(defaultStyle);
 		final Tooltip tt = new Tooltip(columnDisplayName + "\n\n" + helpText);
 		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
 		tt.setPrefWidth(500);
@@ -350,10 +365,18 @@ public class CenterPaneController implements Initializable {
 		tt.setAutoHide(false);
 		title.setTooltip(tt);
 		setColumnHeaderSequenceErrorIndicator(columnDisplayName, title, hbox);
+		if(parentOfSubheaders) {
+			new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
+			title.setStyle("-fx-padding: 0 0 0 5; -fx-text-fill: black; -fx-font-size: 12px");
+			final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
+			hbox.getChildren().add(icon);
+		} 
+		
 		hbox.getChildren().add(title);
 		hbox.setAlignment(Pos.CENTER);
-		col.setGraphic(hbox);
-		col.setText("");
+		hbox.setStyle(defaultStyle);
+		col.setText(columnDisplayName);
+		col.setGraphic(hbox);	
 		col.setStyle("-fx-padding: 0 0 0 5;");
 	}
 	
@@ -381,7 +404,7 @@ public class CenterPaneController implements Initializable {
 	}
 	
 	private void setSequenceErrorIcon(Label title, HBox hbox) {
-		title.setStyle("-fx-padding: 0 0 0 5;");
+		title.setStyle("-fx-padding: 0 0 0 5; -fx-text-fill: black; -fx-font-size: 12px");
 		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
 		icon.setStyleClass("fadgi-sr-warning");
 		hbox.getChildren().add(icon);
@@ -487,80 +510,6 @@ public class CenterPaneController implements Initializable {
 		});
 	}
 
-	private void setSubsectionContextMenu(TableColumn<DPXFileInformationViewModel, String> col) {
-		col.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN));
-		final ContextMenu cm = new ContextMenu();
-		hiddenImageElements.sort(new Comparator<String>() {
-			@Override
-			public int compare(String o1, String o2) {
-				return Collator.getInstance().compare(o1, o2);
-			}
-		});
-		for (final String s : shownImageElements) {
-			if (s == col.getText()) {
-				continue;
-			}
-			final MenuItem mi1 = new MenuItem("Show " + s);
-			mi1.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event) {
-					for (final TableColumn<DPXFileInformationViewModel, ?> nc : table.getColumns()) {
-						final String tmpValue = nc.getUserData().toString();
-						if (tmpValue.equals("General")) {
-							continue;
-						}
-						final DPXMetadataColumnViewModel mcvm = (DPXMetadataColumnViewModel) nc.getUserData();
-						if (mcvm == null) {
-							continue;
-						}
-
-						if (!mcvm.getSectionDisplayName()
-								.equals(DPXSection.IMAGE_INFORMATION_HEADER.getDisplayName())) {
-							nc.setVisible(false);
-						} else if (mcvm.getHasSubsection() && s.equals(mcvm.getSubsectionName())) {
-							nc.setVisible(true);
-						} else if (mcvm.getHasSubsection()) {
-							nc.setVisible(false);
-						}
-					}
-				}
-			});
-			cm.getItems().add(mi1);
-		}
-		for (final String s : hiddenImageElements) {
-			if (s == col.getText()) {
-				continue;
-			}
-			final MenuItem mi1 = new MenuItem("Show " + s);
-			mi1.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event) {
-					for (final TableColumn<DPXFileInformationViewModel, ?> nc : table.getColumns()) {
-						final String tmpValue = nc.getUserData().toString();
-						if (tmpValue.equals("General")) {
-							continue;
-						}
-						final DPXMetadataColumnViewModel mcvm = (DPXMetadataColumnViewModel) nc.getUserData();
-						if (mcvm == null) {
-							continue;
-						}
-
-						if (!mcvm.getSectionDisplayName()
-								.equals(DPXSection.IMAGE_INFORMATION_HEADER.getDisplayName())) {
-							nc.setVisible(false);
-						} else if (mcvm.getHasSubsection() && s.equals(mcvm.getSubsectionName())) {
-							nc.setVisible(true);
-						} else if (mcvm.getHasSubsection()) {
-							nc.setVisible(false);
-						}
-					}
-				}
-			});
-			cm.getItems().add(mi1);
-		}
-
-		col.setContextMenu(cm);
-	}
 
 	private void setTabClickListener() {
 		tabPane.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
@@ -625,10 +574,8 @@ public class CenterPaneController implements Initializable {
 						if (mcvm == null) {
 							continue;
 						}
-						if (mcvm.getHasSubsection() && hiddenImageElements.contains(mcvm.getSubsectionName())) {
-							col.setVisible(false);
-						} else if (mcvm.getSectionDisplayName().equals("Image Information")
-								|| col.getId().equals("Filename") || col.getId().equals("Row")) {
+						if (mcvm.getSectionDisplayName().equals("Image Information")
+							|| col.getId().equals("Filename") || col.getId().equals("Row")) {
 							if (!userHiddenColumns.contains(col)) {
 								col.setVisible(true);
 							} else {

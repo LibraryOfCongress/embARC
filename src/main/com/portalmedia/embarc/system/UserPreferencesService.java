@@ -21,7 +21,7 @@ public class UserPreferencesService {
 	UserPreferences userPreferences;
 
 	public UserPreferencesService() {
-		dbService = new DBService<>(UserPreferences.class);
+		dbService = new DBService<UserPreferences>(UserPreferences.class);
 		userPreferences = getUserPreferences();
 	}
 

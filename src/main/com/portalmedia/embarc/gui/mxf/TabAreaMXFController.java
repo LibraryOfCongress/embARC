@@ -36,15 +36,12 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -53,7 +50,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableView.TableViewSelectionModel;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
 import javafx.util.Callback;
 import tv.amwa.maj.exception.PropertyNotPresentException;
@@ -76,8 +76,6 @@ public class TabAreaMXFController implements Initializable {
 	private TableViewSelectionModel<MXFFileInformationViewModel> tableSelectionModel;
 	private SectionDef selectedSection;
 	private MXFSelectedFilesSummary selectedFilesSummary;
-	private int selectedTDIndex = 0;
-	private int selectedBDIndex = 0;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -85,13 +83,36 @@ public class TabAreaMXFController implements Initializable {
 		setTabClickListener();
 		setDescriptorColumns();
 		setFileInfoColumns();
+		mxfTable.setFocusTraversable(true);
+
+		mxfTable.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(KeyEvent event) {
+				if (event.getCode().equals(KeyCode.ENTER)) {
+					TableColumn<MXFFileInformationViewModel, ?> focusedColumn = mxfTable.getFocusModel()
+							.getFocusedCell().getTableColumn();
+					if (focusedColumn != null && focusedColumn.isSortable()) {
+						if (focusedColumn.getSortType() == SortType.ASCENDING) {
+							focusedColumn.setSortType(SortType.DESCENDING);
+						} else {
+							focusedColumn.setSortType(SortType.ASCENDING);
+						}
+						mxfTable.getSortOrder().clear();
+						mxfTable.getSortOrder().add(focusedColumn);
+					}
+					event.consume();
+				}
+			}
+		});
+
 		tableSelectionModel = mxfTable.getSelectionModel();
 		tableSelectionModel.setSelectionMode(SelectionMode.MULTIPLE);
-		tableSelectionModel.getSelectedItems().addListener((ListChangeListener.Change<? extends MXFFileInformationViewModel> change) -> {
-			selectedFilesSummary = MXFSelectedFilesSummary.create(tableSelectionModel.getSelectedItems());
-			ControllerMediatorMXF.getInstance().setSelectedFileList(selectedFilesSummary);
-			refreshEditor(false);
-		});
+		tableSelectionModel.getSelectedItems()
+				.addListener((ListChangeListener.Change<? extends MXFFileInformationViewModel> change) -> {
+					selectedFilesSummary = MXFSelectedFilesSummary.create(tableSelectionModel.getSelectedItems());
+					ControllerMediatorMXF.getInstance().setSelectedFileList(selectedFilesSummary);
+					refreshEditor(false);
+				});
 		MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().addListener(new ChangeListener<Boolean>() {
 			@Override
 			public void changed(ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) {
@@ -162,7 +183,7 @@ public class TabAreaMXFController implements Initializable {
 
 		// if files are selected and section is selected
 		if (selectedRowCount > 0 && selectedSection != null) {
-			if (selectedSection == MXFSection.TD  || selectedSection == MXFSection.BD) {
+			if (selectedSection == MXFSection.TD || selectedSection == MXFSection.BD) {
 				ControllerMediatorMXF.getInstance().setTDBD(selectedSection);
 			} else if (selectedSection == MXFSection.FILEINFO) {
 				ControllerMediatorMXF.getInstance().setFileInfo();
@@ -234,16 +255,15 @@ public class TabAreaMXFController implements Initializable {
 		idCol.getStyleClass().add("general-section");
 
 		idCol.setCellValueFactory(
-			new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
-				@Override
-				public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> p) {
-					final int id = p.getValue().getId();
-					final int rowNumber = (mxfTable.getItems().indexOf(p.getValue()) + 1);
-					RowNumberManager.addRow(id, rowNumber);
-					return new ReadOnlyObjectWrapper<>(rowNumber + "");
-				}
-			}
-		);
+				new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
+					@Override
+					public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> p) {
+						final int id = p.getValue().getId();
+						final int rowNumber = (mxfTable.getItems().indexOf(p.getValue()) + 1);
+						RowNumberManager.addRow(id, rowNumber);
+						return new ReadOnlyObjectWrapper<>(rowNumber + "");
+					}
+				});
 		idCol.setSortable(false);
 		idCol.setPrefWidth(50);
 		setColumnToolTip(idCol, "");
@@ -251,9 +271,10 @@ public class TabAreaMXFController implements Initializable {
 		final TableColumn<MXFFileInformationViewModel, String> nameCol = createFileInfoCol("Filename", "name", "Descriptors");
 		nameCol.getStyleClass().add("general-section");
 
-		final TableColumn<MXFFileInformationViewModel, String> pathCol = createFileInfoCol("File Path", "path", "Descriptors");
+		final TableColumn<MXFFileInformationViewModel, String> pathCol = createFileInfoCol("File Path", "path",
+				"Descriptors");
 		pathCol.getStyleClass().add("general-section");
-		
+
 		mxfTable.getColumns().add(nameCol);
 		mxfTable.getColumns().add(pathCol);
 	}
@@ -271,11 +292,11 @@ public class TabAreaMXFController implements Initializable {
 			final MXFMetadataColumnViewModelList columnList = MXFMetadataColumnViewModelList.getInstance();
 			String section = "";
 			for (final MXFMetadataColumnViewModel mcvm : columnList.getColumns()) {
-				if (mcvm.getMXFColumn() == MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier ||
-					mcvm.getMXFColumn() == MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode ||
-					mcvm.getMXFColumn() == MXFColumn.AS_07_BD_DMS_PrimaryRFC5646LanguageCode ||
-					mcvm.getMXFColumn() == MXFColumn.AS_07_Manifest ||
-					mcvm.getMXFColumn() == MXFColumn.AS_07_Manifest_Valid) {
+				if (mcvm.getMXFColumn() == MXFColumn.AS_07_Object_TextBasedMetadataPayloadSchemeIdentifier
+						|| mcvm.getMXFColumn() == MXFColumn.AS_07_TD_DMS_PrimaryRFC5646LanguageCode
+						|| mcvm.getMXFColumn() == MXFColumn.AS_07_BD_DMS_PrimaryRFC5646LanguageCode
+						|| mcvm.getMXFColumn() == MXFColumn.AS_07_Manifest
+						|| mcvm.getMXFColumn() == MXFColumn.AS_07_Manifest_Valid) {
 					continue;
 				}
 				section = mcvm.getColumn().getSection().toString();
@@ -283,55 +304,68 @@ public class TabAreaMXFController implements Initializable {
 				final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(colName);
 
 				if ("Identifiers".equals(colName)) {
-					col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
-						public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
-							MXFColumn currentCol = mcvm.getMXFColumn();
-							IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
-							ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(c.getValue().getCoreData().get(currentCol).getCurrentValue());
-							return getIdentifierString(identifiers);
-						}
-					});
+					col.setCellValueFactory(
+							new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
+								public ObservableValue<String> call(
+										CellDataFeatures<MXFFileInformationViewModel, String> c) {
+									MXFColumn currentCol = mcvm.getMXFColumn();
+									IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
+									ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper
+											.createIdentifierListFromString(
+													c.getValue().getCoreData().get(currentCol).getCurrentValue());
+									return getIdentifierString(identifiers);
+								}
+							});
 				} else if ("Devices".equals(colName)) {
-					col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
-						public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
-							MXFColumn currentCol = mcvm.getMXFColumn();
-							DeviceSetHelper deviceSetHelper = new DeviceSetHelper();
-							ArrayList<AS07CoreDMSDeviceObjectsImpl> devices = deviceSetHelper.createDeviceListFromString(c.getValue().getCoreData().get(currentCol).getCurrentValue());
-							// display first item if present. if > 1, display multiple message
-							if (devices != null && devices.size() > 0) {
-								if (devices.size() > 1) return new ReadOnlyStringWrapper("Multiple devices");
-								String manu = "";
-								String type = "";
-								try {
-									manu = devices.get(0).getManufacturer();
-								} catch(PropertyNotPresentException pex) {}
-								try {
-									type = devices.get(0).getDeviceType();
-								} catch(PropertyNotPresentException pex) {}
-								return new ReadOnlyStringWrapper(manu + " " + type);
-							}
-							return new ReadOnlyStringWrapper("No Devices");
-						}
-					});
+					col.setCellValueFactory(
+							new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
+								public ObservableValue<String> call(
+										CellDataFeatures<MXFFileInformationViewModel, String> c) {
+									MXFColumn currentCol = mcvm.getMXFColumn();
+									DeviceSetHelper deviceSetHelper = new DeviceSetHelper();
+									ArrayList<AS07CoreDMSDeviceObjectsImpl> devices = deviceSetHelper
+											.createDeviceListFromString(
+													c.getValue().getCoreData().get(currentCol).getCurrentValue());
+									// display first item if present. if > 1, display multiple message
+									if (devices != null && devices.size() > 0) {
+										if (devices.size() > 1)
+											return new ReadOnlyStringWrapper("Multiple devices");
+										String manu = "";
+										String type = "";
+										try {
+											manu = devices.get(0).getManufacturer();
+										} catch (PropertyNotPresentException pex) {
+										}
+										try {
+											type = devices.get(0).getDeviceType();
+										} catch (PropertyNotPresentException pex) {
+										}
+										return new ReadOnlyStringWrapper(manu + " " + type);
+									}
+									return new ReadOnlyStringWrapper("No Devices");
+								}
+							});
 				} else if ("CORE".equals(section)) {
-					col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
-						public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
-							MXFColumn currentCol = mcvm.getMXFColumn();
-							if (c != null) {
-								MXFFileInformationViewModel fivm = c.getValue();
-								if (fivm != null) {
-									HashMap<MXFColumn, MetadataColumnDef> coreData = fivm.getCoreData();
-									if (coreData != null) {
-										MetadataColumnDef currentValue = coreData.get(currentCol);
-										if (currentValue != null) {
-											return new ReadOnlyStringWrapper(currentValue.getCurrentValue());
+					col.setCellValueFactory(
+							new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
+								public ObservableValue<String> call(
+										CellDataFeatures<MXFFileInformationViewModel, String> c) {
+									MXFColumn currentCol = mcvm.getMXFColumn();
+									if (c != null) {
+										MXFFileInformationViewModel fivm = c.getValue();
+										if (fivm != null) {
+											HashMap<MXFColumn, MetadataColumnDef> coreData = fivm.getCoreData();
+											if (coreData != null) {
+												MetadataColumnDef currentValue = coreData.get(currentCol);
+												if (currentValue != null) {
+													return new ReadOnlyStringWrapper(currentValue.getCurrentValue());
+												}
+											}
 										}
 									}
+									return new ReadOnlyStringWrapper("");
 								}
-							}
-							return new ReadOnlyStringWrapper("");
-						}
-					});
+							});
 					col.setCellFactory(column -> {
 						return new ValidationCellFactoryMXF(column, mcvm);
 					});
@@ -347,8 +381,9 @@ public class TabAreaMXFController implements Initializable {
 				setColumnToolTip(col, MXFColumnHelpText.getInstance().getHelpText(mcvm.getColumn()));
 				if (mcvm.getColumn().hasSubsection()) {
 					setNestedDataColumns(col);
+				} else {
+					mxfTable.getColumns().add(col);
 				}
-				mxfTable.getColumns().add(col);
 			}
 		}
 	}
@@ -358,61 +393,85 @@ public class TabAreaMXFController implements Initializable {
 			final MXFMetadataColumnViewModelList columnList = MXFMetadataColumnViewModelList.getInstance();
 			for (final MXFMetadataColumnViewModel mcvm : columnList.getColumns()) {
 				SectionDef sectionDef = mcvm.getColumn().getSection();
-				if (sectionDef != MXFSection.OBJECT) continue;
-				String colName = mcvm.getDisplayName();
-				MXFColumn mxfCol = mcvm.getMXFColumn();
-				final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(colName);
+				if (sectionDef != MXFSection.OBJECT)
+					continue;
 
 				if ("TD".equals(headerCol.getUserData().toString())) {
-					if (colName == "Identifiers") {
-						col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
-							public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
-								IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
-								ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(c.getValue().getTDElementProperty(selectedTDIndex, mxfCol));
-								return getIdentifierString(identifiers);
-							}
-						});
-					} else {
-						col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().getTDElementProperty(selectedTDIndex, mxfCol)));
+					for (int i = 0; i < MXFFileList.getInstance().getMaxTD(); i++) {
+						String colName = Integer.toString(i+1).concat(" ").concat(mcvm.getDisplayName());
+						MXFColumn mxfCol = mcvm.getMXFColumn();
+						final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(colName);
+						final int index = i;
+						
+						if (mcvm.getDisplayName() == "Identifiers") {
+	 						col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
+	 							public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
+	 								IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
+	 								ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(c.getValue().getTDElementProperty(index, mxfCol));
+	 								return getIdentifierString(identifiers);
+	 							}
+	 						});
+	 					} else {			
+	 						col.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+								c.getValue().getTDElementProperty(index, mxfCol)));
+	 					}
+						
+						col.setUserData(headerCol.getUserData());
+						col.setVisible(false);
+						setColumnWidth(col);
+						col.setSortable(true);
+						col.setId(mcvm.getDisplayName());
+						setColumnToolTip(col, "");
+						setColumnStyles(col, mcvm);
+						mxfTable.getColumns().add(col);
 					}
 				}
-
-				if ("BD".equals(headerCol.getUserData().toString())) {
-					if (colName == "Identifiers") {
-						col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
-							public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
-								IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
-								ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(c.getValue().getBDElementProperty(selectedTDIndex, mxfCol));
-								return getIdentifierString(identifiers);
-							}
-						});
-					} else {
-						col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().getBDElementProperty(selectedBDIndex, mxfCol)));
+				
+				if ("BD".equals(headerCol.getUserData().toString())) {		
+					for (int i = 0; i < MXFFileList.getInstance().getMaxBD(); i++) {
+						String colName = Integer.toString(i+1).concat(" ").concat(mcvm.getDisplayName());
+						MXFColumn mxfCol = mcvm.getMXFColumn();
+						final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(colName);
+						final int index = i;
+						
+						
+						if (mcvm.getDisplayName() == "Identifiers") {
+	 						col.setCellValueFactory(new Callback<CellDataFeatures<MXFFileInformationViewModel, String>, ObservableValue<String>>() {
+	 							public ObservableValue<String> call(CellDataFeatures<MXFFileInformationViewModel, String> c) {
+	 								IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
+	 								ArrayList<AS07DMSIdentifierSetImpl> identifiers = idSetHelper.createIdentifierListFromString(c.getValue().getBDElementProperty(index, mxfCol));
+	 								return getIdentifierString(identifiers);
+	 							}
+	 						});
+	 					} else {
+	 						col.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+								c.getValue().getBDElementProperty(index, mxfCol)));
+						
+	 					}			
+						
+						col.setUserData(headerCol.getUserData());
+						col.setVisible(false);
+						setColumnWidth(col);
+						col.setSortable(true);
+						col.setId(mcvm.getDisplayName());
+						setColumnToolTip(col, "");
+						setColumnStyles(col, mcvm);
+						mxfTable.getColumns().add(col);
 					}
 				}
-
-				col.setUserData(headerCol.getUserData());
-				col.setVisible(false);
-				setColumnWidth(col);
-				col.setSortable(true);
-				col.setId(mcvm.getDisplayName());
-				setColumnStyles(col, mcvm);
-				headerCol.getColumns().add(col);
-				headerCol.getStyleClass().add("no-top-border");
 			}
 		}
-
-		setSubsectionContextMenu(headerCol);
 	}
 
 	private ReadOnlyStringWrapper getIdentifierString(ArrayList<AS07DMSIdentifierSetImpl> identifiers) {
 		if (identifiers != null && identifiers.size() > 0 && identifiers.get(0) != null) {
-			if (identifiers.size() > 1) return new ReadOnlyStringWrapper("Multiple identifiers");
+			if (identifiers.size() > 1)
+				return new ReadOnlyStringWrapper("Multiple identifiers");
 			try {
 				String idValue = identifiers.get(0).getIdentifierValue();
 				try {
 					String idRole = identifiers.get(0).getIdentifierRole();
-					return new ReadOnlyStringWrapper(idValue +" ("+ idRole +")");
+					return new ReadOnlyStringWrapper(idValue + " (" + idRole + ")");
 				} catch (PropertyNotPresentException e) {
 					return new ReadOnlyStringWrapper(idValue);
 				}
@@ -424,48 +483,8 @@ public class TabAreaMXFController implements Initializable {
 		}
 	}
 
-	private void setSubsectionContextMenu(TableColumn<MXFFileInformationViewModel, String> headerCol) {
-		boolean isTD = "TD".equals(headerCol.getUserData().toString());
-		int max = 0;
-		if (isTD) {
-			max = MXFFileList.getInstance().getMaxTD();
-		} else {
-			max = MXFFileList.getInstance().getMaxBD();
-		}
-		if (max <= 1) {
-			return;
-		}
-
-		FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
-		final Tooltip tt = new Tooltip("Right click for options");
-		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
-		tt.setAutoHide(false);
-		Tooltip.install(icon, tt);
-		headerCol.setGraphic(icon);
-		headerCol.setText(headerCol.getUserData() + " Elements");
-		ContextMenu contextMenu = new ContextMenu();
-
-		for (int i = 0; i < max; i++) {
-			MenuItem menuItem = new MenuItem("Show " + headerCol.getUserData() + " " + (i+1));
-			final int index = i;
-			menuItem.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event) {
-					for (final TableColumn<MXFFileInformationViewModel, ?> column : mxfTable.getColumns()) {
-						if ("TD".equals(column.getUserData().toString()) && isTD) selectedTDIndex = index;
-						else if ("BD".equals(column.getUserData().toString()) && !isTD) selectedBDIndex = index;
-					}
-					mxfTable.refresh();
-				}
-			});
-			contextMenu.getItems().add(menuItem);
-		}
-
-		contextMenu.setAutoHide(true);
-		headerCol.setContextMenu(contextMenu);
-	}
-
-	private TableColumn<MXFFileInformationViewModel, String> createFileInfoCol(String name, String propName, String userData) {
+	private TableColumn<MXFFileInformationViewModel, String> createFileInfoCol(String name, String propName,
+			String userData) {
 		final TableColumn<MXFFileInformationViewModel, String> col = new TableColumn<>(name);
 		col.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(cellData.getValue().getProp(propName)));
 		col.setId(name);
@@ -476,7 +495,7 @@ public class TabAreaMXFController implements Initializable {
 			col.setVisible(true);
 		}
 		setColumnWidth(col);
-		//setColumnToolTip(col, ""); <- need tooltip data
+		setColumnToolTip(col, "");
 		return col;
 	}
 
@@ -484,7 +503,8 @@ public class TabAreaMXFController implements Initializable {
 		col.setPrefWidth(120);
 	}
 
-	private void setColumnStyles(TableColumn<MXFFileInformationViewModel, String> col, MXFMetadataColumnViewModel mcvm) {
+	private void setColumnStyles(TableColumn<MXFFileInformationViewModel, String> col,
+			MXFMetadataColumnViewModel mcvm) {
 		if (mcvm.isEditable()) {
 			col.getStyleClass().add("editable-column");
 		} else {
@@ -496,12 +516,15 @@ public class TabAreaMXFController implements Initializable {
 	private void setColumnToolTip(TableColumn<MXFFileInformationViewModel, String> col, String helpText) {
 		final String headerName = col.textProperty().get();
 		final Label title = new Label(headerName);
-		final Tooltip tt = new Tooltip(headerName + "\n\n" + helpText);
-		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
-		tt.setPrefWidth(500);
-		tt.setWrapText(true);
-		tt.setAutoHide(false);
-		title.setTooltip(tt);
+		if (!helpText.isEmpty()) {
+			final Tooltip tt = new Tooltip(headerName + "\n\n" + helpText);
+			tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
+			tt.setPrefWidth(500);
+			tt.setWrapText(true);
+			tt.setAutoHide(false);
+			title.setTooltip(tt);
+		}
+		title.setStyle("-fx-text-fill: black; -fx-font-size: 12px");
 		col.setGraphic(title);
 		col.setText("");
 	}
@@ -570,15 +593,15 @@ public class TabAreaMXFController implements Initializable {
 			final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
 			icon.setStyleClass("fadgi-sr-warning");
 			switch (tab.getId()) {
-				case "coreTab":
-					if (MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
-						Platform.runLater(() -> tab.setGraphic(icon));
-					} else {
-						Platform.runLater(() -> tab.setGraphic(null));
-					}
-					break;
-				default:
-					break;
+			case "coreTab":
+				if (MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
+					Platform.runLater(() -> tab.setGraphic(icon));
+				} else {
+					Platform.runLater(() -> tab.setGraphic(null));
+				}
+				break;
+			default:
+				break;
 			}
 		}
 	}

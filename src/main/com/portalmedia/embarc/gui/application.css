@@ -58,6 +58,12 @@
 	-fx-table-cell-border-color: #eeeeee;
 }
 
+.table-view .column-header .label /* sr only */
+{
+	-fx-font-size: 0.0001;
+	-fx-text-fill: transparent;
+}
+
 /* Icon styles */
 
 .write-files-icon {
