@@ -6,6 +6,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Helper method to turn bytes arrays into types and then into strings
@@ -47,7 +48,7 @@ public class BytesToStringHelper {
 		final Integer[] toReturn = new Integer[value.length / 2];
 		int returnIndex = 0;
 		for (int i = 0; i < value.length; i = i + 2) {
-			toReturn[returnIndex] = ByteBuffer.wrap(value).order(byteOrder).getShort() & 0xffff1;
+			toReturn[returnIndex] = ByteBuffer.wrap(value).order(byteOrder).getShort() & 0xffff;
 			returnIndex++;
 		}
 		return toReturn;
@@ -126,10 +127,28 @@ public class BytesToStringHelper {
 	}
 	
 	public static String toString(byte[] value) {
-		return new String(value).replaceAll("\\u0000", "");
+		StringBuilder result = new StringBuilder();
+		boolean isAscii = true;
+		
+		for (byte b : value) {
+			// Skip null bytes
+			if (b == 0x00) continue;
+			
+			// ASCII printable range (32-126)
+			if (b >= 32 && b <= 126) {
+				result.append((char)b);
+			} else {
+				result.append(String.format("[0x%02x]", b));
+				isAscii = false;
+			}
+		}
+		
+		return result.toString();
 	}
 	
 	public static String toTypedString(Class<?> type, byte[] value, ByteOrder byteOrder) {
+		if(isNull(value, type)) return "NULL";
+		
 		if (type == byte[].class) {
 			return toByteArrayString(value);
 		} else if (type == byte.class) {
@@ -154,7 +173,7 @@ public class BytesToStringHelper {
 	}
 	
 	private static Boolean isValidString(byte[] value, ByteOrder byteOrder) {
-		CharsetDecoder d = Charset.forName("US-ASCII").newDecoder();
+	    CharsetDecoder d = Charset.forName("UTF-8").newDecoder();
 	    try {
 	      CharBuffer r = d.decode(ByteBuffer.wrap(value).order(byteOrder));
 	      r.toString();
