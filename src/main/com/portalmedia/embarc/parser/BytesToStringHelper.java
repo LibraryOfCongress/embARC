@@ -7,6 +7,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.prefs.Preferences;
 
 /**
  * Helper method to turn bytes arrays into types and then into strings
@@ -15,6 +16,26 @@ import java.nio.charset.StandardCharsets;
  * @since 2019-05-01
  **/
 public class BytesToStringHelper {
+    // Preference key for mixed ASCII display mode
+    private static final String PREF_MIXED_MODE = "mixedAsciiDisplayMode";
+    // Display modes
+    public static final int MODE_PRESERVE_ASCII = 0;  // Show ASCII portions as text, non-ASCII as hex
+    public static final int MODE_ALL_HEX = 1;        // Show entire field as hex if any non-ASCII present
+    
+    // Get user preference for mixed ASCII display mode
+    public static int getMixedAsciiDisplayMode() {
+        Preferences prefs = Preferences.userNodeForPackage(BytesToStringHelper.class);
+        return prefs.getInt(PREF_MIXED_MODE, MODE_PRESERVE_ASCII); // Default to preserving ASCII
+    }
+    
+    // Set user preference for mixed ASCII display mode
+    public static void setMixedAsciiDisplayMode(int mode) {
+        if (mode != MODE_PRESERVE_ASCII && mode != MODE_ALL_HEX) {
+            throw new IllegalArgumentException("Invalid display mode");
+        }
+        Preferences prefs = Preferences.userNodeForPackage(BytesToStringHelper.class);
+        prefs.putInt(PREF_MIXED_MODE, mode);
+    }
 	private static String[] getStringIntArray(byte[] value, ByteOrder byteOrder) {
 		final String[] toReturn = new String[value.length / 4];
 		int returnIndex = 0;
@@ -127,9 +148,44 @@ public class BytesToStringHelper {
 	}
 	
 	public static String toString(byte[] value) {
-		StringBuilder result = new StringBuilder();
-		boolean isAscii = true;
+		// Check if array is empty
+		if (value == null || value.length == 0) {
+			return "";
+		}
 		
+		// First scan to determine if we have any non-ASCII characters
+		boolean hasNonAscii = false;
+		for (byte b : value) {
+			// Skip null bytes when checking
+			if (b == 0x00) continue;
+			
+			// Check if outside ASCII printable range (32-126)
+			if (b < 32 || b > 126) {
+				hasNonAscii = true;
+				break;
+			}
+		}
+		
+		// If pure ASCII, just return as string
+		if (!hasNonAscii) {
+			StringBuilder result = new StringBuilder();
+			for (byte b : value) {
+				if (b == 0x00) continue; // Skip null bytes
+				result.append((char)b);
+			}
+			return result.toString();
+		}
+		
+		// Get display mode preference
+		int displayMode = getMixedAsciiDisplayMode();
+		
+		// If it contains non-ASCII and mode is ALL_HEX, return hex representation
+		if (displayMode == MODE_ALL_HEX) {
+			return getHexString(value, ByteOrder.BIG_ENDIAN);
+		}
+		
+		// Otherwise preserve ASCII portions (MODE_PRESERVE_ASCII)
+		StringBuilder result = new StringBuilder();
 		for (byte b : value) {
 			// Skip null bytes
 			if (b == 0x00) continue;
@@ -139,7 +195,6 @@ public class BytesToStringHelper {
 				result.append((char)b);
 			} else {
 				result.append(String.format("[0x%02x]", b));
-				isAscii = false;
 			}
 		}
 		
