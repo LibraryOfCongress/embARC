@@ -2,11 +2,16 @@ package com.portalmedia.embarc.gui.mxf;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.portalmedia.embarc.gui.Main;
+import com.portalmedia.embarc.gui.helper.MXFFileList;
+import com.portalmedia.embarc.parser.FileInformation;
+import com.portalmedia.embarc.parser.mxf.MXFMetadata;
+import com.portalmedia.embarc.system.DiskSpaceChecker;
 import com.portalmedia.embarc.gui.helper.CleanInputPathHelper;
 import com.portalmedia.embarc.system.UserPreferencesService;
 
@@ -146,6 +151,25 @@ public class WriteFilesModalControllerMXF {
 				}
 
 				final String tmpWriteFilesPath = saveAsCb.isSelected() ? writeFilesPath.getText() : "";
+
+				// Check for available disk space when saving to a separate directory
+				if (saveAsCb.isSelected() && !tmpWriteFilesPath.isEmpty()) {
+					List<FileInformation<MXFMetadata>> fileList;
+					if (writeEditedCb.isSelected()) {
+						// Filter to only get edited files
+						fileList = MXFFileList.getList().stream()
+							.filter(file -> file.isEdited() && file.getFileShouldBeWritten())
+							.collect(java.util.stream.Collectors.toList());
+					} else {
+						// Get all files
+						fileList = MXFFileList.getList();
+					}
+					
+					if (!DiskSpaceChecker.checkDiskSpaceForMXF(tmpWriteFilesPath, fileList)) {
+						// User chose not to proceed due to insufficient disk space
+						return;
+					}
+				}
 
 				WriteFilesDialogMXF d;
 				try {
