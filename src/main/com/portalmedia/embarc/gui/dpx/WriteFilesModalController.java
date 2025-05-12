@@ -3,10 +3,14 @@ package com.portalmedia.embarc.gui.dpx;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.helper.CleanInputPathHelper;
+import com.portalmedia.embarc.gui.helper.DPXFileListHelper;
+import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
+import com.portalmedia.embarc.system.DiskSpaceChecker;
 import com.portalmedia.embarc.system.UserPreferencesService;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
@@ -184,6 +188,15 @@ public class WriteFilesModalController {
 
 				final String tmpWriteFilesPath = saveAsCb.isSelected() ? writeFilesPath.getText() : "";
 				final String tmpReportPath = reportCb.isSelected() ? reportPath.getText() : "";
+
+				// Check for available disk space when saving to a separate directory
+				if (saveAsCb.isSelected() && !tmpWriteFilesPath.isEmpty()) {
+					List<DPXFileInformationViewModel> fileList = DPXFileListHelper.getAllFilesToWrite(writeEditedCb.isSelected());
+					if (!DiskSpaceChecker.checkDiskSpaceForDPX(tmpWriteFilesPath, fileList)) {
+						// User chose not to proceed due to insufficient disk space
+						return;
+					}
+				}
 
 				final WriteFilesDialog d = new WriteFilesDialog(tmpWriteFilesPath, tmpReportPath,
 						writeEditedCb.isSelected());
