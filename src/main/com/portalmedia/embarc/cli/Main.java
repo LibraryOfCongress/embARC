@@ -29,6 +29,7 @@ import com.portalmedia.embarc.gui.helper.MXFFileList;
 import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
 import com.portalmedia.embarc.gui.mxf.MXFProfileULMap;
 import com.portalmedia.embarc.parser.ColumnDef;
+import com.portalmedia.embarc.parser.BytesToStringHelper;
 import com.portalmedia.embarc.parser.FileFormat;
 import com.portalmedia.embarc.parser.FileFormatDetection;
 import com.portalmedia.embarc.parser.FileInformation;
@@ -103,6 +104,7 @@ public class Main {
 			Option downloadTDStream = Option.builder("downloadTDStream").desc("MXF: Select a text stream to download").hasArg().build();
 			Option downloadBDStream = Option.builder("downloadBDStream").desc("MXF: Select a binary stream to download").hasArg().build();
 			Option downloadStreamOutputPath = Option.builder("streamOutputPath").desc("MXF: Output directory for selected stream").hasArg().build();
+			Option mixedAsciiMode = Option.builder("mixedAsciiMode").desc("Toggle mixed ASCII/non-ASCII display mode (0=preserve ASCII, 1=all hex)").hasArg().build();
 	
 			options.addOption(printHelpOption);
 			options.addOption(printMetadataOption);
@@ -114,6 +116,7 @@ public class Main {
 			options.addOption(downloadTDStream);
 			options.addOption(downloadBDStream);
 			options.addOption(downloadStreamOutputPath);
+			options.addOption(mixedAsciiMode);
 	
 			formatter = new HelpFormatter();
 			formatter.setOptionComparator(null);
@@ -126,6 +129,23 @@ public class Main {
 				if (line.hasOption("help")) {
 					formatter.printHelp("embARC CLI", options);
 					return;
+				}
+				
+				// Handle mixed ASCII display mode option
+				if (line.hasOption("mixedAsciiMode")) {
+					String modeStr = line.getOptionValue("mixedAsciiMode");
+					try {
+						int mode = Integer.parseInt(modeStr);
+						if (mode == BytesToStringHelper.MODE_PRESERVE_ASCII || mode == BytesToStringHelper.MODE_ALL_HEX) {
+							BytesToStringHelper.setMixedAsciiDisplayMode(mode);
+							System.out.println("\nMixed ASCII display mode set to: " + 
+								(mode == BytesToStringHelper.MODE_PRESERVE_ASCII ? "preserve ASCII (0)" : "all hex (1)"));
+						} else {
+							System.out.println("\nInvalid mode value. Use 0 for preserve ASCII or 1 for all hex.");
+						}
+					} catch (NumberFormatException e) {
+						System.out.println("\nInvalid mode value. Use 0 for preserve ASCII or 1 for all hex.");
+					}
 				}
 	
 				if (otherArgs.size() > 1) {
