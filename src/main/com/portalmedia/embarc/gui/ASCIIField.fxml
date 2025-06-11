@@ -6,6 +6,7 @@
 <?import javafx.scene.text.Text?>
 <?import org.controlsfx.control.textfield.CustomTextField?>
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import javafx.scene.layout.HBox?>
 
 <fx:root
 	type="javafx.scene.layout.AnchorPane"
@@ -22,9 +23,9 @@
 	>
 		<HBox
 			spacing="5"
-			minWidth="200"
-			maxWidth="300"
-			prefWidth="275.0"
+			minWidth="185"
+			maxWidth="285"
+			prefWidth="260.0"
 			style="-fx-padding: 0 5 0 0"
 		>
 			<Label
@@ -42,6 +43,12 @@
 					size="12px"
 				/>
 			</HBox>
+		</HBox>
+		<HBox 
+			fx:id="editorTextFieldValidationInfo"
+			minWidth="15"
+			maxWidth="30"
+			prefWidth="15">
 		</HBox>
 		<CustomTextField
 			fx:id="editorTextField"

@@ -7,8 +7,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.accessibility.AccessibleRole;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.portalmedia.embarc.gui.ASCIIArea;
 import com.portalmedia.embarc.gui.ASCIIField;
+import com.portalmedia.embarc.gui.AccessibleAlertHelper;
 import com.portalmedia.embarc.gui.BorderValidityField;
 import com.portalmedia.embarc.gui.DatePickerField;
 import com.portalmedia.embarc.gui.DropDownField;
@@ -37,6 +42,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
@@ -237,7 +243,7 @@ public class EditorForm extends AnchorPane {
 					area.setColumn(c);
 					area.setVisible(subsectionVisible);
 					area.setValue(summary.getDisplayValues(c));
-					area.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+					area.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 					area.setEditable(c.getEditable());
 					area.setInvalidRuleSets(summary.getRuleSetViolations(c));
 					area.managedProperty().bind(area.visibleProperty());
@@ -267,7 +273,7 @@ public class EditorForm extends AnchorPane {
 					field.setColumn(c);
 					field.setVisible(subsectionVisible);
 					field.setValue(summary.getDisplayValues(c));
-					field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+					field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 					field.setEditable(c.getEditable());
 					field.setInvalidRuleSets(summary.getRuleSetViolations(c));
 					field.managedProperty().bind(field.visibleProperty());
@@ -300,7 +306,7 @@ public class EditorForm extends AnchorPane {
 				field.setColumn(c);
 				field.setVisible(subsectionVisible);
 				field.setValue(summary.getDisplayValues(c));
-				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				field.setEditable(c.getEditable());
 				field.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				field.managedProperty().bind(field.visibleProperty());
@@ -329,7 +335,7 @@ public class EditorForm extends AnchorPane {
 				textField.setColumn(c);
 				textField.setValue(summary.getDisplayValues(c));
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				textField.managedProperty().bind(textField.visibleProperty());
@@ -358,7 +364,7 @@ public class EditorForm extends AnchorPane {
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
 				textField.setValue(summary.getDisplayValues(c));
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				textField.managedProperty().bind(textField.visibleProperty());
@@ -380,7 +386,7 @@ public class EditorForm extends AnchorPane {
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
 				textField.setValue(summary.getDisplayValues(c));
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
 				textField.managedProperty().bind(textField.visibleProperty());
@@ -451,7 +457,7 @@ public class EditorForm extends AnchorPane {
 				final ASCIIField field = new ASCIIField();
 				field.setColumn(c);
 				field.setVisible(subsectionVisible);
-				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				field.setValue(summary.getDisplayValues(c));
 				field.setEditable(c.getEditable());
 				field.setInvalidRuleSets(summary.getRuleSetViolations(c));
@@ -472,7 +478,7 @@ public class EditorForm extends AnchorPane {
 				final IntegerField field = new IntegerField();
 				field.setColumn(c);
 				field.setVisible(subsectionVisible);
-				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				field.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				field.setValue(summary.getDisplayValues(c));
 				field.setEditable(c.getEditable());
 				field.setInvalidRuleSets(summary.getRuleSetViolations(c));
@@ -493,7 +499,7 @@ public class EditorForm extends AnchorPane {
 				final DropDownField textField = new DropDownField();
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setValue(summary.getDisplayValues(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
@@ -514,7 +520,7 @@ public class EditorForm extends AnchorPane {
 				final DatePickerField textField = new DatePickerField();
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setValue(summary.getDisplayValues(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
@@ -535,7 +541,7 @@ public class EditorForm extends AnchorPane {
 				final FloatField textField = new FloatField();
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setValue(summary.getDisplayValues(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
@@ -556,7 +562,7 @@ public class EditorForm extends AnchorPane {
 				final BorderValidityField textField = new BorderValidityField();
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setValue(summary.getDisplayValues(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
@@ -577,7 +583,7 @@ public class EditorForm extends AnchorPane {
 				final PixelAspectRatioField textField = new PixelAspectRatioField();
 				textField.setColumn(c);
 				textField.setVisible(subsectionVisible);
-				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c));
+				textField.setLabel(c.getDisplayName(), DPXColumnHelpText.getInstance().getHelpText(c), "#000000");
 				textField.setValue(summary.getDisplayValues(c));
 				textField.setEditable(c.getEditable());
 				textField.setInvalidRuleSets(summary.getRuleSetViolations(c));
@@ -630,25 +636,21 @@ public class EditorForm extends AnchorPane {
 	}
 	
 	private void showAlert(String modalTitle, String alertText) {
-		final Alert alert = new Alert(AlertType.NONE);
-		alert.setTitle(modalTitle);
-		alert.setHeaderText(null);
-		alert.setContentText(null);
+		final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+				modalTitle, 
+				AlertType.NONE, 
+				alertText,
+				ButtonType.CLOSE
+			);
+		
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
-
-		final ButtonType[] buttonList = new ButtonType[1];
-		buttonList[0] = ButtonType.CLOSE;
-		alert.getButtonTypes().setAll(buttonList);
-
-		final GridPane grid = new GridPane();
-		final Text text = new Text(alertText);
-		text.setStyle("-fx-font-size: 14.0");
-		text.setFocusTraversable(true);
-		grid.add(text, 0, 0);
-		grid.setVgap(15);
-		alert.getDialogPane().setContent(grid);
-
+		final DialogPane dialogPane = alert.getDialogPane();
+		dialogPane.lookupButton(ButtonType.CLOSE).setAccessibleHelp(alertText);
+		 	
+		dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+		dialogPane.getStyleClass().add("alertDialog");
+		 
 		alert.showAndWait();
 		if (alert.getResult() == ButtonType.CLOSE) {
 			alert.close();
@@ -656,26 +658,23 @@ public class EditorForm extends AnchorPane {
 	}
 	
 	private void showConfirmation(String modalTitle, String confirmationText) {
-		final Alert alert = new Alert(AlertType.CONFIRMATION);
-		alert.setTitle(modalTitle);
-		alert.setHeaderText(null);
-		alert.setContentText(null);
+		final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+				modalTitle, 
+				AlertType.NONE, 
+				confirmationText,
+				ButtonType.CANCEL, 
+				ButtonType.OK
+			);
+		
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
-
-		final ButtonType[] buttonList = new ButtonType[2];
-		buttonList[0] = ButtonType.CANCEL;
-		buttonList[1] = ButtonType.OK;
-		alert.getButtonTypes().setAll(buttonList);
-
-		final GridPane grid = new GridPane();
-		final Text text = new Text(confirmationText);
-		text.setStyle("-fx-font-size: 14.0");
-		text.setFocusTraversable(true);
-		grid.add(text, 0, 0);
-		grid.setVgap(15);
-		alert.getDialogPane().setContent(grid);
-
+		
+		final DialogPane dialogPane = alert.getDialogPane();
+		dialogPane.lookupButton(ButtonType.OK).setAccessibleHelp(confirmationText);
+		 	
+		dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+		dialogPane.getStyleClass().add("alertDialog");
+		 
 		alert.showAndWait();
 		if (alert.getResult() == ButtonType.CANCEL) {
 			alert.close();

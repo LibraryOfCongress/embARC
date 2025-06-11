@@ -1,6 +1,7 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
@@ -14,6 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 
 /**
  * Component that displays Image Source Information Header Border Validity array
@@ -37,7 +39,15 @@ public class BorderValidityField extends AnchorPane implements IEditorField {
 	private IntegerInputControl editorArrayValue3;
 	@FXML
 	private IntegerInputControl editorArrayValue4;
-
+	@FXML
+	private HBox editorArrayValue1ValidationInfo;
+	@FXML
+	private HBox editorArrayValue2ValidationInfo;
+	@FXML
+	private HBox editorArrayValue3ValidationInfo;
+	@FXML
+	private HBox editorArrayValue4ValidationInfo;
+	
 	private DPXColumn column;
 	private String originalValue;
 	private MXFColumn mxfColumn;
@@ -60,18 +70,7 @@ public class BorderValidityField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void clearValidation() {
-		if(editorArrayValue1!=null) {
-			editorArrayValue1.setRight(null);
-		}
-		if(editorArrayValue2!=null) {
-			editorArrayValue2.setRight(null);
-		}
-		if(editorArrayValue3!=null) {
-			editorArrayValue3.setRight(null);
-		}
-		if(editorArrayValue4!=null) {
-			editorArrayValue4.setRight(null);
-		}
+		this.setInvalidRuleSets(new HashSet<>());
 	}
 
 	/*
@@ -132,15 +131,20 @@ public class BorderValidityField extends AnchorPane implements IEditorField {
 	 * com.portalmedia.embarc.gui.IEditorField#setInvalidRuleSets(java.util.Set)
 	 */
 	@Override
-	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet) {
-		final ValidationWarningIcons icons = new ValidationWarningIcons();
-		icons.setInvalidRuleSets(invalidRuleSet);
-		AnchorPane.setBottomAnchor(icons, 0.0);
-		AnchorPane.setTopAnchor(icons, 0.0);
-		editorArrayValue1.setRight(icons);
-		editorArrayValue2.setRight(icons);
-		editorArrayValue3.setRight(icons);
-		editorArrayValue4.setRight(icons);
+	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet) {	
+		boolean hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorArrayValue1ValidationInfo, invalidRuleSet, column);
+		String validationWarning = hasErrors ? "Contains errors" : "";
+		
+		editorArrayValue1.setAccessibleHelp(validationWarning);
+		
+		hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorArrayValue2ValidationInfo, invalidRuleSet, column);
+		editorArrayValue2.setAccessibleHelp(validationWarning);
+		
+		hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorArrayValue3ValidationInfo, invalidRuleSet, column);
+		editorArrayValue3.setAccessibleHelp(validationWarning);
+		
+		hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorArrayValue4ValidationInfo, invalidRuleSet, column);
+		editorArrayValue4.setAccessibleHelp(validationWarning);		
 	}
 
 	/*
@@ -175,6 +179,18 @@ public class BorderValidityField extends AnchorPane implements IEditorField {
 		editorTextFieldLabelInfoIcon.setAccessibleRole(AccessibleRole.BUTTON);
 		editorTextFieldLabelInfoIcon.setAccessibleText("Open modal with field specification.");
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see com.portalmedia.embarc.gui.IEditorField#setLabel(java.lang.String)
+	 */
+	@Override
+	public void setLabel(String labelText, String helpText, String labelColor) {
+		editorTextFieldLabel.setTextFill(Color.web(labelColor));
+		setLabel(labelText, helpText);
+	}
+
 
 	/*
 	 * (non-Javadoc)

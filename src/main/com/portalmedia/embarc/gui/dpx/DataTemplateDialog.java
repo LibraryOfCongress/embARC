@@ -10,6 +10,7 @@ import java.util.Objects;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 
+import com.portalmedia.embarc.gui.AccessibleAlertHelper;
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.parser.ColumnDef;
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
@@ -32,12 +33,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -97,10 +101,10 @@ public class DataTemplateDialog extends Dialog {
 	}
 	
 	public void createDataTemplateStage() {
-		dataTemplateStage = new Stage();
+		dataTemplateStage = new Stage(); 
 		dataTemplateStage.initOwner(Main.getPrimaryStage());
-		dataTemplateStage.setHeight(410);
-		dataTemplateStage.setWidth(600);
+		dataTemplateStage.setHeight(450);
+		dataTemplateStage.setWidth(610);
 		dataTemplateStage.initStyle(StageStyle.UTILITY);
 		dataTemplateStage.setResizable(false);
 		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DPXDataTemplate.fxml"));
@@ -108,6 +112,7 @@ public class DataTemplateDialog extends Dialog {
 		Scene scene;
 		try {
 			scene = new Scene(fxmlLoader.load());
+			scene.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
 			setContent();
 			dataTemplateStage.setScene(scene);
 			dataTemplateStage.show();
@@ -192,13 +197,24 @@ public class DataTemplateDialog extends Dialog {
 		deleteTemplateButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
-				Alert alert = new Alert(AlertType.CONFIRMATION);
+				final String message = "Are you sure you want to delete this template?";
+				final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+						"Delete Template", 
+						AlertType.CONFIRMATION, 
+						message);
+				
+				
 				alert.initModality(Modality.APPLICATION_MODAL);
 				alert.initOwner(Main.getPrimaryStage());
 	        	alert.setGraphic(null);
-	        	alert.setTitle("Delete Template");
 	        	alert.setHeaderText(null);
-	        	alert.setContentText("Are you sure you want to delete this template?");
+				 
+	        	final DialogPane dialogPane =  alert.getDialogPane();
+	        	dialogPane.lookupButton(ButtonType.OK).setAccessibleHelp(message);
+				 	
+				dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+				dialogPane.getStyleClass().add("alertDialog");	 
+	        	
 	        	Optional<ButtonType> result = alert.showAndWait();
 	        	if (result.get() == ButtonType.OK){
 		        	userPreferences.removeDpxDataTemplate(template.getName());

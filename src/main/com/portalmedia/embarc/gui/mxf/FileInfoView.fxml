@@ -34,7 +34,7 @@
 			style="-fx-padding: 10 10 10 10;"
 			VBox.vgrow="ALWAYS"
 		>
-			<ScrollPane styleClass="light-blue-bg" VBox.vgrow="ALWAYS">
+			<ScrollPane VBox.vgrow="ALWAYS">
 				<content>
 					<GridPane
 						alignment="TOP_CENTER"

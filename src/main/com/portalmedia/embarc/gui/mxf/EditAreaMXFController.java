@@ -4,6 +4,7 @@ import java.net.URL;
 
 import java.util.ResourceBundle;
 
+import com.portalmedia.embarc.gui.AccessibleAlertHelper;
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.helper.MXFFileList;
 import com.portalmedia.embarc.parser.SectionDef;
@@ -18,10 +19,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 
 /**
@@ -82,10 +86,24 @@ public class EditAreaMXFController implements Initializable {
 					writeMXFFilesButton.setOnAction(new EventHandler<ActionEvent>() {
 						@Override
 						public void handle(ActionEvent e) {
-							final Alert alert = new Alert(AlertType.NONE, "Fix missing required Core DMS fields marked with icon in Core DMS tab.", ButtonType.OK);
+							final String message = "Fix missing required Core DMS fields marked with icon in Core DMS tab.";
+							final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+									"Cannot Write Files", 
+									AlertType.NONE, 
+									message, 
+									ButtonType.OK
+								);
+									
 							alert.initModality(Modality.APPLICATION_MODAL);
-							alert.initOwner(Main.getPrimaryStage());
-							alert.setHeaderText("Cannot Write Files");
+							alert.initOwner(Main.getPrimaryStage());	
+							
+							final DialogPane dialogPane = alert.getDialogPane();
+							dialogPane.lookupButton(ButtonType.OK).setAccessibleHelp(message);
+							 	
+							dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+							dialogPane.getStyleClass().add("alertDialog");	 
+							
+							
 							alert.showAndWait();
 							if (alert.getResult() == ButtonType.OK) {
 								alert.close();

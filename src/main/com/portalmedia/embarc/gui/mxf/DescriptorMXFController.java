@@ -135,7 +135,7 @@ public class DescriptorMXFController extends AnchorPane {
 		if (cdciDescriptors.size() > 0) {
 			for (CDCIDescriptorImpl cdci : cdciDescriptors) {
 				VBox card = createCDCICard(cdci, index);
-				card.setStyle("-fx-background-color: #e6ecf0;");
+				//card.setStyle("-fx-background-color: #e6ecf0;");
 				pictureVBox.getChildren().add(card);
 				index++;
 			}

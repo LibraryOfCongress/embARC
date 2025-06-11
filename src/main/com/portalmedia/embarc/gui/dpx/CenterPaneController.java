@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
@@ -13,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 
+import com.portalmedia.embarc.gui.AccessibleAlertHelper;
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.ProgressSpinner;
 import com.portalmedia.embarc.gui.helper.DPXFileListHelper;
@@ -35,6 +37,7 @@ import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -57,6 +60,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DialogEvent;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
@@ -123,6 +127,8 @@ public class CenterPaneController implements Initializable {
 	private List<DPXSequenceError> sourceImageFilenameSequenceErrorList = new ArrayList<DPXSequenceError>();
 	private List<DPXSequenceError> framePositionSequenceErrorList = new ArrayList<DPXSequenceError>();
 
+	private final String TAB_VALIDATION_WARNING = " Contains validation error";
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ControllerMediatorDPX.getInstance().registerCenterPaneController(this);
@@ -210,15 +216,16 @@ public class CenterPaneController implements Initializable {
 			setTabWarnings();
 			setColumnSequenceGapWarnings();
 		}
+		
 		final int selectedRowCount = table.getSelectionModel().getSelectedItems().size();
 		if (selectedRowCount > 0 && selectedSection != null) {
 			ControllerMediatorDPX.getInstance().setEditor(selectedSection);
 		} else if (selectedRowCount > 0) {
 			ControllerMediatorDPX.getInstance().resetEditor(selectedSection);
-			ControllerMediatorDPX.getInstance().setGeneralEditor();
+			ControllerMediatorDPX.getInstance().setGeneralEditor();		
 		} else {
 			ControllerMediatorDPX.getInstance().resetEditor(selectedSection);
-		}
+		}	
 	}
 
 	public void refreshValidation() {
@@ -260,7 +267,7 @@ public class CenterPaneController implements Initializable {
 
 	private void setColumnContextMenu(TableColumn<DPXFileInformationViewModel, String> col) {
 		final ContextMenu cm = new ContextMenu();
-		cm.setStyle("-fx-text-fill: black; -fx-font-size: 12px");
+		cm.setStyle("-fx-font-size: 12px");
 		final MenuItem mi1 = new MenuItem("Auto Populate Name");
 		mi1.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -355,11 +362,11 @@ public class CenterPaneController implements Initializable {
 			String columnDisplayName,
 			boolean parentOfSubheaders) {
 		HBox hbox = new HBox();
-		final String defaultStyle = "-fx-text-fill: black; -fx-font-size: 12px";
+		final String defaultStyle = "-fx-font-size: 12px";
 		final Label title = new Label(columnDisplayName);
 		title.setStyle(defaultStyle);
 		final Tooltip tt = new Tooltip(columnDisplayName + "\n\n" + helpText);
-		tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
+		tt.setStyle("-fx-font-size: 12px");
 		tt.setPrefWidth(500);
 		tt.setWrapText(true);
 		tt.setAutoHide(false);
@@ -367,7 +374,7 @@ public class CenterPaneController implements Initializable {
 		setColumnHeaderSequenceErrorIndicator(columnDisplayName, title, hbox);
 		if(parentOfSubheaders) {
 			new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
-			title.setStyle("-fx-padding: 0 0 0 5; -fx-text-fill: black; -fx-font-size: 12px");
+			title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
 			final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
 			hbox.getChildren().add(icon);
 		} 
@@ -404,7 +411,7 @@ public class CenterPaneController implements Initializable {
 	}
 	
 	private void setSequenceErrorIcon(Label title, HBox hbox) {
-		title.setStyle("-fx-padding: 0 0 0 5; -fx-text-fill: black; -fx-font-size: 12px");
+		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
 		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
 		icon.setStyleClass("fadgi-sr-warning");
 		hbox.getChildren().add(icon);
@@ -514,6 +521,7 @@ public class CenterPaneController implements Initializable {
 	private void setTabClickListener() {
 		tabPane.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
 			if (table.getItems().size() > 0) {
+				tabPane.requestFocus(); //Covers special case where navigating with VoiceOver VO+-> key combo does not keep focus on tab pane
 				switch (newTab.getId()) {
 				case "generalTab":
 					for (final TableColumn<DPXFileInformationViewModel, ?> col : table.getColumns()) {
@@ -747,61 +755,93 @@ public class CenterPaneController implements Initializable {
 	
 	public void setTabWarnings() {
 		final ObservableList<Tab> tabs = tabPane.getTabs();
-
-		for (final Tab t : tabs) {
-			final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
-			icon.setStyleClass("fadgi-sr-warning");
+		for (final Tab t : tabs) {		
 			switch (t.getId()) {
 			case "generalTab":
+				removeAccessibleTabWarning(t, "General");
 				break;
 			case "fileInformationTab":
 				if (tabSummary.hasSectionViolation(DPXSection.FILE_INFORMATION_HEADER)) {
-					t.setGraphic(icon);
+					setAccessibleTabWarning(t, "File Info");
 				} else {
-					t.setGraphic(null);
+					removeAccessibleTabWarning(t, "File Info");
 				}
 				break;
 			case "imageInformationTab":
 				if (tabSummary.hasSectionViolation(DPXSection.IMAGE_INFORMATION_HEADER)) {
-					t.setGraphic(icon);
+					setAccessibleTabWarning(t, "Image Info");
 				} else {
-					t.setGraphic(null);
+					removeAccessibleTabWarning(t, "Image Info");
 				}
 				break;
 			case "imageSourceInformationTab":
 				if (tabSummary.hasSectionViolation(DPXSection.IMAGE_SOURCE_INFORMATION_HEADER)) {
-					t.setGraphic(icon);
+					setAccessibleTabWarning(t, "Image Source Info");
 				} else {
-					t.setGraphic(null);
+					removeAccessibleTabWarning(t, "Image Source Info");
 				}
 				break;
 			case "motionPictureFilmTab":
 				if (tabSummary.hasSectionViolation(DPXSection.MOTION_PICTURE_FILM_INFORMATION_HEADER)) {
-					t.setGraphic(icon);
+					setAccessibleTabWarning(t, "Motion Picture Film Info");
 				} else {
-					t.setGraphic(null);
+					removeAccessibleTabWarning(t, "Motion Picture Film Info");
 				}
 				break;
 			case "televisionTab":
 				if (tabSummary.hasSectionViolation(DPXSection.TELEVISION_INFORMATION_HEADER)) {
-					t.setGraphic(icon);
+					setAccessibleTabWarning(t, "Television Info");
 				} else {
-					t.setGraphic(null);
+					removeAccessibleTabWarning(t, "Television Info");
 				}
 				break;
 			case "userDefinedTab":
 				if (tabSummary.hasSectionViolation(DPXSection.USER_DEFINED_DATA)) {
-					t.setGraphic(icon);
+					setAccessibleTabWarning(t, "User Defined Info");
 				} else {
-					t.setGraphic(null);
+					removeAccessibleTabWarning(t, "User Defined Info");
 				}
 				break;
 			default:
-				break;
+				break; // unknown tab, should not be reached
 			}
 		}
 	}
 
+	
+	private void setAccessibleTabWarning(Tab t, String titleText) {
+		String accessibleText = titleText + TAB_VALIDATION_WARNING;
+		
+		HBox hbox = new HBox();
+		final String defaultStyle = "-fx-font-size: 12px";
+		final Label title = new Label(titleText);
+		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
+		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
+		icon.setStyleClass("fadgi-sr-warning");
+		hbox.getChildren().add(icon);	
+		hbox.getChildren().add(title);
+		hbox.setAlignment(Pos.CENTER);
+		hbox.setStyle(defaultStyle);
+		
+		t.setGraphic(hbox);
+		t.setText(accessibleText);
+		t.setStyle("-fx-padding: 0 0 0 5;");
+	}
+	
+	private void removeAccessibleTabWarning(Tab t,  String titleText) {	
+		HBox hbox = new HBox();
+		final String defaultStyle = "-fx-font-size: 12px";
+		final Label title = new Label(titleText);
+		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
+		hbox.getChildren().add(title);
+		hbox.setAlignment(Pos.CENTER);
+		hbox.setStyle(defaultStyle);
+		
+		t.setGraphic(hbox);
+		t.setText(titleText);
+		t.setStyle("-fx-padding: 0 0 0 5;");
+	}
+	
 	public void showColumnVisibilityDialogue() {
 		final Alert columnVisibilityDialog = new Alert(AlertType.INFORMATION, "", ButtonType.OK);
 		columnVisibilityDialog.initModality(Modality.APPLICATION_MODAL);
@@ -862,18 +902,33 @@ public class CenterPaneController implements Initializable {
 	}
 
 	private void showEditsAlert(int editedCount) {
-		String info = String.format("%s total fields changed.", editedCount);
+		//The alert will not resize to accommodate title length (unlike header, which is not accessible in JavaFX8 to my knowledge)
+		//Adding rough padding to message so that modal width includes full title
+		String info = String.format("        %s total fields changed.        ", editedCount);
 		if (editedCount == 1) {
-			info = String.format("%s field changed.", editedCount);
+			info = String.format("        %s field changed.        ", editedCount);
 		}
-		final Alert alert = new Alert(AlertType.NONE, info, ButtonType.OK);
+		
+		final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+				"Changes Applied",
+				AlertType.NONE,
+				info,
+				ButtonType.OK
+			);
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
-		alert.setHeaderText("Changes Applied");
+		 
+		 DialogPane dialogPane = alert.getDialogPane();		 
+		 alert.getDialogPane().lookupButton(ButtonType.OK).setAccessibleHelp(info);
+		 	
+		 dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+		 dialogPane.getStyleClass().add("alertDialog");	 
+		
 		alert.showAndWait();
 		if (alert.getResult() == ButtonType.OK) {
 			alert.close();
 		}
+		
 		ControllerMediatorDPX.getInstance().setEditedFieldsCount(0);
 	}
 
@@ -1056,14 +1111,24 @@ public class CenterPaneController implements Initializable {
 	}
 
 	public void autoPopulateNames() {
-		final Alert alert = new Alert(AlertType.CONFIRMATION);
+		final String message = "Are you sure you want to change the Image Filename metadata to match the Filename on disk?";
+		final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+				"Are you sure?",
+				AlertType.CONFIRMATION,
+				message
+			);
+				
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
 		alert.setGraphic(null);
-		alert.setTitle("Are you sure?");
-		alert.setHeaderText("Auto Populate Filenames");
-		alert.setContentText(
-				"Are you sure you want to change the Image Filename metadata to match the Filename on disk?");
+		alert.setHeaderText(null);
+
+		DialogPane dialogPane = alert.getDialogPane();		 
+		alert.getDialogPane().lookupButton(ButtonType.OK).setAccessibleHelp(message);
+		 	
+		dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+		dialogPane.getStyleClass().add("alertDialog");	 
+		
 
 		final Optional<ButtonType> result = alert.showAndWait();
 		if (result.get() == ButtonType.OK) {
@@ -1124,42 +1189,93 @@ public class CenterPaneController implements Initializable {
 
 	private List<CheckBox> createColumnVisibilityCheckBoxes() {
 		final List<CheckBox> cbList = new ArrayList<>();
+		Map<String, List<TableColumn<DPXFileInformationViewModel, ?>>> relatedColumnDictionary 
+			= new HashMap<String, List<TableColumn<DPXFileInformationViewModel, ?>>>();
+		Map<String, String> checkboxIdToColumnKeyMap 
+		= new HashMap<String, String>();
+		
+		Integer count = 0;
 		for (final TableColumn<DPXFileInformationViewModel, ?> col : table.getColumns()) {
-			String text = col.getId();
+			String text = col.getId();			
 			if (text.length() > 20) {
 				text = text.substring(0, 20) + "...";
 			}
 			final CheckBox checkbox = new CheckBox(text);
 			final Tooltip tt = new Tooltip(col.getId());
-			tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
+
+			final String ttStyle = "-fx-font-size: 12px";
+			tt.setStyle(ttStyle);
+
 			checkbox.setTooltip(tt);
+			checkbox.setId(count.toString());
 
 			if (col.getUserData() instanceof String) {
+				final String data = (String) col.getUserData();
+				final List<TableColumn<DPXFileInformationViewModel, ?>> columnList 
+					= new ArrayList<TableColumn<DPXFileInformationViewModel, ?>>();
+				columnList.add(col);
+				relatedColumnDictionary.put(data, columnList);
+				
 				checkbox.setUserData(col.getUserData());
+				checkboxIdToColumnKeyMap.put(checkbox.getId(), data);
 			} else {
 				final DPXMetadataColumnViewModel mcvm = (DPXMetadataColumnViewModel) col.getUserData();
+				String columnKey;
+				if(mcvm.getHasSubsection()) {
+					columnKey = mcvm.getSubsectionName();
+					List<TableColumn<DPXFileInformationViewModel, ?>> existingColumnList
+						= relatedColumnDictionary.get(columnKey);
+					//One checkbox per subsection
+					if(existingColumnList != null) {
+						existingColumnList.add(col);
+						continue;
+					}
+					
+					checkbox.setText(mcvm.getSubsectionName());
+					final Tooltip updatedTooltip = new Tooltip(mcvm.getSubsectionName());
+					updatedTooltip.setStyle(ttStyle);
+					checkbox.setTooltip(updatedTooltip);
+				} else {
+					columnKey = col.getId()+mcvm.hashCode(); //need keep unique
+				}
+				
 				checkbox.setUserData(mcvm.getSectionDisplayName());
+				checkboxIdToColumnKeyMap.put(checkbox.getId(), columnKey);
+				List<TableColumn<DPXFileInformationViewModel, ?>> columnList
+					= new ArrayList<TableColumn<DPXFileInformationViewModel, ?>>();
+				columnList.add(col);
+				relatedColumnDictionary.put(columnKey, columnList);				
 			}
 
 			if (!userHiddenColumns.contains(col)) {
 				checkbox.setSelected(true);
 			} else {
 				checkbox.setSelected(false);
-			}
+			}		
+			
+			cbList.add(checkbox);
+			count++;
+		}
+		
+		for (final CheckBox checkbox : cbList) {
 			checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
 				@Override
 				public void changed(ObservableValue<? extends Boolean> obs, Boolean ov, Boolean nv) {
+					final String columnKey = checkboxIdToColumnKeyMap.get(checkbox.getId());
+					final List<TableColumn<DPXFileInformationViewModel, ?>> columns 
+						= relatedColumnDictionary.get(columnKey);
 					final UserPreferencesService userPreferences = new UserPreferencesService();
-					if (nv) {
-						userHiddenColumns.remove(col);
-						userPreferences.removeHiddenDPXColumn(col.getId());
-					} else {
-						userHiddenColumns.add(col);
-						userPreferences.addHiddenDPXColumn(col.getId());
+					for (final TableColumn<DPXFileInformationViewModel, ?> col : columns) {
+						if (nv) {
+							userHiddenColumns.remove(col);
+							userPreferences.removeHiddenDPXColumn(col.getId());
+						} else {
+							userHiddenColumns.add(col);
+							userPreferences.addHiddenDPXColumn(col.getId());
+						}
 					}
 				}
 			});
-			cbList.add(checkbox);
 		}
 		return cbList;
 	}

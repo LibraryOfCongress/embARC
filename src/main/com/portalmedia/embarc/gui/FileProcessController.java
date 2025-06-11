@@ -21,6 +21,7 @@ import com.portalmedia.embarc.parser.FileFormatDetection;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.concurrent.Task;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.DragEvent;
@@ -92,11 +93,17 @@ public class FileProcessController {
 
 		final Task<Void> task = createProcessFilesTask(files);
 		final Label filesToProcess = new Label("Total items found: " + totalItemsCount);
+		filesToProcess.setStyle("-fx-text-fill: black;");
 		final FontAwesomeIconView question = new FontAwesomeIconView(FontAwesomeIcon.QUESTION_CIRCLE);
 		filesToProcess.setTooltip(new Tooltip("This count includes all folders and hidden files"));
 		filesToProcess.setGraphic(question);
 		progressDialog.setCountLabel(filesToProcess);
 		progressDialog.activateProgressBar(task);
+		
+		 DialogPane dialogPane = progressDialog.getDialogAlert().getDialogPane();
+		 dialogPane.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		 dialogPane.getStyleClass().add("alertDialog");
+		
 		progressDialog.getDialogAlert().show();
 
 		progressDialog.getDialogAlert().setOnCloseRequest(e -> {

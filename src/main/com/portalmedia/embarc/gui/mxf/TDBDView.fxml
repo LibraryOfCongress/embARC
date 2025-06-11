@@ -33,9 +33,9 @@
 			/>
 		</VBox>
 		<VBox style="-fx-padding: 10 10 10 10">
-			<ScrollPane styleClass="light-blue-bg">
+			<ScrollPane>
 				<content>
-					<VBox fx:id="tdbdVBox" style="-fx-padding: 10 10 10 10" />
+					<VBox fx:id="tdbdVBox" style="-fx-background-color: derive(#ececec,26.4%); -fx-padding: 10 10 10 10" />
 				</content>
 			</ScrollPane>
 		</VBox>

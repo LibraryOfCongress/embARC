@@ -21,37 +21,30 @@
 				<Tab
 					fx:id="generalTab"
 					styleClass="general-tab"
-					text="General"
 				/>
 				<Tab
 					fx:id="fileInformationTab"
 					styleClass="file-info-tab"
-					text="File Info"
 				/>
 				<Tab
 					fx:id="imageInformationTab"
 					styleClass="img-info-tab"
-					text="Image Info"
 				/>
 				<Tab
 					fx:id="imageSourceInformationTab"
 					styleClass="img-src-tab"
-					text="Image Source Info"
 				/>
 				<Tab
 					fx:id="motionPictureFilmTab"
 					styleClass="film-tab"
-					text="Motion Picture Film Info"
 				/>
 				<Tab
 					fx:id="televisionTab"
 					styleClass="tv-tab"
-					text="Television Info"
 				/>
 				<Tab
 					fx:id="userDefinedTab"
 					styleClass="user-tab"
-					text="User Defined Info"
 				/>
 			</tabs>
 		</TabPane>

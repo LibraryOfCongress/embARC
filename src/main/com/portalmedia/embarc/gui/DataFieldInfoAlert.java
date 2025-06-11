@@ -21,19 +21,21 @@ public class DataFieldInfoAlert {
 		final ButtonType[] buttonList = new ButtonType[1];
 		buttonList[0] = ButtonType.CLOSE;
 		alert.getButtonTypes().setAll(buttonList);
+		alert.getDialogPane().setStyle("-fx-background-color: #eceff1;");
 
 		final GridPane grid = new GridPane();
 		final ScrollPane scrollPane = new ScrollPane();
 		final Text text = new Text(helpText);
+		grid.setStyle("-fx-background-color: #eceff1;");
 		text.setWrappingWidth(375);
 		scrollPane.setContent(text);
 		scrollPane.setPrefWidth(400);
 		scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 		scrollPane.setAccessibleText(helpText);
 		scrollPane.setFocusTraversable(true);
-		scrollPane.setStyle("-fx-background-color: transparent;");
+		scrollPane.setStyle("-fx-background-color: transparent; -fx-background: #eceff1;");
 		final Label labelTextText = new Label(labelText);
-		labelTextText.setStyle("-fx-font-size: 14.0");
+		labelTextText.setStyle("-fx-font-size: 14.0; -fx-text-fill: black;");
 		labelTextText.setAccessibleText(labelText);
 		labelTextText.setFocusTraversable(true);
 		grid.add(labelTextText, 0, 0);

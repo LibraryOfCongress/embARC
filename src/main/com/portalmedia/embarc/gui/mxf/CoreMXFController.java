@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.gui.ASCIIField;
+import com.portalmedia.embarc.gui.AccessibleAlertHelper;
 import com.portalmedia.embarc.gui.DataFieldInfoAlert;
 import com.portalmedia.embarc.gui.DropDownField;
 import com.portalmedia.embarc.gui.IEditorField;
@@ -25,6 +26,7 @@ import com.portalmedia.embarc.parser.mxf.IdentifierSetHelper;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumnHelpText;
 import com.portalmedia.embarc.parser.mxf.MXFSection;
+import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
@@ -41,6 +43,7 @@ import javafx.scene.AccessibleRole;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
@@ -215,7 +218,7 @@ public class CoreMXFController extends AnchorPane {
 			field.setVisible(true);
 			String label = col.getDisplayName();
 			if (col.isRequired()) label += " *";
-			field.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col));
+			field.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col), "black");
 			MetadataColumnDef columnDef = summary.getCoreData().get(col);
 			if (columnDef != null && columnDef.getCurrentValue() != null) {
 				field.setValue(columnDef.getCurrentValue());
@@ -253,7 +256,7 @@ public class CoreMXFController extends AnchorPane {
 		if (col.isRequired()) {
 			label += " *";
 		}
-		dropDownField.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col));
+		dropDownField.setLabel(label, MXFColumnHelpText.getInstance().getHelpText(col), "black");
 		MetadataColumnDef columnDef = summary.getCoreData().get(col);
 		if (columnDef != null) {
 			dropDownField.setValue(columnDef.getCurrentValue());
@@ -283,6 +286,7 @@ public class CoreMXFController extends AnchorPane {
 		HBox labelIconHbox = new HBox();
 		labelIconHbox.setSpacing(5);
 		Label devicesLabel = new Label(label);
+		devicesLabel.setStyle("-fx-text-fill: black;");
 		HBox iconHbox = new HBox();
 		labelIconHbox.getChildren().addAll(devicesLabel, iconHbox);
 		FontAwesomeIconView infoIcon = new FontAwesomeIconView();
@@ -316,7 +320,9 @@ public class CoreMXFController extends AnchorPane {
 		field.setValue(summary.getCoreData().get(col).getCurrentValue());
 		fields.add(field);
 		if (devices.size() == 0) {
-			vbox.getChildren().add(new Label("No Devices"));
+			Label noDeviceLabel = new Label("No Devices");
+			noDeviceLabel.setStyle("-fx-text-fill: black;");
+			vbox.getChildren().add(noDeviceLabel);
 			Label newDeviceLabel = createNewDeviceLabel(devices, field);
 			newDeviceLabel.setFocusTraversable(true);
 			vbox.getChildren().add(newDeviceLabel);
@@ -333,6 +339,7 @@ public class CoreMXFController extends AnchorPane {
 				type = device.getDeviceType();
 			} catch(PropertyNotPresentException pex) {}
 			Label deviceLabel = new Label(manu + " " + type);
+			deviceLabel.setStyle("-fx-text-fill: black;");
 			deviceLabel.setPrefWidth(306.0);
 			deviceLabel.setMaxWidth(306.0);
 			deviceLabel.setMinWidth(100.0);
@@ -378,6 +385,7 @@ public class CoreMXFController extends AnchorPane {
 		newDeviceLabel.setOnMouseClicked(e -> {
 			newDevice(devices, field);
 		});
+		newDeviceLabel.setStyle("-fx-text-fill: black;");
 		return newDeviceLabel;
 	}
 
@@ -394,6 +402,7 @@ public class CoreMXFController extends AnchorPane {
 		HBox labelIconHbox = new HBox();
 		labelIconHbox.setSpacing(5);
 		Label identifierLabel = new Label(label);
+		identifierLabel.setStyle("-fx-text-fill: black;");
 		HBox iconHbox = new HBox();
 		labelIconHbox.getChildren().addAll(identifierLabel, iconHbox);
 		FontAwesomeIconView infoIcon = new FontAwesomeIconView();
@@ -427,7 +436,9 @@ public class CoreMXFController extends AnchorPane {
 		field.setValue(summary.getCoreData().get(col).getCurrentValue());
 		fields.add(field);
 		if (identifiers.size() == 0) {
-			vbox.getChildren().add(new Label("No Identifiers"));
+			Label noIdentLabel = new Label("No Identifiers");
+			noIdentLabel.setStyle("-fx-text-fill: black;");
+			vbox.getChildren().add(noIdentLabel);
 			Label newIdentifierLabel = createNewIdentifierLabel(identifiers, field);
 			newIdentifierLabel.setFocusTraversable(true);
 			vbox.getChildren().add(newIdentifierLabel);
@@ -439,6 +450,7 @@ public class CoreMXFController extends AnchorPane {
 				String idValue = id.getIdentifierValue();
 				String idRole = id.getIdentifierRole();
 				Label idLabel = new Label(idValue +" ("+ idRole +")");
+				idLabel.setStyle("-fx-text-fill: black;");
 				idLabel.setPrefWidth(306.0);
 				idLabel.setMaxWidth(306.0);
 				idLabel.setFocusTraversable(true);
@@ -488,6 +500,7 @@ public class CoreMXFController extends AnchorPane {
 		newIdentifierLabel.setOnMouseClicked(e -> {
 			newIdentifier(identifiers, field);
 		});
+		newIdentifierLabel.setStyle("-fx-text-fill: black;");
 		return newIdentifierLabel;
 	}
 
@@ -532,24 +545,23 @@ public class CoreMXFController extends AnchorPane {
 	}
 	
 	private void showAlert(String modalTitle, String alertText) {
-		final Alert alert = new Alert(AlertType.NONE);
-		alert.setTitle(modalTitle);
+		final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+				modalTitle, 
+				AlertType.NONE,
+				alertText, 
+				ButtonType.CLOSE
+			);
 		alert.setHeaderText(null);
 		alert.setContentText(null);
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
 
-		final ButtonType[] buttonList = new ButtonType[1];
-		buttonList[0] = ButtonType.CLOSE;
-		alert.getButtonTypes().setAll(buttonList);
+		DialogPane dialogPane = alert.getDialogPane();		 	
+		alert.getDialogPane().lookupButton(ButtonType.CLOSE).setAccessibleHelp(alertText);
 
-		final GridPane grid = new GridPane();
-		final Text text = new Text(alertText);
-		text.setStyle("-fx-font-size: 14.0");
-		text.setFocusTraversable(true);
-		grid.add(text, 0, 0);
-		grid.setVgap(15);
-		alert.getDialogPane().setContent(grid);
+		dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+		dialogPane.getStyleClass().add("alertDialog");	 
+		
 
 		alert.showAndWait();
 		if (alert.getResult() == ButtonType.CLOSE) {
@@ -558,25 +570,25 @@ public class CoreMXFController extends AnchorPane {
 	}
 	
 	private void showConfirmation(String modalTitle, String confirmationText) {
-		final Alert alert = new Alert(AlertType.CONFIRMATION);
-		alert.setTitle(modalTitle);
+		final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+				modalTitle, 
+				AlertType.CONFIRMATION,
+				confirmationText, 
+				ButtonType.CANCEL,
+				ButtonType.OK
+			);
+		
 		alert.setHeaderText(null);
 		alert.setContentText(null);
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
 
-		final ButtonType[] buttonList = new ButtonType[2];
-		buttonList[0] = ButtonType.CANCEL;
-		buttonList[1] = ButtonType.OK;
-		alert.getButtonTypes().setAll(buttonList);
+		DialogPane dialogPane = alert.getDialogPane();		 	
+		alert.getDialogPane().lookupButton(ButtonType.OK).setAccessibleHelp(confirmationText);
 
-		final GridPane grid = new GridPane();
-		final Text text = new Text(confirmationText);
-		text.setStyle("-fx-font-size: 14.0");
-		text.setFocusTraversable(true);
-		grid.add(text, 0, 0);
-		grid.setVgap(15);
-		alert.getDialogPane().setContent(grid);
+		dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+		dialogPane.getStyleClass().add("alertDialog");	 
+		
 
 		alert.showAndWait();
 		if (alert.getResult() == ButtonType.CANCEL) {

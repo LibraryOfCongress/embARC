@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.portalmedia.embarc.gui.AccessibleAlertHelper;
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.ProgressSpinner;
 import com.portalmedia.embarc.gui.helper.MXFFileList;
@@ -39,8 +40,10 @@ import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Tab;
@@ -54,6 +57,9 @@ import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.util.Callback;
 import tv.amwa.maj.exception.PropertyNotPresentException;
@@ -76,6 +82,7 @@ public class TabAreaMXFController implements Initializable {
 	private TableViewSelectionModel<MXFFileInformationViewModel> tableSelectionModel;
 	private SectionDef selectedSection;
 	private MXFSelectedFilesSummary selectedFilesSummary;
+	private final String TAB_VALIDATION_WARNING = " Contains validation error";
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -119,6 +126,8 @@ public class TabAreaMXFController implements Initializable {
 				setTabWarnings();
 			}
 		});
+		
+		setTabWarnings(); //Run at least once on load
 		refreshEditor(false);
 		setColumnVisibility("FileInfo");
 		mxfTable.scrollToColumnIndex(0);
@@ -199,6 +208,7 @@ public class TabAreaMXFController implements Initializable {
 	public void setTabClickListener() {
 		mxfTabPane.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
 			if (mxfTable.getItems().size() > 0) {
+				mxfTabPane.requestFocus(); //Covers special case where navigating with VoiceOver VO+-> key combo does not keep focus on tab pane
 				switch (newTab.getId()) {
 				case "fileInfoTab":
 					setColumnVisibility("FileInfo");
@@ -518,13 +528,13 @@ public class TabAreaMXFController implements Initializable {
 		final Label title = new Label(headerName);
 		if (!helpText.isEmpty()) {
 			final Tooltip tt = new Tooltip(headerName + "\n\n" + helpText);
-			tt.setStyle("-fx-text-fill: white; -fx-font-size: 12px");
+			tt.setStyle("-fx-font-size: 12px");
 			tt.setPrefWidth(500);
 			tt.setWrapText(true);
 			tt.setAutoHide(false);
 			title.setTooltip(tt);
 		}
-		title.setStyle("-fx-text-fill: black; -fx-font-size: 12px");
+		title.setStyle("-fx-font-size: 12px");
 		col.setGraphic(title);
 		col.setText("");
 	}
@@ -577,10 +587,25 @@ public class TabAreaMXFController implements Initializable {
 		if (editedCount == 1) {
 			info = String.format("%s field changed.", editedCount);
 		}
-		final Alert alert = new Alert(AlertType.NONE, info, ButtonType.OK);
+		
+		final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+				"Changes Applied", 
+				AlertType.NONE, 
+				info, 
+				ButtonType.OK
+			);
+		
 		alert.initModality(Modality.APPLICATION_MODAL);
 		alert.initOwner(Main.getPrimaryStage());
-		alert.setHeaderText("Changes Applied");
+		
+		DialogPane dialogPane = alert.getDialogPane();
+		 
+		alert.getDialogPane().lookupButton(ButtonType.OK).setAccessibleHelp(info);
+		 	
+		dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+		dialogPane.getStyleClass().add("alertDialog");	 
+		
+		
 		alert.showAndWait();
 		if (alert.getResult() == ButtonType.OK) {
 			alert.close();
@@ -595,14 +620,59 @@ public class TabAreaMXFController implements Initializable {
 			switch (tab.getId()) {
 			case "coreTab":
 				if (MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
-					Platform.runLater(() -> tab.setGraphic(icon));
+					Platform.runLater(() -> setAccessibleTabWarning(tab, "Core DMS"));
 				} else {
-					Platform.runLater(() -> tab.setGraphic(null));
+					Platform.runLater(() -> removeAccessibleTabWarning(tab, "Core DMS"));
 				}
 				break;
-			default:
+			case "fileInfoTab":
+				Platform.runLater(() -> removeAccessibleTabWarning(tab, "File Info"));
 				break;
+			case "descriptorsTab":
+				Platform.runLater(() -> removeAccessibleTabWarning(tab, "Descriptors"));
+				break;
+			case "tdTab":
+				Platform.runLater(() -> removeAccessibleTabWarning(tab, "Text DMS"));
+				break;
+			case "bdTab":
+				Platform.runLater(() -> removeAccessibleTabWarning(tab, "Binary DMS"));
+				break;
+			default:
+				break; //Unknown tab, should not hit
 			}
 		}
+	}
+
+	private void setAccessibleTabWarning(Tab tab, String titleText) {
+		String accessibleText = titleText + TAB_VALIDATION_WARNING;
+		
+		HBox hbox = new HBox();
+		final String defaultStyle = "-fx-font-size: 12px";
+		final Label title = new Label(titleText);
+		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
+		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
+		icon.setStyleClass("fadgi-sr-warning");
+		hbox.getChildren().add(icon);	
+		hbox.getChildren().add(title);
+		hbox.setAlignment(Pos.CENTER);
+		hbox.setStyle(defaultStyle);
+		
+		tab.setGraphic(hbox);
+		tab.setText(accessibleText);
+		tab.setStyle("-fx-padding: 0 0 0 5;");
+	}
+	
+	private void removeAccessibleTabWarning(Tab tab,  String titleText) {	
+		HBox hbox = new HBox();
+		final String defaultStyle = "-fx-font-size: 12px";
+		final Label title = new Label(titleText);
+		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
+		hbox.getChildren().add(title);
+		hbox.setAlignment(Pos.CENTER);
+		hbox.setStyle(defaultStyle);
+		
+		tab.setGraphic(hbox);
+		tab.setText(titleText);
+		tab.setStyle("-fx-padding: 0 0 0 5;");
 	}
 }

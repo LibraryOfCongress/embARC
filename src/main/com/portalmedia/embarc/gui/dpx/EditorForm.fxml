@@ -50,9 +50,10 @@
 					animated="false"
 				>
 					<content>
-						<ScrollPane fx:id="sectionEditableFieldsContainer" styleClass="light-blue-bg">
+						<ScrollPane fx:id="sectionEditableFieldsContainer" style="-fx-background-color: #eceff1;">
 							<content>
-								<VBox fx:id="sectionEditableFields" />
+								<VBox fx:id="sectionEditableFields" 
+								style="-fx-background-color: derive(#ececec,26.4%); -fx-padding: 10 10 10 10;"/>
 							</content>
 						</ScrollPane>
 					</content>
@@ -63,9 +64,10 @@
 					text="Not Editable Fields"
 				>
 					<content>
-						<ScrollPane fx:id="sectionNotEditableFieldsContainer" styleClass="light-blue-bg">
+						<ScrollPane fx:id="sectionNotEditableFieldsContainer">
 							<content>
-								<VBox fx:id="sectionNotEditableFields" />
+								<VBox fx:id="sectionNotEditableFields" 
+								style="-fx-background-color: derive(#ececec,26.4%); -fx-padding: 10 10 10 10;"/>
 							</content>
 						</ScrollPane>
 					</content>

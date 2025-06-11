@@ -18,6 +18,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.DialogPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -52,6 +53,7 @@ public class RuleSetModalController {
 		ruleSetsDialog.setTitle("Rule Sets");
 		ruleSetsDialog.setHeaderText(null);
 		ruleSetsDialog.setContentText("Toggle rule sets");
+		
 		final List<CheckBox> checkBoxes = createRuleSetCheckboxes();
 		if (checkBoxes.size() > 0) {
 			final GridPane grid = new GridPane();
@@ -80,10 +82,11 @@ public class RuleSetModalController {
 	private List<CheckBox> createRuleSetCheckboxes() {
 		final List<CheckBox> cbList = new ArrayList<>();
 		final HashSet<ValidationRuleSetEnum> currentRules = ControllerMediatorDPX.getInstance().getCurrentRuleSets();
-
+		final String alertTextStyles = "-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: black; -fx-fill: black;"; 
+		
 		// SMPTE-C - grey square
 		final CheckBox smpteCheckbox = new CheckBox("SMPTE-C");
-
+		smpteCheckbox.setStyle(alertTextStyles);
 		final MaterialDesignIconView icon2 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_BOX);
 		icon2.setStyleClass("smpte-c-warning");
 		icon2.setSize("18");
@@ -104,6 +107,7 @@ public class RuleSetModalController {
 
 		// FADGI-SR - red octagon
 		final CheckBox fadgiSRCheckbox = new CheckBox("FADGI-SR");
+		fadgiSRCheckbox.setStyle(alertTextStyles);
 		final MaterialDesignIconView icon3 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
 		icon3.setStyleClass("fadgi-sr-warning");
 		icon3.setSize("18");
@@ -124,6 +128,7 @@ public class RuleSetModalController {
 
 		// FADGI-R - orange triangle
 		final CheckBox fadgiRCheckbox = new CheckBox("FADGI-R");
+		fadgiRCheckbox.setStyle(alertTextStyles);
 		final FontAwesomeIconView icon4 = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_TRIANGLE);
 		icon4.setStyleClass("fadgi-r-warning");
 		icon4.setSize("16");
@@ -144,6 +149,7 @@ public class RuleSetModalController {
 
 		// FADGI-O - yellow circle
 		final CheckBox fadgiOCheckbox = new CheckBox("FADGI-O");
+		fadgiOCheckbox.setStyle(alertTextStyles);
 		final MaterialDesignIconView icon5 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_CIRCLE);
 		icon5.setStyleClass("fadgi-o-warning");
 		icon5.setSize("18");

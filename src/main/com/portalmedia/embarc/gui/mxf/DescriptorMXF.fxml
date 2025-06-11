@@ -51,7 +51,7 @@
 						animated="false"
 					>
 						<content>
-							<ScrollPane styleClass="light-blue-bg">
+							<ScrollPane>
 								<content>
 									<VBox fx:id="pictureVBox" />
 								</content>
@@ -64,7 +64,7 @@
 						animated="false"
 					>
 						<content>
-							<ScrollPane styleClass="light-blue-bg">
+							<ScrollPane>
 								<content>
 									<VBox fx:id="soundVBox" />
 								</content>
@@ -77,7 +77,7 @@
 						animated="false"
 					>
 						<content>
-							<ScrollPane styleClass="light-blue-bg">
+							<ScrollPane>
 								<content>
 									<VBox fx:id="otherVBox" />
 								</content>
