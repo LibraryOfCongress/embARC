@@ -52,6 +52,12 @@
 					prefWidth="100"
 					HBox.hgrow="ALWAYS"
 				/>
+				<HBox 
+					fx:id="editorArrayValue1ValidationInfo"
+					minWidth="15"
+					maxWidth="30"
+					prefWidth="15">
+				</HBox>
 				<IntegerInputControl
 					fx:id="editorArrayValue1"
 					HBox.hgrow="ALWAYS"
@@ -66,6 +72,12 @@
 					prefWidth="100"
 					HBox.hgrow="ALWAYS"
 				/>
+				<HBox 
+					fx:id="editorArrayValue2ValidationInfo"
+					minWidth="15"
+					maxWidth="30"
+					prefWidth="15">
+				</HBox>
 				<IntegerInputControl
 					fx:id="editorArrayValue2"
 					HBox.hgrow="ALWAYS"
@@ -80,6 +92,12 @@
 					prefWidth="100"
 					HBox.hgrow="ALWAYS"
 				/>
+				<HBox 
+					fx:id="editorArrayValue3ValidationInfo"
+					minWidth="15"
+					maxWidth="30"
+					prefWidth="15">
+				</HBox>
 				<IntegerInputControl
 					fx:id="editorArrayValue3"
 					HBox.hgrow="ALWAYS"
@@ -94,6 +112,12 @@
 					prefWidth="100"
 					HBox.hgrow="ALWAYS"
 				/>
+				<HBox 
+					fx:id="editorArrayValue4ValidationInfo"
+					minWidth="15"
+					maxWidth="30"
+					prefWidth="15">
+				</HBox>
 				<IntegerInputControl
 					fx:id="editorArrayValue4"
 					HBox.hgrow="ALWAYS"

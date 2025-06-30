@@ -113,7 +113,10 @@ public class TDBDController extends AnchorPane {
 			} else {
 				message = isTD ? "No text data present" : "No binary data present";
 			}
-			bp.setTop(new Label(message));
+			
+			Label messageLabel = new Label(message);
+			messageLabel.setStyle("-fx-text-fill: black;");
+			bp.setTop(messageLabel);
 			tdbdVBox.getChildren().add(bp);
 			return;
 		}
@@ -126,10 +129,6 @@ public class TDBDController extends AnchorPane {
 			tdbdVBox.getChildren().add(vbox);
 			index += 1;
 		}
-		tdbdVBox.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent event) { event.consume(); }
-		});
 		setNumberOfSelectedFiles(summary.getFileCount());
 	}
 
@@ -241,7 +240,7 @@ public class TDBDController extends AnchorPane {
 		}
 		String title = isTD ? String.format("%sText Data Element #%s", titlePrefix, index) : String.format("Binary Data Element #%s", index);
 		Label label = new Label(title);
-		label.setStyle("-fx-font-size: 13; -fx-font-weight: bold;");
+		label.setStyle("-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: black;");
 		label.setFocusTraversable(true);
 		header.getChildren().add(label);
 		MXFService mxfService = new MXFServiceImpl(filePath);
@@ -258,6 +257,7 @@ public class TDBDController extends AnchorPane {
 		label.setPadding(new Insets(2,0,2,5));
 		label.setFocusTraversable(isTraversable);
 		label.setAccessibleText(accessibleText);
+		label.setStyle("-fx-text-fill: black;");
 		return label;
 	}
 
@@ -265,9 +265,10 @@ public class TDBDController extends AnchorPane {
 		FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
 		icon.setGlyphName("DOWNLOAD");
 		icon.setAccessibleText("Select to download data for " + title);
-
+		
 		Button button = new Button();
 		button.setGraphic(icon);
+		button.getStyleClass().add("light-element-base");
 		button.setOnAction(event -> {
 			showDownloadDataDialog(streamId, filePath, fileName, isTD);
 		});
@@ -316,7 +317,7 @@ public class TDBDController extends AnchorPane {
 		}
 
 		final Label writeFilesPathLabel = new Label(fullPath);
-
+		writeFilesPathLabel.setStyle("-fx-text-fill: black;");
 		final ChoiceDialog<ButtonData> dialog = new ChoiceDialog<>();
 		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
 		icon.setStyleClass("write-files-icon");

@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.controlsfx.control.textfield.CustomTextField;
 
-import com.portalmedia.embarc.gui.ValidationWarningIcons;
+import com.portalmedia.embarc.gui.ValidationWarningHelper;
 import com.portalmedia.embarc.parser.ColumnDef;
 import com.portalmedia.embarc.validation.DPXColumnValidationRules;
 import com.portalmedia.embarc.validation.IValidationRule;
@@ -17,6 +17,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 
 /**
  * Sets, determines, and reports metadata rule violations
@@ -28,15 +29,20 @@ import javafx.scene.layout.AnchorPane;
 public class ValidationChangeListener implements ChangeListener<String> {
 
 	private CustomTextField textField;
+	private TextArea textArea;
+	private HBox validationInfo;
 	ColumnDef column;
 
-	public ValidationChangeListener(CustomTextField textField, ColumnDef column) {
+	public ValidationChangeListener(CustomTextField textField, ColumnDef column, HBox validationInfo) {
 		this.textField = textField;
 		this.column = column;
+		this.validationInfo = validationInfo;
 	}
 
-	public ValidationChangeListener(TextArea textArea, ColumnDef column) {
+	public ValidationChangeListener(TextArea textArea, ColumnDef column, HBox validationInfo) {
 		this.column = column;
+		this.textArea = textArea;
+		this.validationInfo = validationInfo;
 	}
 
 	@Override
@@ -61,17 +67,32 @@ public class ValidationChangeListener implements ChangeListener<String> {
 					}
 				}
 			}
-			setInvalidRuleSets(violatedRules);
+			
+			if(this.textArea != null) {
+				setInvalidRuleSets(violatedRules, textArea);
+			}
+			
+			if(this.textField != null) {
+				setInvalidRuleSets(violatedRules, textField);
+			}
 		}
 	}
+	
+	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet, CustomTextField textField) {
+		final boolean hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(
+				validationInfo, 
+				invalidRuleSet, 
+				column);
+		String validationWarning = hasErrors ? "; Contains errors" : "";
+		textField.setAccessibleText(textField.getText() + validationWarning);
+	}
 
-	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet) {
-		final ValidationWarningIcons icons = new ValidationWarningIcons();
-		icons.setInvalidRuleSets(invalidRuleSet, column);
-		AnchorPane.setBottomAnchor(icons, 0.0);
-		AnchorPane.setTopAnchor(icons, 0.0);
-		if (textField != null) {
-			textField.setRight(icons);
-		}
+	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet, TextArea textArea) {
+		final boolean hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(
+				validationInfo, 
+				invalidRuleSet, 
+				column);
+		String validationWarning = hasErrors ? "; Contains errors" : "";
+		textArea.setAccessibleText(textArea.getText() + validationWarning);
 	}
 }

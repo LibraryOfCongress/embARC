@@ -1,6 +1,7 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.controlsfx.control.textfield.CustomTextField;
@@ -26,6 +27,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 
 /**
@@ -48,6 +50,8 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	private HBox popoutIconContainer;
 	@FXML
 	private FontAwesomeIconView popoutIcon;
+	@FXML
+	private HBox editorTextFieldValidationInfo;
 
 	private DPXColumn column;
 	private String originalValue;
@@ -71,9 +75,7 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void clearValidation() {
-		if(editorTextField!=null) {
-			editorTextField.setRight(null);
-		}
+		this.setInvalidRuleSets(new HashSet<>());
 	}
 
 	/*
@@ -112,7 +114,7 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 		if (this.column == null) {
 			editorTextField.textProperty()
 					.addListener(new MaxLengthChangeListener(editorTextField, column.getLength()));
-			editorTextField.textProperty().addListener(new ValidationChangeListener(editorTextField, column));
+			editorTextField.textProperty().addListener(new ValidationChangeListener(editorTextField, column, editorTextFieldValidationInfo));
 		}
 		this.column = column;
 	}
@@ -135,14 +137,12 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	 * com.portalmedia.embarc.gui.IEditorField#setInvalidRuleSets(java.util.Set)
 	 */
 	@Override
-	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet) {
-		final ValidationWarningIcons icons = new ValidationWarningIcons();
-		icons.setInvalidRuleSets(invalidRuleSet, getColumn());
-		AnchorPane.setBottomAnchor(icons, 0.0);
-		AnchorPane.setTopAnchor(icons, 0.0);
-		editorTextField.setRight(icons);
+	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet) {		
+		final boolean hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorTextFieldValidationInfo, invalidRuleSet, getColumn());
+		String validationWarning = hasErrors ? "Contains errors" : "";
+		editorTextField.setAccessibleHelp(validationWarning);
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 *
@@ -173,6 +173,17 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 		setLabel(labelText);
 		editorTextFieldLabelInfoIcon.setAccessibleRole(AccessibleRole.BUTTON);
 		editorTextFieldLabelInfoIcon.setAccessibleText("Open modal with " + labelText + " specification.");
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see com.portalmedia.embarc.gui.IEditorField#setLabel(java.lang.String)
+	 */
+	@Override
+	public void setLabel(String labelText, String helpText, String labelColor) {
+		editorTextFieldLabel.setTextFill(Color.web(labelColor));
+		setLabel(labelText, helpText);
 	}
 
 	/*
@@ -259,7 +270,7 @@ public class ASCIIField extends AnchorPane implements IEditorField {
 	 * @see com.portalmedia.embarc.gui.IEditorField#setMXFRules()
 	 */
 	public void setMXFMissingRequiredFieldRules() {
-		ValidationChangeListenerMXF validationListener = new ValidationChangeListenerMXF(editorTextField, mxfColumn);
+		ValidationChangeListenerMXF validationListener = new ValidationChangeListenerMXF(editorTextField, mxfColumn, editorTextFieldValidationInfo);
 		validationListener.setMissingRequiredField(originalValue);
 		editorTextField.textProperty().addListener(validationListener);
 	}

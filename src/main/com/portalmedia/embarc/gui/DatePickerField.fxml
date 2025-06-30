@@ -21,9 +21,9 @@
 	>
 		<HBox
 			spacing="5"
-			minWidth="200"
-			maxWidth="300"
-			prefWidth="275.0"
+			minWidth="185"
+			maxWidth="285"
+			prefWidth="260.0"
 			prefHeight="28.0"
 		>
 			<Text
@@ -42,6 +42,12 @@
 					size="12px"
 				/>
 			</HBox>
+		</HBox>
+		<HBox 
+			fx:id="editorTextFieldValidationInfo"
+			minWidth="15"
+			maxWidth="30"
+			prefWidth="15">
 		</HBox>
 		<DatePicker
 			fx:id="datePicker"

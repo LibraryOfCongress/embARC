@@ -33,6 +33,8 @@ public interface IEditorField {
 
 	void setLabel(String text, String helpText);
 
+	void setLabel(String labelText, String helpText, String labelColor);
+	
 	void setPopoutIcon();
 
 	void setValue(String value);

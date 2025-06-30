@@ -30,26 +30,27 @@ import com.portalmedia.embarc.gui.mxf.TopMenuBarMXF;
 import com.portalmedia.embarc.system.UserPreferences;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.AccessibleRole;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -187,6 +188,7 @@ public class Main extends Application {
 		// set root scene, apply style sheet
 		Scene scene = new Scene(rootLayout);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+
 		primaryStage.setScene(scene);
 	}
 
@@ -271,13 +273,24 @@ public class Main extends Application {
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
 			public void handle(WindowEvent e) {
-				Alert alert = new Alert(AlertType.CONFIRMATION);
+				final String message = "Are you sure you want to quit embARC?";
+				final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+						"Quit embARC", 
+						AlertType.CONFIRMATION, 
+						message
+					);
+				
 				alert.initModality(Modality.APPLICATION_MODAL);
 				alert.initOwner(primaryStage);
 				alert.setGraphic(null);
-				alert.setTitle("Quit embARC");
 				alert.setHeaderText(null);
-				alert.setContentText("Are you sure you want to quit embARC?");
+				
+				DialogPane dialogPane = alert.getDialogPane();				 
+				alert.getDialogPane().lookupButton(ButtonType.OK).setAccessibleHelp(message);
+				 	
+				dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+				dialogPane.getStyleClass().add("alertDialog");	 
+				
 
 				Optional<ButtonType> result = alert.showAndWait();
 				if (result.get() == ButtonType.OK) {

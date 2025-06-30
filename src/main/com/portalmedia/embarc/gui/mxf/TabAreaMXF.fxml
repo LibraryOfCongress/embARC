@@ -12,18 +12,18 @@
 	xmlns:fx="http://javafx.com/fxml"
 	fx:controller="com.portalmedia.embarc.gui.mxf.TabAreaMXFController"
 >
-	<top>
+	<top> 
 		<TabPane
 			fx:id="mxfTabPane"
 			prefHeight="33.0"
 			tabClosingPolicy="UNAVAILABLE"
 		>
 			<tabs>
-				<Tab fx:id="fileInfoTab" text="File Info" />
-				<Tab fx:id="descriptorsTab" text="Descriptors" />
-				<Tab fx:id="coreTab" text="Core DMS" />
-				<Tab fx:id="tdTab" text="Text DMS" />
-				<Tab fx:id="bdTab" text="Binary DMS" />
+				<Tab fx:id="fileInfoTab" />
+				<Tab fx:id="descriptorsTab" />
+				<Tab fx:id="coreTab" />
+				<Tab fx:id="tdTab" />
+				<Tab fx:id="bdTab" />
 			</tabs>
 		</TabPane>
 	</top>

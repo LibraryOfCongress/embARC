@@ -48,7 +48,8 @@ public class ManifestParserImpl implements ManifestParser {
 				}
 				out.close();
 			}
-
+			
+			in.close();
 			schemaFile = tempFile;
 		} catch (Exception e) {
 			throw new FileNotFoundException("Unable to find manifest schema file");

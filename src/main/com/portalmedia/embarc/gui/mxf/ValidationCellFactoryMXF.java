@@ -2,7 +2,7 @@ package com.portalmedia.embarc.gui.mxf;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.portalmedia.embarc.gui.ValidationWarningIcons;
+import com.portalmedia.embarc.gui.ValidationWarningHelper;
 import com.portalmedia.embarc.gui.model.MXFFileInformationViewModel;
 import com.portalmedia.embarc.gui.model.MXFMetadataColumnViewModel;
 
@@ -50,14 +50,11 @@ public class ValidationCellFactoryMXF extends TableCell<MXFFileInformationViewMo
 					final MXFFileInformationViewModel fivm = row.getItem();
 					String cellData = columnData.getCellData(fivm);
 					if (mcvmData.getMXFColumn().isRequired() && StringUtils.isBlank(cellData)) {
-						final ValidationWarningIcons icons = new ValidationWarningIcons();
 						final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
-
+						icon.setAccessibleText("Missing Required Value");
 						icon.setStyleClass("fadgi-sr-warning");
-						icons.getChildren().add(icon);
-						AnchorPane.setTopAnchor(icon, 2.00);
-
-						final VBox iconsBox = new VBox(icons);
+						
+						final VBox iconsBox = new VBox(icon);
 						iconsBox.setAlignment(Pos.CENTER_RIGHT);
 
 						final Label valueLabel = new Label();

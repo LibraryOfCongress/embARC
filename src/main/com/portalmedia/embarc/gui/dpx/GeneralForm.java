@@ -100,6 +100,7 @@ public class GeneralForm extends AnchorPane {
 			viewImageIcon.setGlyphName("EXTERNAL_LINK");
 			viewImageIcon.setAccessibleText("Select to open image viewer");
 			final Button b = new Button();
+			b.setStyle("-fx-text-fill: black; -fx-base: #E5E5E5;");
 			b.setGraphic(viewImageIcon);
 			b.setOnAction(new EventHandler<ActionEvent>() {
 				@Override

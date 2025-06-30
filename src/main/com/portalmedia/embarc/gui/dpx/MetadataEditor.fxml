@@ -51,13 +51,17 @@
 						fx:id="writeFilesButton"
 						mnemonicParsing="false"
 						text="Write Files"
-						style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10px 20px;  -fx-text-fill: #304b59;"
+						style="
+							-fx-font-size: 16px; 
+							-fx-font-weight: bold; 
+							-fx-text-fill: black;
+							-fx-padding: 10px 20px;
+							-fx-base: #E5E5E5;"
 						prefHeight="40.0"
 						layoutY="18.0"
 					>
 						<graphic>
 							<FontAwesomeIconView
-								fill="#304b59"
 								glyphName="DOWNLOAD"
 								size="20px"
 							/>

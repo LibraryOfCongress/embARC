@@ -18,18 +18,18 @@
 	maxWidth="-Infinity"
 	minHeight="-Infinity"
 	minWidth="-Infinity"
-	prefHeight="400.0"
-	prefWidth="600.0"
+	prefHeight="440.0"
+	prefWidth="610.0"
 	xmlns="http://javafx.com/javafx"
 	xmlns:fx="http://javafx.com/fxml"
 >
 	<children>
-		<Pane prefHeight="44.0" prefWidth="600.0">
+		<Pane prefHeight="54.0" prefWidth="600.0">
 			<children>
 				<Label
 					alignment="CENTER_RIGHT"
 					layoutX="14.0"
-					layoutY="9.0"
+					layoutY="19.0"
 					prefHeight="29.0"
 					prefWidth="40.0"
 					text="Name"
@@ -38,14 +38,14 @@
 				<TextField
 					fx:id="nameField"
 					layoutX="60.0"
-					layoutY="10.0"
+					layoutY="20.0"
 					prefHeight="27.0"
 					prefWidth="170.0"
 				/>
 				<Label
 					alignment="CENTER_RIGHT"
 					layoutX="258.0"
-					layoutY="9.0"
+					layoutY="19.0"
 					prefHeight="29.0"
 					prefWidth="101.0"
 					text="Date Created: "
@@ -55,7 +55,7 @@
 					fx:id="dateCreated"
 					alignment="CENTER_RIGHT"
 					layoutX="359.0"
-					layoutY="9.0"
+					layoutY="19.0"
 					prefHeight="29.0"
 					prefWidth="200.0"
 					text=""

@@ -9,6 +9,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
@@ -23,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
 /**
@@ -41,6 +43,8 @@ public class DatePickerField extends AnchorPane implements IEditorField {
 	private HBox editorTextFieldLabelInfoIcon;
 	@FXML
 	private DatePicker datePicker;
+	@FXML
+	private HBox editorTextFieldValidationInfo;
 
 	private DPXColumn column;
 	private LocalDate originalValue;
@@ -64,7 +68,7 @@ public class DatePickerField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void clearValidation() {
-		// TODO: EditorTextField.setRight(null);
+		this.setInvalidRuleSets(new HashSet<>());
 	}
 
 	/*
@@ -146,12 +150,9 @@ public class DatePickerField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet) {
-		final ValidationWarningIcons icons = new ValidationWarningIcons();
-		icons.setInvalidRuleSets(invalidRuleSet);
-		AnchorPane.setBottomAnchor(icons, 0.0);
-		AnchorPane.setTopAnchor(icons, 0.0);
-		// TODO: EditorTextField.setRight(icons);
-
+		final boolean hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorTextFieldValidationInfo, invalidRuleSet, getColumn());
+		String validationWarning = hasErrors ? "Contains errors" : "";
+		datePicker.setAccessibleHelp(validationWarning);
 	}
 
 	/*
@@ -185,6 +186,18 @@ public class DatePickerField extends AnchorPane implements IEditorField {
 		editorTextFieldLabelInfoIcon.setAccessibleRole(AccessibleRole.BUTTON);
 		editorTextFieldLabelInfoIcon.setAccessibleText("Open modal with field specification.");
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see com.portalmedia.embarc.gui.IEditorField#setLabel(java.lang.String)
+	 */
+	@Override
+	public void setLabel(String labelText, String helpText, String labelColor) {
+		editorTextFieldLabel.setTextFill(Color.web(labelColor));
+		setLabel(labelText, helpText);
+	}
+
 
 	/*
 	 * (non-Javadoc)

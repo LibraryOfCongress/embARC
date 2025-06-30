@@ -40,9 +40,9 @@
 					accessibleText="A * denotes a required field"
 				/>
 			</HBox>
-			<ScrollPane styleClass="light-blue-bg">
+			<ScrollPane>
 				<content>
-					<VBox fx:id="editableFieldsVBox" style="-fx-padding: 10 10 10 10" />
+					<VBox fx:id="editableFieldsVBox" style="-fx-background-color: derive(#ececec,26.4%); -fx-padding: 10 10 10 10" />
 				</content>
 			</ScrollPane>
 			<VBox style="-fx-padding: 10 0 10 0" spacing="10">

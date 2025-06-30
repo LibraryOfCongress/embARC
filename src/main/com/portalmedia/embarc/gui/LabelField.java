@@ -66,6 +66,11 @@ public class LabelField extends AnchorPane implements IEditorField {
 		
 	}
 	@Override
+	public void setLabel(String text, String helpText, String labelColor) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
 	public void setPopoutIcon() {
 		// TODO Auto-generated method stub
 		

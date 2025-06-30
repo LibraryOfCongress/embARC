@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import com.portalmedia.embarc.gui.AboutModalController;
+import com.portalmedia.embarc.gui.AccessibleAlertHelper;
 import com.portalmedia.embarc.gui.FileProcessController;
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.parser.dpx.DPXDataTemplate;
@@ -13,10 +14,13 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -116,6 +120,7 @@ public class TopMenuBarDPX {
 		optionsMenu.getItems().addAll(ruleSets, toggleColumns, dataTemplates);
 		reportsMenu.getItems().addAll(createReport, createImageChecksumReport, createSequenceGapAnalysisReport, createSequenceGapAnalysisReportVerbose, createCSVExport);
 		menuBar.getMenus().addAll(fileMenu, optionsMenu, reportsMenu);
+		menuBar.setStyle("-fx-background-color: #eceff1;");
 		return menuBar;
 	}
 	
@@ -141,13 +146,25 @@ public class TopMenuBarDPX {
 			    	if (count == 0) contentText += "all files?";
 			    	else if (count == 1) contentText += count + " file?";
 			    	else contentText += count + " files?";
-			    	Alert alert = new Alert(AlertType.CONFIRMATION);
+			    	
+			    	final Alert alert = AccessibleAlertHelper.CreateAccessibleAlert(
+			    			"Apply Data Template", 
+							AlertType.CONFIRMATION, 
+							contentText
+						);
 					alert.initModality(Modality.APPLICATION_MODAL);
 					alert.initOwner(Main.getPrimaryStage());
 		        	alert.setGraphic(null);
-		        	alert.setTitle("Apply Data Template");
 		        	alert.setHeaderText(null);
-		        	alert.setContentText(contentText);
+
+					DialogPane dialogPane = alert.getDialogPane();
+					 
+					alert.getDialogPane().lookupButton(ButtonType.OK).setAccessibleHelp(contentText);
+					 	
+					dialogPane.getStylesheets().add(getClass().getResource("/com/portalmedia/embarc/gui/application.css").toExternalForm());
+					dialogPane.getStyleClass().add("alertDialog");	 
+					
+		        	
 		        	Optional<ButtonType> result = alert.showAndWait();
 		        	if (result.get() == ButtonType.OK) {
 		        		if (count == 0) cm.updateChangedValuesAllFiles(template.getValues());

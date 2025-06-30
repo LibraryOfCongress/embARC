@@ -3,14 +3,19 @@ package com.portalmedia.embarc.gui.mxf;
 import org.apache.commons.lang.StringUtils;
 import org.controlsfx.control.textfield.CustomTextField;
 
-import com.portalmedia.embarc.gui.ValidationWarningIcons;
+import com.portalmedia.embarc.gui.ValidationWarningHelper;
 import com.portalmedia.embarc.parser.ColumnDef;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 /**
  * Sets, determines, and reports missing required fields
@@ -23,10 +28,12 @@ public class ValidationChangeListenerMXF implements ChangeListener<String> {
 
 	private CustomTextField textField;
 	ColumnDef column;
+	HBox validationInfo;
 
-	public ValidationChangeListenerMXF(CustomTextField textField, ColumnDef column) {
+	public ValidationChangeListenerMXF(CustomTextField textField, ColumnDef column, HBox validationInfo) {
 		this.textField = textField;
 		this.column = column;
+		this.validationInfo = validationInfo;
 	}
 
 	@Override
@@ -35,17 +42,13 @@ public class ValidationChangeListenerMXF implements ChangeListener<String> {
 	}
 	
 	public void setMissingRequiredField(String value) {
-		final ValidationWarningIcons icons = new ValidationWarningIcons();
 		if (this.column.isRequired() && StringUtils.isBlank(value)) {
-			final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
-			icon.setStyleClass("fadgi-sr-warning");
-			icons.getChildren().add(icon);
-			AnchorPane.setTopAnchor(icon, 5.00);
-			if (textField != null) {
-				textField.setRight(icons);
-			}
+			final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);		
+			icon.setStyleClass("fadgi-sr-warning");			
+			validationInfo.getChildren().add(icon);
+			textField.setAccessibleText("Missing Required Value");
 		} else {
-			textField.setRight(icons);
+			validationInfo = new HBox();
 		}
 	}
 }

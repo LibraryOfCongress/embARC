@@ -19,17 +19,20 @@
 	alignment="CENTER"
 	xmlns="http://javafx.com/javafx"
 	xmlns:fx="http://javafx.com/fxml"
+	style="-fx-background-color: derive(#ececec,26.4%);"
 >
 	<HBox
 		prefHeight="400.0"
 		alignment="CENTER"
+		style="-fx-background-color: derive(#ececec,26.4%);"
 	>
-		<Pane prefHeight="400.0">
+		<Pane prefHeight="400.0" style="-fx-background-color: derive(#ececec,26.4%);">
 			<VBox
 				prefHeight="400.0"
 				alignment="CENTER"
+				style="-fx-background-color: derive(#ececec,26.4%);"
 			>
-				<HBox alignment="CENTER">
+				<HBox alignment="CENTER" style="-fx-background-color: derive(#ececec,26.4%);">
 					<Button
 						fx:id="aboutButton"
 						prefWidth="100.0"
@@ -48,10 +51,12 @@
 						prefHeight="350.0"
 						alignment="CENTER"
 						visible="true"
+						style="-fx-background-color: derive(#ececec,26.4%);"
 					>
 							<Label
 								prefHeight="50.0"
 								text="embARC"
+								style="-fx-text-fill: black;"
 							>
 								<font>
 									<Font size="15.0" />
@@ -59,6 +64,7 @@
 							</Label>
 							<Label
 								text="“embARC” for “Metadata Embedded for Archival Content”"
+								style="-fx-text-fill: black;"
 							/>
 							<Label prefHeight="30.0" />
 							<HBox
@@ -81,6 +87,7 @@
 											<Label
 												fx:id="versionLabel"
 												text=""
+												style="-fx-text-fill: black;"
 											/>
 											<Hyperlink
 												fx:id="fadgiLink"
@@ -93,6 +100,7 @@
 								alignment="CENTER"
 								wrapText="true"
 								maxWidth="400.0"
+								style="-fx-text-fill: black;"
 								text="embARC was developed by the Federal Agencies Digital Guidelines Initiative (FADGI) supported by AVP and PortalMedia."
 							>
 								<font>
@@ -104,17 +112,20 @@
 						fx:id="licensePane"
 						prefHeight="0.0"
 						visible="false"
+						style="-fx-background-color: derive(#ececec,26.4%);"
 					>
 						<ScrollPane
 							prefHeight="350.0"
 							prefWidth="600"
 							hbarPolicy="NEVER"
+							style="-fx-background-color: derive(#ececec,26.4%);"
 						>
 							<content>
-								<VBox>
+								<VBox style="-fx-background-color: derive(#ececec,26.4%);">
 									<Label
 										prefHeight="30.0"
 										text="embARC"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -126,10 +137,12 @@
 									/>
 									<Label
 										prefHeight="30.0"
+										style="-fx-text-fill: black;"
 									/>
 									<Label
 										prefHeight="30.0"
 										text="FontAwesome"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -144,10 +157,12 @@
 									/>
 									<Label
 										prefHeight="30.0"
+										style="-fx-text-fill: black;"
 									/>
 									<Label
 										prefHeight="30.0"
 										text="Nitrite"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -162,10 +177,12 @@
 									/>
 									<Label
 										prefHeight="30.0"
+										style="-fx-text-fill: black;"
 									/>
 									<Label
 										prefHeight="30.0"
 										text="FFmpeg"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -186,10 +203,12 @@
 									/>
 									<Label
 										prefHeight="30.0"
+										style="-fx-text-fill: black;"
 									/>
 									<Label
 										prefHeight="30.0"
 										text="CRC32C"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -204,10 +223,12 @@
 									/>
 									<Label
 										prefHeight="30.0"
+										style="-fx-text-fill: black;"
 									/>
 									<Label
 										prefHeight="30.0"
 										text="Apache Tika"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -222,10 +243,12 @@
 									/>
 									<Label
 										prefHeight="30.0"
+										style="-fx-text-fill: black;"
 									/>
 									<Label
 										prefHeight="30.0"
 										text="Media Authoring with Java API (MAJ)"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -240,10 +263,12 @@
 									/>
 									<Label
 										prefHeight="30.0"
+										style="-fx-text-fill: black;"
 									/>
 									<Label
 										prefHeight="30.0"
 										text="DROID (Digital Record Object Identification)"
+										style="-fx-text-fill: black;"
 									>
 										<font>
 											<Font size="20.0" />
@@ -256,11 +281,12 @@
 									<Hyperlink
 										text="https://github.com/digital-preservation/droid/blob/master/LICENSE"
 									/>
-									<Label prefHeight="30.0" />
+									<Label prefHeight="30.0"
+									style="-fx-text-fill: black;" />
 								</VBox>
 							</content>
 							<padding>
-								<Insets bottom="5.0" left="10.0" right="5.0" top="5.0" />
+								<Insets bottom="5.0" left="10.0" right="25.0" top="5.0"/>
 							</padding>
 						</ScrollPane>
 					</VBox>

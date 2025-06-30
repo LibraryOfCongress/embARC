@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import com.portalmedia.embarc.gui.ValidationWarningIcons;
+import com.portalmedia.embarc.gui.ValidationWarningHelper;
 import com.portalmedia.embarc.gui.model.DPXFileInformationViewModel;
 import com.portalmedia.embarc.gui.model.DPXMetadataColumnViewModel;
 import com.portalmedia.embarc.validation.IValidationRule;
@@ -64,8 +64,8 @@ public class ValidationCellFactory extends TableCell<DPXFileInformationViewModel
 					}
 				}
 				if (brokenRules.size() > 0) {
-					final ValidationWarningIcons icons = new ValidationWarningIcons();
-					icons.setInvalidRuleSets(brokenRules, mdvm.getColumn());
+					HBox icons = new HBox();
+					ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(icons, brokenRules, mdvm.getColumn());
 
 					final VBox iconsBox = new VBox(icons);
 					iconsBox.setAlignment(Pos.CENTER_RIGHT);

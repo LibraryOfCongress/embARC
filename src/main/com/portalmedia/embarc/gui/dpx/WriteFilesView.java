@@ -22,6 +22,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 /**
  * Editor pane view when no files are selected. Displays rule set check boxes
@@ -194,6 +195,10 @@ public class WriteFilesView extends AnchorPane {
 		grid.add(new Label(String.valueOf(foErrors)), 1, 4);
 		foLabel.setAccessibleText(foErrors + " files with FADGI-O violations.");
 		foCB.setOnAction(event -> handleCheckboxEvent(event));
+		
+		final Label warningMessage = new Label("If 'Errors Only' checkbox is selected, deselect and reselect to see updated warnings.");
+		warningMessage.setFocusTraversable(true);
+		grid.add(warningMessage, 0, 6);
 	}
 
 	private void handleCheckboxEvent(ActionEvent event) {

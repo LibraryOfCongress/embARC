@@ -1,6 +1,7 @@
 package com.portalmedia.embarc.gui;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.portalmedia.embarc.parser.dpx.DPXColumn;
@@ -14,6 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 
 /**
  * Component for managing the pixel aspect ratio field
@@ -33,6 +35,10 @@ public class PixelAspectRatioField extends AnchorPane implements IEditorField {
 	private IntegerInputControl editorArrayValue1;
 	@FXML
 	private IntegerInputControl editorArrayValue2;
+	@FXML
+	private HBox editorArrayValue1ValidationInfo;
+	@FXML
+	private HBox editorArrayValue2ValidationInfo;
 
 	private DPXColumn column;
 	private String originalValue;
@@ -56,12 +62,7 @@ public class PixelAspectRatioField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void clearValidation() {
-		if(editorArrayValue1!=null) {
-			editorArrayValue1.setRight(null);
-		}
-		if(editorArrayValue2!=null) {
-			editorArrayValue2.setRight(null);
-		}
+		this.setInvalidRuleSets(new HashSet<>());
 	}
 
 	/*
@@ -120,15 +121,15 @@ public class PixelAspectRatioField extends AnchorPane implements IEditorField {
 	 */
 	@Override
 	public void setInvalidRuleSets(Set<ValidationRuleSetEnum> invalidRuleSet) {
-		final ValidationWarningIcons icons = new ValidationWarningIcons();
-		icons.setInvalidRuleSets(invalidRuleSet);
-		AnchorPane.setBottomAnchor(icons, 0.0);
-		AnchorPane.setTopAnchor(icons, 0.0);
-		editorArrayValue1.setRight(icons);
-		editorArrayValue2.setRight(icons);
-
+		boolean hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorArrayValue1ValidationInfo, invalidRuleSet, getColumn());
+		String validationWarning = hasErrors ? "Contains errors" : "";
+		
+		editorArrayValue1.setAccessibleHelp(validationWarning);
+		
+		hasErrors = ValidationWarningHelper.getInvalidRuleSetsAndUpdateErrorIcons(editorArrayValue2ValidationInfo, invalidRuleSet, getColumn());
+		editorArrayValue2.setAccessibleHelp(validationWarning);
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -159,6 +160,17 @@ public class PixelAspectRatioField extends AnchorPane implements IEditorField {
 		setLabel(labelText);
 		editorTextFieldLabelInfoIcon.setAccessibleRole(AccessibleRole.BUTTON);
 		editorTextFieldLabelInfoIcon.setAccessibleText("Open modal with field specification.");
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see com.portalmedia.embarc.gui.IEditorField#setLabel(java.lang.String)
+	 */
+	@Override
+	public void setLabel(String labelText, String helpText, String labelColor) {
+		editorTextFieldLabel.setTextFill(Color.web(labelColor));
+		setLabel(labelText, helpText);
 	}
 
 	/*

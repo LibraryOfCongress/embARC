@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file
 
+## 1.4.0 2025-05-20
+	Accessibility Tasks:
+	- emb-m-10 & emb-w-12 - make tabs with non-compliance issues accessible to screen reader users
+	- emb-w-16 - support Windows high contrast dark mode
+    - emb-m-11 and emb-w-13 - change validation tooltips into popups for ease of use with keyboard
+    - emb-m-02 - partial update; keep focus on header tabs when using VO+arrow-key to navigate to header from sidebar
+	Improvements:
+	- Update simple confirmation / alert popups to better support screen reader
+	- Add text to inform user that rule set validation will not be updated while 'Errors Only' checkbox is applied
+	Bugfixes:
+	- Make Toggle Column Visibility modal content more compact to allow it to load on Windows
+	- Fix download buttons for text and binary DMS
+ 
+ ## 1.3.2 2024-09-13
+ Same as version 1.3.1 but fixes a bug to eliminate the need to force quit after making an edit  
 
 ## 1.3.1 2024-08-28
 	Accessibility Tasks:

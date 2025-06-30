@@ -153,7 +153,6 @@ public class DPXService {
 					fos.write(buffer, 0, length);
 				}
 				is.close();
-				fos.close();
 
 				// Copy the temp file to the final destination
 				final Path tempFile = new File(tempPath).toPath();
@@ -171,7 +170,8 @@ public class DPXService {
 				}
 			}
 			
-
+			fos.close();
+			
 		} catch (final Exception ex) {
 			// Cleanup on error
 			final Path tempFile = new File(tempPath).toPath();
