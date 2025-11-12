@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import com.portalmedia.embarc.gui.*?>
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <fx:root
 	type="javafx.scene.layout.AnchorPane"
@@ -36,10 +36,10 @@
 				fx:id="editorTextFieldLabelInfoIcon"
 				focusTraversable="true"
 			>
-				<FontAwesomeIconView
+				<FontIcon
 					styleClass="popout-icon"
-					glyphName="INFO_CIRCLE"
-					size="12px"
+					iconLiteral="fas-info-circle"
+					iconSize="12"
 				/>
 			</HBox>
 		</HBox>

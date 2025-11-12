@@ -18,8 +18,9 @@ import com.portalmedia.embarc.gui.mxf.ControllerMediatorMXF;
 import com.portalmedia.embarc.parser.FileFormat;
 import com.portalmedia.embarc.parser.FileFormatDetection;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.concurrent.Task;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
@@ -94,7 +95,7 @@ public class FileProcessController {
 		final Task<Void> task = createProcessFilesTask(files);
 		final Label filesToProcess = new Label("Total items found: " + totalItemsCount);
 		filesToProcess.setStyle("-fx-text-fill: black;");
-		final FontAwesomeIconView question = new FontAwesomeIconView(FontAwesomeIcon.QUESTION_CIRCLE);
+		final FontIcon question = new FontIcon(FontAwesomeSolid.QUESTION_CIRCLE);
 		filesToProcess.setTooltip(new Tooltip("This count includes all folders and hidden files"));
 		filesToProcess.setGraphic(question);
 		progressDialog.setCountLabel(filesToProcess);

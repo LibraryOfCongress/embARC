@@ -6,8 +6,10 @@ import com.portalmedia.embarc.gui.ValidationWarningHelper;
 import com.portalmedia.embarc.gui.model.MXFFileInformationViewModel;
 import com.portalmedia.embarc.gui.model.MXFMetadataColumnViewModel;
 
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.materialdesign.MaterialDesign;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -50,9 +52,9 @@ public class ValidationCellFactoryMXF extends TableCell<MXFFileInformationViewMo
 					final MXFFileInformationViewModel fivm = row.getItem();
 					String cellData = columnData.getCellData(fivm);
 					if (mcvmData.getMXFColumn().isRequired() && StringUtils.isBlank(cellData)) {
-						final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
+						final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
 						icon.setAccessibleText("Missing Required Value");
-						icon.setStyleClass("fadgi-sr-warning");
+						icon.getStyleClass().add("fadgi-sr-warning");
 						
 						final VBox iconsBox = new VBox(icon);
 						iconsBox.setAlignment(Pos.CENTER_RIGHT);

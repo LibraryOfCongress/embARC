@@ -28,8 +28,9 @@ import com.portalmedia.embarc.parser.mxf.MXFColumnHelpText;
 import com.portalmedia.embarc.parser.mxf.MXFSection;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
@@ -289,10 +290,10 @@ public class CoreMXFController extends AnchorPane {
 		devicesLabel.setStyle("-fx-text-fill: black;");
 		HBox iconHbox = new HBox();
 		labelIconHbox.getChildren().addAll(devicesLabel, iconHbox);
-		FontAwesomeIconView infoIcon = new FontAwesomeIconView();
-		infoIcon.setGlyphName("INFO_CIRCLE");
+		FontIcon infoIcon = new FontIcon();
+		infoIcon.setIconCode(FontAwesomeSolid.INFO_CIRCLE);
 		infoIcon.getStyleClass().add("popout-icon");
-		infoIcon.setSize("12px");
+		infoIcon.setIconSize(12);
 		iconHbox.idProperty().set("editorTextFieldLabelInfoIcon");
 		iconHbox.setFocusTraversable(true);
 		iconHbox.getChildren().add(infoIcon);
@@ -345,9 +346,9 @@ public class CoreMXFController extends AnchorPane {
 			deviceLabel.setMinWidth(100.0);
 			deviceLabel.setFocusTraversable(true);
 			HBox iconBox = new HBox();
-			FontAwesomeIconView popoutIcon = new FontAwesomeIconView(FontAwesomeIcon.EXTERNAL_LINK);
-			popoutIcon.setSize("16px");
-			popoutIcon.setStyleClass("popout-icon");
+			FontIcon popoutIcon = new FontIcon(FontAwesomeSolid.EXTERNAL_LINK_ALT);
+			popoutIcon.setIconSize(16);
+			popoutIcon.getStyleClass().add("popout-icon");
 			popoutIcon.setVisible(true);
 			iconBox.setAccessibleText("Open modal to edit or delete " + deviceLabel.getText() + " device");
 			iconBox.setAccessibleRole(AccessibleRole.BUTTON);
@@ -374,8 +375,8 @@ public class CoreMXFController extends AnchorPane {
 	private Label createNewDeviceLabel(ArrayList<AS07CoreDMSDeviceObjectsImpl> devices, LabelField field) {
 		Label newDeviceLabel = new Label("Add New Device");
 		newDeviceLabel.setAccessibleRole(AccessibleRole.BUTTON);
-		FontAwesomeIconView plusCircle = new FontAwesomeIconView(FontAwesomeIcon.PLUS_CIRCLE);
-		plusCircle.setStyleClass("popout-icon");
+		FontIcon plusCircle = new FontIcon(FontAwesomeSolid.PLUS_CIRCLE);
+		plusCircle.getStyleClass().add("popout-icon");
 		newDeviceLabel.setGraphic(plusCircle);
 		newDeviceLabel.setOnKeyPressed(e -> {
 			if (e.getCode() == KeyCode.SPACE) {
@@ -405,10 +406,10 @@ public class CoreMXFController extends AnchorPane {
 		identifierLabel.setStyle("-fx-text-fill: black;");
 		HBox iconHbox = new HBox();
 		labelIconHbox.getChildren().addAll(identifierLabel, iconHbox);
-		FontAwesomeIconView infoIcon = new FontAwesomeIconView();
-		infoIcon.setGlyphName("INFO_CIRCLE");
+		FontIcon infoIcon = new FontIcon();
+		infoIcon.setIconCode(FontAwesomeSolid.INFO_CIRCLE);
 		infoIcon.getStyleClass().add("popout-icon");
-		infoIcon.setSize("12px");
+		infoIcon.setIconSize(12);
 		iconHbox.idProperty().set("editorTextFieldLabelInfoIcon");
 		iconHbox.setFocusTraversable(true);
 		iconHbox.getChildren().add(infoIcon);
@@ -455,9 +456,9 @@ public class CoreMXFController extends AnchorPane {
 				idLabel.setMaxWidth(306.0);
 				idLabel.setFocusTraversable(true);
 				HBox iconBox = new HBox();
-				FontAwesomeIconView popoutIcon = new FontAwesomeIconView(FontAwesomeIcon.EXTERNAL_LINK);
-				popoutIcon.setSize("16px");
-				popoutIcon.setStyleClass("popout-icon");
+				FontIcon popoutIcon = new FontIcon(FontAwesomeSolid.EXTERNAL_LINK_ALT);
+				popoutIcon.setIconSize(16);
+				popoutIcon.getStyleClass().add("popout-icon");
 				iconBox.setAccessibleText("Open modal to edit or delete " + idLabel.getText() + " identifier");
 				iconBox.setAccessibleRole(AccessibleRole.BUTTON);
 				iconBox.setFocusTraversable(true);
@@ -488,8 +489,8 @@ public class CoreMXFController extends AnchorPane {
 	private Label createNewIdentifierLabel(ArrayList<AS07DMSIdentifierSetImpl> identifiers, LabelField field) {
 		Label newIdentifierLabel = new Label("Add New Identifier");
 		newIdentifierLabel.setAccessibleRole(AccessibleRole.BUTTON);
-		FontAwesomeIconView plusCircle = new FontAwesomeIconView(FontAwesomeIcon.PLUS_CIRCLE);
-		plusCircle.setStyleClass("popout-icon");
+		FontIcon plusCircle = new FontIcon(FontAwesomeSolid.PLUS_CIRCLE);
+		plusCircle.getStyleClass().add("popout-icon");
 		newIdentifierLabel.setGraphic(plusCircle);
 		newIdentifierLabel.setOnKeyPressed(e -> {
 			if (e.getCode() != KeyCode.SPACE) {

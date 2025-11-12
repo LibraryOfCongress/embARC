@@ -6,8 +6,10 @@ import org.controlsfx.control.textfield.CustomTextField;
 import com.portalmedia.embarc.gui.ValidationWarningHelper;
 import com.portalmedia.embarc.parser.ColumnDef;
 
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.materialdesign.MaterialDesign;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
@@ -43,8 +45,8 @@ public class ValidationChangeListenerMXF implements ChangeListener<String> {
 	
 	public void setMissingRequiredField(String value) {
 		if (this.column.isRequired() && StringUtils.isBlank(value)) {
-			final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);		
-			icon.setStyleClass("fadgi-sr-warning");			
+			final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);		
+			icon.getStyleClass().add("fadgi-sr-warning");			
 			validationInfo.getChildren().add(icon);
 			textField.setAccessibleText("Missing Required Value");
 		} else {

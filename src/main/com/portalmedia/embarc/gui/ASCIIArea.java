@@ -9,7 +9,9 @@ import com.portalmedia.embarc.parser.dpx.DPXColumn;
 import com.portalmedia.embarc.parser.mxf.MXFColumn;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -44,7 +46,7 @@ public class ASCIIArea extends AnchorPane implements IEditorField {
 	@FXML
 	private TextArea editorTextArea;
 	@FXML
-	private FontAwesomeIconView popoutIcon;
+	private FontIcon popoutIcon;
 	@FXML
 	private HBox popoutIconContainer;
 	@FXML

@@ -27,8 +27,9 @@ import com.portalmedia.embarc.parser.mxf.ManifestParser;
 import com.portalmedia.embarc.parser.mxf.ManifestParserImpl;
 import com.portalmedia.embarc.parser.mxf.ManifestType;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -262,8 +263,8 @@ public class TDBDController extends AnchorPane {
 	}
 
 	private Button getDownloadButton(String streamId, String filePath, String fileName, Boolean isTD, String title) {
-		FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
-		icon.setGlyphName("DOWNLOAD");
+		FontIcon icon = new FontIcon(FontAwesomeSolid.DOWNLOAD);
+		icon.setIconCode(FontAwesomeSolid.DOWNLOAD);
 		icon.setAccessibleText("Select to download data for " + title);
 		
 		Button button = new Button();
@@ -319,9 +320,9 @@ public class TDBDController extends AnchorPane {
 		final Label writeFilesPathLabel = new Label(fullPath);
 		writeFilesPathLabel.setStyle("-fx-text-fill: black;");
 		final ChoiceDialog<ButtonData> dialog = new ChoiceDialog<>();
-		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
-		icon.setStyleClass("write-files-icon");
-		icon.setSize("20");
+		final FontIcon icon = new FontIcon(FontAwesomeSolid.DOWNLOAD);
+		icon.getStyleClass().add("write-files-icon");
+		icon.setIconSize(20);
 		dialog.setGraphic(icon);
 		dialog.getDialogPane().setPrefSize(525, 150);
 		String tdbd = isTD ? "Text Data" : "Binary Data";

@@ -7,10 +7,10 @@ import java.util.List;
 import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import org.kordamp.ikonli.materialdesign.MaterialDesign;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
@@ -87,9 +87,9 @@ public class RuleSetModalController {
 		// SMPTE-C - grey square
 		final CheckBox smpteCheckbox = new CheckBox("SMPTE-C");
 		smpteCheckbox.setStyle(alertTextStyles);
-		final MaterialDesignIconView icon2 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_BOX);
-		icon2.setStyleClass("smpte-c-warning");
-		icon2.setSize("18");
+		final FontIcon icon2 = new FontIcon(MaterialDesign.MDI_ALERT_BOX);
+		icon2.getStyleClass().add("smpte-c-warning");
+		icon2.setIconSize(18);
 		smpteCheckbox.setGraphic(icon2);
 		if (currentRules.contains(ValidationRuleSetEnum.SMPTE_C)) {
 			smpteCheckbox.setSelected(true);
@@ -108,9 +108,9 @@ public class RuleSetModalController {
 		// FADGI-SR - red octagon
 		final CheckBox fadgiSRCheckbox = new CheckBox("FADGI-SR");
 		fadgiSRCheckbox.setStyle(alertTextStyles);
-		final MaterialDesignIconView icon3 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
-		icon3.setStyleClass("fadgi-sr-warning");
-		icon3.setSize("18");
+		final FontIcon icon3 = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+		icon3.getStyleClass().add("fadgi-sr-warning");
+		icon3.setIconSize(18);
 		fadgiSRCheckbox.setGraphic(icon3);
 		if (currentRules.contains(ValidationRuleSetEnum.FADGI_SR)) {
 			fadgiSRCheckbox.setSelected(true);
@@ -129,9 +129,9 @@ public class RuleSetModalController {
 		// FADGI-R - orange triangle
 		final CheckBox fadgiRCheckbox = new CheckBox("FADGI-R");
 		fadgiRCheckbox.setStyle(alertTextStyles);
-		final FontAwesomeIconView icon4 = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_TRIANGLE);
-		icon4.setStyleClass("fadgi-r-warning");
-		icon4.setSize("16");
+		final FontIcon icon4 = new FontIcon(FontAwesomeSolid.EXCLAMATION_TRIANGLE);
+		icon4.getStyleClass().add("fadgi-r-warning");
+		icon4.setIconSize(16);
 		fadgiRCheckbox.setGraphic(icon4);
 		if (currentRules.contains(ValidationRuleSetEnum.FADGI_R)) {
 			fadgiRCheckbox.setSelected(true);
@@ -150,9 +150,9 @@ public class RuleSetModalController {
 		// FADGI-O - yellow circle
 		final CheckBox fadgiOCheckbox = new CheckBox("FADGI-O");
 		fadgiOCheckbox.setStyle(alertTextStyles);
-		final MaterialDesignIconView icon5 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_CIRCLE);
-		icon5.setStyleClass("fadgi-o-warning");
-		icon5.setSize("18");
+		final FontIcon icon5 = new FontIcon(MaterialDesign.MDI_ALERT_CIRCLE);
+		icon5.getStyleClass().add("fadgi-o-warning");
+		icon5.setIconSize(18);
 		fadgiOCheckbox.setGraphic(icon5);
 		if (currentRules.contains(ValidationRuleSetEnum.FADGI_O)) {
 			fadgiOCheckbox.setSelected(true);

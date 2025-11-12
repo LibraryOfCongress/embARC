@@ -7,10 +7,10 @@ import com.portalmedia.embarc.gui.model.DatabaseSummary;
 import com.portalmedia.embarc.parser.SectionDef;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import org.kordamp.ikonli.materialdesign.MaterialDesign;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -131,9 +131,9 @@ public class WriteFilesView extends AnchorPane {
 		smptcCB.setId("SMPTE_C");
 		final Label smptcLabel = new Label("Files with SMPTE-C Violations"); // grey square
 		smptcLabel.setLabelFor(smptcCB);
-		final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_BOX);
-		icon.setStyleClass("smpte-c-warning");
-		icon.setSize("18");
+		final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_BOX);
+		icon.getStyleClass().add("smpte-c-warning");
+		icon.setIconSize(18);
 		smptcLabel.setGraphic(icon);
 		HBox smptcHBox = new HBox();
 		smptcHBox.setSpacing(10);
@@ -148,9 +148,9 @@ public class WriteFilesView extends AnchorPane {
 		fsrCB.setId("FADGI_SR");
 		final Label fsrLabel = new Label("Files with FADGI-SR violations"); // red octagon
 		fsrLabel.setLabelFor(fsrCB);
-		final MaterialDesignIconView icon1 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
-		icon1.setStyleClass("fadgi-sr-warning");
-		icon1.setSize("18");
+		final FontIcon icon1 = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+		icon1.getStyleClass().add("fadgi-sr-warning");
+		icon1.setIconSize(18);
 		fsrLabel.setGraphic(icon1);
 		HBox fsrHBox = new HBox();
 		fsrHBox.setSpacing(10);
@@ -165,9 +165,9 @@ public class WriteFilesView extends AnchorPane {
 		frCB.setId("FADGI_R");
 		final Label frLabel = new Label("Files with FADGI-R Violations"); // orange triangle
 		frLabel.setLabelFor(frCB);
-		final FontAwesomeIconView icon2 = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_TRIANGLE);
-		icon2.setStyleClass("fadgi-r-warning");
-		icon2.setSize("16");
+		final FontIcon icon2 = new FontIcon(FontAwesomeSolid.EXCLAMATION_TRIANGLE);
+		icon2.getStyleClass().add("fadgi-r-warning");
+		icon2.setIconSize(16);
 		frLabel.setGraphic(icon2);
 		HBox frHBox = new HBox();
 		frHBox.setSpacing(10);
@@ -182,9 +182,9 @@ public class WriteFilesView extends AnchorPane {
 		foCB.setId("FADGI_O");
 		final Label foLabel = new Label("Files with FADGI-O Violations"); // yellow circle
 		foLabel.setLabelFor(foCB);
-		final MaterialDesignIconView icon3 = new MaterialDesignIconView(MaterialDesignIcon.ALERT_CIRCLE);
-		icon3.setStyleClass("fadgi-o-warning");
-		icon3.setSize("18");
+		final FontIcon icon3 = new FontIcon(MaterialDesign.MDI_ALERT_CIRCLE);
+		icon3.getStyleClass().add("fadgi-o-warning");
+		icon3.setIconSize(18);
 		foLabel.setGraphic(icon3);
 		HBox foHBox = new HBox();
 		foHBox.setSpacing(10);

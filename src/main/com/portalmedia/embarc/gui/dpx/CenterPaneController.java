@@ -35,8 +35,8 @@ import com.portalmedia.embarc.parser.dpx.DPXSequenceError;
 import com.portalmedia.embarc.system.UserPreferencesService;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -373,11 +373,11 @@ public class CenterPaneController implements Initializable {
 		title.setTooltip(tt);
 		setColumnHeaderSequenceErrorIndicator(columnDisplayName, title, hbox);
 		if(parentOfSubheaders) {
-			new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
+			new FontIcon(FontAwesomeSolid.CARET_DOWN);
 			title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
-			final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.CARET_DOWN);
+			final FontIcon icon = new FontIcon(FontAwesomeSolid.CARET_DOWN);
 			hbox.getChildren().add(icon);
-		} 
+		}
 		
 		hbox.getChildren().add(title);
 		hbox.setAlignment(Pos.CENTER);
@@ -412,8 +412,8 @@ public class CenterPaneController implements Initializable {
 	
 	private void setSequenceErrorIcon(Label title, HBox hbox) {
 		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
-		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
-		icon.setStyleClass("fadgi-sr-warning");
+		final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION);
+		icon.getStyleClass().add("fadgi-sr-warning");
 		hbox.getChildren().add(icon);
 	}
 
@@ -816,8 +816,8 @@ public class CenterPaneController implements Initializable {
 		final String defaultStyle = "-fx-font-size: 12px";
 		final Label title = new Label(titleText);
 		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
-		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
-		icon.setStyleClass("fadgi-sr-warning");
+		final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION);
+		icon.getStyleClass().add("fadgi-sr-warning");
 		hbox.getChildren().add(icon);	
 		hbox.getChildren().add(title);
 		hbox.setAlignment(Pos.CENTER);

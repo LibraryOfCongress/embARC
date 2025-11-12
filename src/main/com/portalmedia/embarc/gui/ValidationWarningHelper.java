@@ -9,10 +9,10 @@ import com.portalmedia.embarc.validation.DPXColumnValidationRules;
 import com.portalmedia.embarc.validation.IValidationRule;
 import com.portalmedia.embarc.validation.ValidationRuleSetEnum;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import org.kordamp.ikonli.materialdesign.MaterialDesign;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.geometry.Pos;
 import javafx.scene.AccessibleRole;
 import javafx.scene.control.Alert;
@@ -44,24 +44,24 @@ public class ValidationWarningHelper {
 		
 		for (final ValidationRuleSetEnum rule : invalidRuleSet) {
 			if (rule == ValidationRuleSetEnum.FADGI_O) { // yellow circle
-				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_CIRCLE);
-				icon.setStyleClass("fadgi-o-warning");
-				icon.setSize("18");
+				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_CIRCLE);
+				icon.getStyleClass().add("fadgi-o-warning");
+				icon.setIconSize(18);
 				warningIcons.getChildren().add(icon);
 			} else if (rule == ValidationRuleSetEnum.FADGI_R) { // orange triangle
-				final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_TRIANGLE);
-				icon.setStyleClass("fadgi-r-warning");
-				icon.setSize("16");
+				final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION_TRIANGLE);
+				icon.getStyleClass().add("fadgi-r-warning");
+				icon.setIconSize(16);
 				warningIcons.getChildren().add(icon);
 			} else if (rule == ValidationRuleSetEnum.FADGI_SR) { // red octagon
-				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
-				icon.setStyleClass("fadgi-sr-warning");
-				icon.setSize("18");
+				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+				icon.getStyleClass().add("fadgi-sr-warning");
+				icon.setIconSize(18);
 				warningIcons.getChildren().add(icon);
 			} else if (rule == ValidationRuleSetEnum.SMPTE_C) { // grey square
-				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_BOX);
-				icon.setStyleClass("smpte-c-warning");
-				icon.setSize("18");
+				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_BOX);
+				icon.getStyleClass().add("smpte-c-warning");
+				icon.setIconSize(18);
 				warningIcons.getChildren().add(icon);
 			}
 		}
@@ -94,9 +94,9 @@ public class ValidationWarningHelper {
 				}
 					
 				hasInvalidRules = true;
-				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_CIRCLE);
+				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_CIRCLE);
 				icon.setAccessibleText(ruleText);
-				icon.setStyleClass("fadgi-o-warning-clickable");
+				icon.getStyleClass().add("fadgi-o-warning-clickable");
 	
 				HBox iconHbox = ValidationWarningHelper.CreateValidationIcon("FADGI-O", ruleText);
 				iconHbox.getChildren().add(icon);
@@ -111,9 +111,9 @@ public class ValidationWarningHelper {
 				}
 				
 				hasInvalidRules = true;
-				final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_TRIANGLE);
+				final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION_TRIANGLE);
 				icon.setAccessibleText(ruleText);
-				icon.setStyleClass("fadgi-r-warning-clickable");
+				icon.getStyleClass().add("fadgi-r-warning-clickable");
 				
 				HBox iconHbox = ValidationWarningHelper.CreateValidationIcon("FADGI-R", ruleText);
 				iconHbox.getChildren().add(icon);
@@ -128,9 +128,9 @@ public class ValidationWarningHelper {
 				}
 				
 				hasInvalidRules = true;
-				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_OCTAGON);
+				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
 				icon.setAccessibleText(ruleText);
-				icon.setStyleClass("fadgi-sr-warning-clickable");
+				icon.getStyleClass().add("fadgi-sr-warning-clickable");
 				
 				HBox iconHbox = ValidationWarningHelper.CreateValidationIcon("FADGI-SR", ruleText);
 				iconHbox.getChildren().add(icon);
@@ -145,9 +145,9 @@ public class ValidationWarningHelper {
 				}
 				
 				hasInvalidRules = true;
-				final MaterialDesignIconView icon = new MaterialDesignIconView(MaterialDesignIcon.ALERT_BOX);
+				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_BOX);
 				icon.setAccessibleText(ruleText);
-				icon.setStyleClass("smpte-c-warning-clickable");
+				icon.getStyleClass().add("smpte-c-warning-clickable");
 				HBox iconHbox = ValidationWarningHelper.CreateValidationIcon("SMPTE-C", ruleText);
 				iconHbox.getChildren().add(icon);
 				warningIcons.getChildren().add(iconHbox);

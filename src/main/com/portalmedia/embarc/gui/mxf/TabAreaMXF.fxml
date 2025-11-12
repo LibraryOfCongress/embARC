@@ -4,7 +4,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import com.portalmedia.embarc.gui.*?>
 
 <BorderPane
