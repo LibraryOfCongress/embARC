@@ -3,21 +3,22 @@ plugins {
 	id 'eclipse'
 	id 'application'
 	id 'distribution'
-	id 'com.github.johnrengelman.shadow' version '4.0.2'
-	id 'edu.sc.seis.launch4j' version '2.4.4'
-	id 'edu.sc.seis.macAppBundle' version '2.3.0'
+	id 'com.gradleup.shadow' version '9.1.0'
+	id 'org.openjfx.javafxplugin' version '0.1.0'
+	id 'org.beryx.jlink' version '3.1.2'  // Add this for better JavaFX packaging
 }
 
-applicationName = 'embARC'
+application {
+    mainClass = 'com.portalmedia.embarc.gui.Launcher'
+}
 
-// GUI Settings
-version = '1.4.0'
-mainClassName = 'com.portalmedia.embarc.gui.Main'
+// GUI Setings
+//mainClass = 'com.portalmedia.embarc.gui.Launcher'
 
 // CLI Settings
-// Uncomment the following lines for CLI version
-// version = '0.4.0'
-// mainClassName = 'com.portalmedia.embarc.cli.Main'
+//mainClassName = 'com.portalmedia.embarc.cli.Main'
+
+version = '1.4'
 
 repositories {
 	mavenCentral()
@@ -33,6 +34,7 @@ sourceSets {
 			srcDirs = ['src/main', 'src/resources']
 		}
 	}
+/*
 	test {
 		java {
 			srcDirs = ['src/tests']
@@ -41,82 +43,83 @@ sourceSets {
 			srcDir 'tests/resources'
 		}
 	}
+*/
+}
+
+javafx {
+    version = '21'
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.base', 'javafx.graphics' ]
+    configuration = 'implementation'
+
+    run.jvmArgs = ['--add-exports=javafx.graphics/com.sun.javafx.css.parser=ALL-UNNAMED']
 }
 
 dependencies {
-	implementation 'commons-cli:commons-cli:1.4'
-	implementation 'commons-collections:commons-collections:3.2.2'
-	implementation 'commons-io:commons-io:2.8.0'
+	implementation 'commons-cli:commons-cli:1.10.0'
+	implementation 'commons-collections:commons-collections:3.1'
+	implementation 'commons-io:commons-io:2.20.0'
 	implementation 'commons-lang:commons-lang:2.6'
-	//implementation 'de.jensd:fontawesomefx-emojione:2.2.7-2'
-	//implementation 'de.jensd:fontawesomefx-fontawesome:4.7.0-5'
-    //implementation 'de.jensd:fontawesomefx-icons525:3.0.0-4'
-    //implementation 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
-    //implementation 'de.jensd:fontawesomefx-materialicons:2.2.0-5'
-    //implementation 'de.jensd:fontawesomefx-octicons:4.3.0-5'
-    //implementation 'de.jensd:fontawesomefx-weathericons:2.0.10-5'
-	implementation 'javax.activation:activation:1.1'
+	implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.1'
+	implementation 'org.kordamp.ikonli:ikonli-fontawesome5-pack:12.3.1'
+	implementation 'org.kordamp.ikonli:ikonli-materialdesign-pack:12.3.1'
+	implementation 'javax.activation:activation:1.1.1'
 	implementation 'javax.xml.bind:jaxb-api:2.4.0-b180830.0359'
 	implementation 'net.byteseek:byteseek:2.0.3'
-	implementation 'net.sf.supercsv:super-csv:2.3.1'
+	implementation 'net.sf.supercsv:super-csv:2.4.0'
 	implementation 'net.sf.trove4j:trove4j:3.0.3'
-	implementation 'org.apache.tika:tika-core:1.4'
-	implementation 'org.controlsfx:controlsfx:8.40.14'
+	implementation 'org.apache.tika:tika-core:3.2.2'
+	implementation 'org.controlsfx:controlsfx:11.2.2'
 	implementation 'org.dizitart:nitrite:3.1.0'
-	implementation 'org.glassfish.jaxb:jaxb-runtime:2.4.0-b180830.0438'
-	implementation 'org.json:json:20201115'
-	implementation files('../maj/target/classes')
-	implementation files('../droid/droid-core/target/classes')
-	implementation files('../droid/droid-core-interfaces/target/classes')
-	implementation fileTree(dir: '../javafx-sdk-18.0.2/lib', include: '*.jar')
-	implementation fileTree(dir: '../fontawesome', include: ['*.jar'])
+	implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
+	implementation 'org.json:json:20250517'
+	implementation files('embARC-maj/target/classes')
+	implementation 'uk.gov.nationalarchives:droid-core:6.9.4'
+	implementation 'uk.gov.nationalarchives:droid-core-interfaces:6.9.4'
+
 	implementation gradleApi()
 
-	implementation 'junit:junit:4.12'
+	implementation 'junit:junit:4.13.2'
+
+	// Explicit JavaFX dependencies for runtime
+	runtimeOnly "org.openjfx:javafx-controls:21:win"
+	runtimeOnly "org.openjfx:javafx-controls:21:linux"
+	runtimeOnly "org.openjfx:javafx-controls:21:mac"
+	runtimeOnly "org.openjfx:javafx-fxml:21:win"
+	runtimeOnly "org.openjfx:javafx-fxml:21:linux"
+	runtimeOnly "org.openjfx:javafx-fxml:21:mac"
+	runtimeOnly "org.openjfx:javafx-base:21:win"
+	runtimeOnly "org.openjfx:javafx-base:21:linux"
+	runtimeOnly "org.openjfx:javafx-base:21:mac"
+	runtimeOnly "org.openjfx:javafx-graphics:21:win"
+	runtimeOnly "org.openjfx:javafx-graphics:21:linux"
+	runtimeOnly "org.openjfx:javafx-graphics:21:mac"
 }
 
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'com.portalmedia.embarc.cli.Main'
+			'Main-Class': application.mainClass
 		)
 	}
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
 shadowJar {
-	archiveName = "embARC-${version}.jar"
-	baseName = 'embARC'
-}
+    zip64 = true
 
-launch4j {
-	version = "${version}"
-	mainClassName = 'com.portalmedia.embarc.gui.Main'
-	outfile = 'embARC.exe'
-	copyConfigurable = tasks.shadowJar.outputs.files
-	jar = "lib/${project.tasks.shadowJar.archiveName}"
-	icon = "${projectDir}/icons/embarc_gRr_icon.ico"
-	maxHeapSize = 6000
-	jvmOptions = ['-XX:+UseG1GC', '-Xms64m']
-	maxHeapPercent = 10
-}
-
-macAppBundle {
-	appName = "embARC"
-	version = "${version}"
-	mainClassName = 'com.portalmedia.embarc.gui.Main'
-	icon = "${projectDir}/icons/embarc.icns"
-	backgroundImage = "${projectDir}/icons/embARC.png"
-	arguments = ['-XX:+UseG1GC', '-Xms64m']
-	bundleJRE = true
-	jreHome = '/Library/Java/JavaVirtualMachines/amazon-corretto-8.jdk/Contents/Home'
-	jarTask = 'shadowJar'
+    // Merge service files to avoid JavaFX issues
+    mergeServiceFiles()
 }
 
 task writeVersionProperties {
-	doLast {
-		def file = file("${projectDir}/src/main/resources/version.properties")
-		file.text = "version=${version}\n"
-	}
+    doLast {
+        def file = file("${projectDir}/src/main/resources/version.properties")
+        file.text = "version=${version}\n"
+    }
 }
 
 processResources.dependsOn writeVersionProperties

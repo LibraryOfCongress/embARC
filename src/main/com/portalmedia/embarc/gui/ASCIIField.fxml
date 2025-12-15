@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 <?import org.controlsfx.control.textfield.CustomTextField?>
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import javafx.scene.layout.HBox?>
 
 <fx:root
@@ -37,10 +37,10 @@
 				fx:id="editorTextFieldLabelInfoIcon"
 				focusTraversable="true"
 			>
-				<FontAwesomeIconView
+				<FontIcon
 					styleClass="popout-icon"
-					glyphName="INFO_CIRCLE"
-					size="12px"
+					iconLiteral="fas-info-circle"
+					iconSize="12"
 				/>
 			</HBox>
 		</HBox>
@@ -63,10 +63,10 @@
 			alignment="CENTER"
 			visible="false"
 		>
-			<FontAwesomeIconView
+			<FontIcon
 				styleClass="popout-icon"
-				glyphName="EXTERNAL_LINK"
-				size="15px"
+				iconLiteral="fas-external-link-alt"
+				iconSize="15"
 			/>
 		</HBox>
 		<padding>

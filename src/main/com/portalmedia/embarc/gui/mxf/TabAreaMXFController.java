@@ -27,8 +27,9 @@ import com.portalmedia.embarc.parser.mxf.MXFFileInfo;
 import com.portalmedia.embarc.parser.mxf.MXFMetadataColumnViewModelList;
 import com.portalmedia.embarc.parser.mxf.MXFSection;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -615,8 +616,8 @@ public class TabAreaMXFController implements Initializable {
 	private void setTabWarnings() {
 		final ObservableList<Tab> tabs = mxfTabPane.getTabs();
 		for (final Tab tab : tabs) {
-			final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
-			icon.setStyleClass("fadgi-sr-warning");
+			final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION);
+			icon.getStyleClass().add("fadgi-sr-warning");
 			switch (tab.getId()) {
 			case "coreTab":
 				if (MXFFileList.getInstance().hasCoreRequiredFieldsErrorProperty().get()) {
@@ -650,8 +651,8 @@ public class TabAreaMXFController implements Initializable {
 		final String defaultStyle = "-fx-font-size: 12px";
 		final Label title = new Label(titleText);
 		title.setStyle("-fx-padding: 0 0 0 5; -fx-font-size: 12px");
-		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION);
-		icon.setStyleClass("fadgi-sr-warning");
+		final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION);
+		icon.getStyleClass().add("fadgi-sr-warning");
 		hbox.getChildren().add(icon);	
 		hbox.getChildren().add(title);
 		hbox.setAlignment(Pos.CENTER);

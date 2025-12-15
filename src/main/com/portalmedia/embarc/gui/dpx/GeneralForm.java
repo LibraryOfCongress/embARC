@@ -14,7 +14,9 @@ import org.apache.log4j.Logger;
 
 import com.portalmedia.embarc.gui.model.SelectedFilesSummary;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -96,8 +98,8 @@ public class GeneralForm extends AnchorPane {
 			viewImage.setFocusTraversable(false);
 			grid.add(viewImage, 0, 2);
 
-			final FontAwesomeIconView viewImageIcon = new FontAwesomeIconView();
-			viewImageIcon.setGlyphName("EXTERNAL_LINK");
+			final FontIcon viewImageIcon = new FontIcon();
+			viewImageIcon.setIconCode(FontAwesomeSolid.EXTERNAL_LINK_ALT);
 			viewImageIcon.setAccessibleText("Select to open image viewer");
 			final Button b = new Button();
 			b.setStyle("-fx-text-fill: black; -fx-base: #E5E5E5;");

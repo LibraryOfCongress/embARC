@@ -8,7 +8,7 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.text.Text?>
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import com.portalmedia.embarc.gui.*?>
 
 <AnchorPane
@@ -68,9 +68,9 @@
 						layoutY="18.0"
 					>
 						<graphic>
-							<FontAwesomeIconView
-								glyphName="DOWNLOAD"
-								size="20px"
+							<FontIcon
+								iconLiteral="fas-download"
+								iconSize="20"
 							/>
 						</graphic>
 					</Button>

@@ -10,8 +10,9 @@ import com.portalmedia.embarc.gui.Main;
 import com.portalmedia.embarc.gui.helper.CleanInputPathHelper;
 import com.portalmedia.embarc.system.UserPreferencesService;
 
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -55,9 +56,9 @@ public class WriteFilesModalControllerMXF {
 	public void showWriteFilesDialog() {
 		final UserPreferencesService userPreferences = new UserPreferencesService();
 		final ChoiceDialog<ButtonData> dialog = new ChoiceDialog<>();
-		final FontAwesomeIconView icon = new FontAwesomeIconView(FontAwesomeIcon.DOWNLOAD);
-		icon.setStyleClass("write-files-icon");
-		icon.setSize("20");
+		final FontIcon icon = new FontIcon(FontAwesomeSolid.DOWNLOAD);
+		icon.getStyleClass().add("write-files-icon");
+		icon.setIconSize(20);
 		dialog.setGraphic(icon);
 		dialog.getDialogPane().setPrefSize(525, 320);
 		dialog.setTitle("Write Files");
