@@ -29,7 +29,7 @@ import tv.amwa.maj.model.SubDescriptor;
 import tv.amwa.maj.model.impl.AS07DateTimeDescriptorImpl;
 import tv.amwa.maj.model.impl.AncillaryPacketsDescriptorImpl;
 import tv.amwa.maj.model.impl.CDCIDescriptorImpl;
-import tv.amwa.maj.model.impl.FFV1PictureSubDescriptorImpl;
+//import tv.amwa.maj.model.impl.FFV1PictureSubDescriptorImpl;
 import tv.amwa.maj.model.impl.TimedTextDescriptorImpl;
 import tv.amwa.maj.model.impl.WAVEPCMDescriptorImpl;
 import tv.amwa.maj.record.Rational;
@@ -355,6 +355,7 @@ public class DescriptorHelper {
 		cdciProps.put("White Reference Level", whiteRefLevel);
 
 		// FFV1
+		/*
 		FFV1PictureSubDescriptorImpl ffv1 = null;
 		try {
 			List<SubDescriptor> subdescriptors = cdci.getSubDescriptors();
@@ -412,6 +413,7 @@ public class DescriptorHelper {
 			cdciProps.put("FFV1 Version", ffv1Version);
 			cdciProps.put("FFV1 Micro Version", ffv1MicroVersion);
 		}
+		*/
 
 		// Calculated Values
 		String duration = "";
@@ -766,6 +768,7 @@ public class DescriptorHelper {
 		return null;
 	}
 
+/*
 	private FFV1PictureSubDescriptorImpl GetFFV1Subdescriptor(List<SubDescriptor> subdescriptors) {
 		if (subdescriptors == null || subdescriptors.size() == 0) {
 			return null;
@@ -781,4 +784,5 @@ public class DescriptorHelper {
 		}
 		return null;
 	}
+*/
 }

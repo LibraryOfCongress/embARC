@@ -49,7 +49,7 @@ import tv.amwa.maj.model.SubDescriptor;
 import tv.amwa.maj.model.impl.AS07DateTimeDescriptorImpl;
 import tv.amwa.maj.model.impl.AncillaryPacketsDescriptorImpl;
 import tv.amwa.maj.model.impl.CDCIDescriptorImpl;
-import tv.amwa.maj.model.impl.FFV1PictureSubDescriptorImpl;
+//import tv.amwa.maj.model.impl.FFV1PictureSubDescriptorImpl;
 import tv.amwa.maj.model.impl.TimedTextDescriptorImpl;
 import tv.amwa.maj.model.impl.WAVEPCMDescriptorImpl;
 import tv.amwa.maj.record.AUID;
@@ -268,6 +268,7 @@ public class DescriptorMXFController extends AnchorPane {
 		cdciPane.setPadding(new Insets(0, 0, 10, 5));
 		vbox.getChildren().add(cdciPane);
 
+/*
 		BorderPane ffv1Pane = new BorderPane();
 		Label ffv1Title = new Label("FFV1");
 		ffv1Title.setUnderline(true);
@@ -279,6 +280,7 @@ public class DescriptorMXFController extends AnchorPane {
 		ffv1Pane.setCenter(ffv1GridPane);
 		ffv1Pane.setPadding(new Insets(0, 0, 10, 5));
 		vbox.getChildren().add(ffv1Pane);
+*/
 
 		BorderPane calculatedPane = new BorderPane();
 		Label calculatedTitle = new Label("Calculated");
@@ -621,7 +623,8 @@ public class DescriptorMXFController extends AnchorPane {
 	private void populateCDCIFFV1Grid(GridPane gp, CDCIDescriptorImpl cdci) {
 		int row = 0;
 		gp.setStyle("-fx-background-color: transparent;");
-		
+
+        /*
 		FFV1PictureSubDescriptorImpl ffv1 = null;
 		try {
 			List<SubDescriptor> subdescriptors = cdci.getSubDescriptors();
@@ -692,6 +695,7 @@ public class DescriptorMXFController extends AnchorPane {
 			}
 			row += 1;
 		}
+		*/
 	}
 
 	private void populateCDCICalculatedGrid(GridPane gp, CDCIDescriptorImpl cdci) {
@@ -1337,6 +1341,7 @@ public class DescriptorMXFController extends AnchorPane {
 		return null;
 	}
 
+/*
 	private FFV1PictureSubDescriptorImpl GetFFV1Subdescriptor(List<SubDescriptor> subdescriptors) {
 		if (subdescriptors == null || subdescriptors.size() == 0) {
 			return null;
@@ -1353,4 +1358,5 @@ public class DescriptorMXFController extends AnchorPane {
 		}
 		return null;
 	}
+*/
 }
