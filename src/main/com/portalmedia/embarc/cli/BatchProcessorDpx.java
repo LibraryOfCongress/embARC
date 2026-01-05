@@ -82,7 +82,7 @@ public class BatchProcessorDpx {
         			framePositionInSeqDuplicateResult = "Duplicates In Sequence";
         		}
         		prevFramePosition = currFramePosition;
-    		}
+			}
 
     		if (firstLap) firstLap = false;
     	}
@@ -129,17 +129,21 @@ public class BatchProcessorDpx {
     }
 
     private static boolean isSequential(String a, String b, boolean firstLap) {
-    	if (firstLap) return true;
-    	if (a.isEmpty() || b.isEmpty()) return false; // either are empty => not sequential
-    	if ((Integer.parseInt(a) + 1) == Integer.parseInt(b)) return true;
-    	return false;
+        if (firstLap) return true;
+        if (a == null || b == null || a.isEmpty() || b.isEmpty()) return false; // either are empty => not sequential
+        try {
+            if ((Integer.parseInt(a) + 1) == Integer.parseInt(b)) return true;
+        } catch (NumberFormatException e) { return false; }
+        return false;
     }
 
     private static boolean isUnique(String a, String b, boolean firstLap) {
-    	if (firstLap) return true;
-    	if (a.isEmpty() || b.isEmpty()) return true;
-    	if (Integer.parseInt(a) == Integer.parseInt(b)) return false;
-    	else return true;
+        if (firstLap) return true;
+        if (a == null || b == null || a.isEmpty() || b.isEmpty()) return true;
+        try {
+            if (Integer.parseInt(a) == Integer.parseInt(b)) return false;
+        } catch (NumberFormatException e) { return true; }
+        return true;
     }
 
     private static void batchFileSizeAnalysis(TreeMap<String, DPXFileInformation> dpxTreeMap) {
