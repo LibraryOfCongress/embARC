@@ -1,0 +1,72 @@
+name: Checks
+
+on: [push, pull_request]
+
+jobs:
+  Unix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+        id: setup-ffmpeg
+        with:
+          ffmpeg-version: release
+      - name: embARC-maj
+        run: |
+          git clone --depth=1 https://github.com/PortalMedia/embARC-maj.git
+      - name: Compile
+        run: |
+          sed -i.bak 's/com.portalmedia.embarc.gui.Launcher/com.portalmedia.embarc.cli.Main/g' build.gradle
+          ./gradlew build
+      - name: Check
+        run: |
+          ffmpeg -f lavfi -i "testsrc2=size=1920x1080:rate=30" -vframes 1 -pix_fmt rgb48le 000001.dpx
+          echo -n '{"COPYRIGHT_STATEMENT": "PLACEHOLDERTEXT"}' > copyright.json
+          java -jar build/libs/embARC-$(<Project/version.txt)-all.jar 000001.dpx -applyChangesFromJSON copyright.json
+          java -jar build/libs/embARC-$(<Project/version.txt)-all.jar 000001.dpx -json 000001.dpx.json
+          grep "PLACEHOLDERTEXT" 000001.dpx.json
+
+  Windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+        id: setup-ffmpeg
+        with:
+          ffmpeg-version: release
+      - name: embARC-maj
+        run: |
+          # Don't use git clone because it's fail on Windows due to invalid path (.metadata/.plugins/org.eclipse.core.runtime/.settings/org.springframework.ide.eclipse.boot.dash:Cloud Foundry.prefs')
+          Invoke-WebRequest -Uri "https://github.com/PortalMedia/embARC-maj/archive/refs/heads/master.zip" -OutFile "embARC-maj.zip"
+          Expand-Archive -Path "embARC-maj.zip" -DestinationPath "."
+          Rename-Item -Path "embARC-maj-master" -NewName "embARC-maj"
+      - name: Compile
+        run: |
+          (Get-Content build.gradle) -replace 'com.portalmedia.embarc.gui.Launcher', 'com.portalmedia.embarc.cli.Main' | Set-Content build.gradle
+          .\gradlew.bat build
+      - name: Check
+        run: |
+          ffmpeg -f lavfi -i "testsrc2=size=1920x1080:rate=30" -vframes 1 -pix_fmt rgb48le 000001.dpx
+          '{"COPYRIGHT_STATEMENT": "PLACEHOLDERTEXT"}' | Set-Content copyright.json -NoNewline
+          $version = Get-Content Project/version.txt
+          java -jar "build/libs/embARC-$version-all.jar" 000001.dpx -applyChangesFromJSON copyright.json
+          java -jar "build/libs/embARC-$version-all.jar" 000001.dpx -json 000001.dpx.json
+          if (-not (Select-String -Pattern "PLACEHOLDERTEXT" -Path "000001.dpx.json")) { throw "PLACEHOLDERTEXT not found" }
