@@ -31,11 +31,12 @@ jobs:
           ./gradlew build
       - name: Check
         run: |
-          ffmpeg -f lavfi -i "testsrc2=size=1920x1080:rate=30" -vframes 1 -pix_fmt rgb48le 000001.dpx
+          mkdir dpx
+          ffmpeg -f lavfi -i "testsrc2=size=1920x1080:rate=30" -vframes 5 -pix_fmt rgb48le dpx/%06d.dpx
           echo -n '{"COPYRIGHT_STATEMENT": "PLACEHOLDERTEXT"}' > copyright.json
-          java -jar build/libs/embARC-$(<Project/version.txt)-all.jar 000001.dpx -applyChangesFromJSON copyright.json
-          java -jar build/libs/embARC-$(<Project/version.txt)-all.jar 000001.dpx -json 000001.dpx.json
-          grep "PLACEHOLDERTEXT" 000001.dpx.json
+          java -jar build/libs/embARC-$(<Project/version.txt)-all.jar dpx/ -applyChangesFromJSON copyright.json
+          java -jar build/libs/embARC-$(<Project/version.txt)-all.jar dpx/000005.dpx -json 000005.dpx.json
+          grep "PLACEHOLDERTEXT" 000005.dpx.json
 
   Windows:
     runs-on: windows-latest
@@ -64,9 +65,10 @@ jobs:
           .\gradlew.bat build
       - name: Check
         run: |
-          ffmpeg -f lavfi -i "testsrc2=size=1920x1080:rate=30" -vframes 1 -pix_fmt rgb48le 000001.dpx
+          New-Item -ItemType Directory -Path "dpx"
+          ffmpeg -f lavfi -i "testsrc2=size=1920x1080:rate=30" -vframes 5 -pix_fmt rgb48le dpx/%06d.dpx
           '{"COPYRIGHT_STATEMENT": "PLACEHOLDERTEXT"}' | Set-Content copyright.json -NoNewline
           $version = Get-Content Project/version.txt
-          java -jar "build/libs/embARC-$version-all.jar" 000001.dpx -applyChangesFromJSON copyright.json
-          java -jar "build/libs/embARC-$version-all.jar" 000001.dpx -json 000001.dpx.json
-          if (-not (Select-String -Pattern "PLACEHOLDERTEXT" -Path "000001.dpx.json")) { throw "PLACEHOLDERTEXT not found" }
+          java -jar "build/libs/embARC-$version-all.jar" dpx/ -applyChangesFromJSON copyright.json
+          java -jar "build/libs/embARC-$version-all.jar" dpx/000005.dpx -json 000005.dpx.json
+          if (-not (Select-String -Pattern "PLACEHOLDERTEXT" -Path "000005.dpx.json")) { throw "PLACEHOLDERTEXT not found" }
