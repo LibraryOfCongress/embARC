@@ -202,7 +202,7 @@ public class BytesToStringHelper {
 	}
 	
 	public static String toTypedString(Class<?> type, byte[] value, ByteOrder byteOrder) {
-		if(isNull(value, type)) return "NULL";
+		if(isNull(value, type)) return "";
 		
 		if (type == byte[].class) {
 			return toByteArrayString(value);
@@ -285,7 +285,7 @@ public class BytesToStringHelper {
 	}
 	public static String toStandardizedTypedString(Class<?> type, byte[] value, ByteOrder byteOrder) {
 
-		if(isNull(value, type)) return "NULL";
+		if(isNull(value, type)) return "";
 		
 		if (type == byte[].class) {
 			return toByteArrayString(value);
