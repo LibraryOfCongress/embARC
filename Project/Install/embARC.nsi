@@ -37,6 +37,11 @@ SetCompressor /FINAL /SOLID lzma
 !define MUI_ABORTWARNING
 !define MUI_ICON "..\..\icons\embARC.ico"
 
+; Uninstaller signing
+!ifdef EXPORT_UNINST
+  !uninstfinalize 'copy /Y "%1" "../../Release/${PRODUCT_NAME}_GUI_${PRODUCT_VERSION}_Windows_x64-uninst.exe"'
+!endif
+
 ; Language Selection Dialog Settings
 !define MUI_LANGDLL_REGISTRY_ROOT "${PRODUCT_UNINST_ROOT_KEY}"
 !define MUI_LANGDLL_REGISTRY_KEY "${PRODUCT_UNINST_KEY}"
@@ -100,7 +105,11 @@ Section "SectionPrincipale" SEC01
 SectionEnd
 
 Section -Post
-  WriteUninstaller "$INSTDIR\uninst.exe"
+  !if /FileExists "..\..\Release\${PRODUCT_NAME}_GUI_${PRODUCT_VERSION}_Windows_x64-uninst.exe"
+    File "/oname=$INSTDIR\uninst.exe" "..\..\Release\${PRODUCT_NAME}_GUI_${PRODUCT_VERSION}_Windows_x64-uninst.exe"
+  !else
+    WriteUninstaller "$INSTDIR\uninst.exe"
+  !endif
   WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\embARC.exe"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName"     "$(^Name)"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher"       "${PRODUCT_PUBLISHER}"
