@@ -52,7 +52,7 @@ public class ValidationCellFactoryMXF extends TableCell<MXFFileInformationViewMo
 					final MXFFileInformationViewModel fivm = row.getItem();
 					String cellData = columnData.getCellData(fivm);
 					if (mcvmData.getMXFColumn().isRequired() && StringUtils.isBlank(cellData)) {
-						final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+						final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION_CIRCLE);
 						icon.setAccessibleText("Missing Required Value");
 						icon.getStyleClass().add("fadgi-sr-warning");
 						

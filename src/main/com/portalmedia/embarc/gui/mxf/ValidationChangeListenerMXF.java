@@ -45,7 +45,7 @@ public class ValidationChangeListenerMXF implements ChangeListener<String> {
 	
 	public void setMissingRequiredField(String value) {
 		if (this.column.isRequired() && StringUtils.isBlank(value)) {
-			final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);		
+			final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION_CIRCLE);		
 			icon.getStyleClass().add("fadgi-sr-warning");			
 			validationInfo.getChildren().add(icon);
 			textField.setAccessibleText("Missing Required Value");

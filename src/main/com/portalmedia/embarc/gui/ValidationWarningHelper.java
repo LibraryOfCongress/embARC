@@ -54,7 +54,7 @@ public class ValidationWarningHelper {
 				icon.setIconSize(16);
 				warningIcons.getChildren().add(icon);
 			} else if (rule == ValidationRuleSetEnum.FADGI_SR) { // red octagon
-				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+				final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION_CIRCLE);
 				icon.getStyleClass().add("fadgi-sr-warning");
 				icon.setIconSize(18);
 				warningIcons.getChildren().add(icon);
@@ -128,7 +128,7 @@ public class ValidationWarningHelper {
 				}
 				
 				hasInvalidRules = true;
-				final FontIcon icon = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+				final FontIcon icon = new FontIcon(FontAwesomeSolid.EXCLAMATION_CIRCLE);
 				icon.setAccessibleText(ruleText);
 				icon.getStyleClass().add("fadgi-sr-warning-clickable");
 				

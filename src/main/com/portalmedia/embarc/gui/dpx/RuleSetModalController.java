@@ -108,7 +108,7 @@ public class RuleSetModalController {
 		// FADGI-SR - red octagon
 		final CheckBox fadgiSRCheckbox = new CheckBox("FADGI-SR");
 		fadgiSRCheckbox.setStyle(alertTextStyles);
-		final FontIcon icon3 = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+		final FontIcon icon3 = new FontIcon(FontAwesomeSolid.EXCLAMATION_CIRCLE);
 		icon3.getStyleClass().add("fadgi-sr-warning");
 		icon3.setIconSize(18);
 		fadgiSRCheckbox.setGraphic(icon3);
