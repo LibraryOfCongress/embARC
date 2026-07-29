@@ -148,7 +148,7 @@ public class WriteFilesView extends AnchorPane {
 		fsrCB.setId("FADGI_SR");
 		final Label fsrLabel = new Label("Files with FADGI-SR violations"); // red octagon
 		fsrLabel.setLabelFor(fsrCB);
-		final FontIcon icon1 = new FontIcon(MaterialDesign.MDI_ALERT_OCTAGON);
+		final FontIcon icon1 = new FontIcon(FontAwesomeSolid.EXCLAMATION_CIRCLE);
 		icon1.getStyleClass().add("fadgi-sr-warning");
 		icon1.setIconSize(18);
 		fsrLabel.setGraphic(icon1);
