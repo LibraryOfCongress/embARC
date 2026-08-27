@@ -14,7 +14,7 @@ public class IdentifierSetHelper {
 		ArrayList<AS07DMSIdentifierSetImpl> idents = new ArrayList<AS07DMSIdentifierSetImpl>();
 		String[] valList = values.split(slash);
 		for (String v : valList) {
-			if (v != "") idents.add(createIdentifierFromString(v));
+			if (!v.isEmpty()) idents.add(createIdentifierFromString(v));
 		}
 		return idents;
 	}

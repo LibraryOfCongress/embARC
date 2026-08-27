@@ -15,7 +15,7 @@ public class DeviceSetHelper {
 		ArrayList<AS07CoreDMSDeviceObjectsImpl> devices = new ArrayList<AS07CoreDMSDeviceObjectsImpl>();
 		String[] valList = values.split(slash);
 		for (String v : valList) {
-			if (v != "") devices.add(createDeviceFromString(v));
+			if (!v.isEmpty()) devices.add(createDeviceFromString(v));
 		}
 		return devices;
 	}

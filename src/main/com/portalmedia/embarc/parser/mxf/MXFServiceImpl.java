@@ -17,8 +17,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.logging.Level;
@@ -405,7 +407,8 @@ public class MXFServiceImpl implements MXFService {
 		return null;
 	}
 
-	private static byte[] encodeCoreDMSLocalSet(AS07CoreDMSFramework framework, AUID instanceID, PrimerPack primerPack)
+	private static byte[] encodeCoreDMSLocalSet(AS07CoreDMSFramework framework, AUID instanceID, PrimerPack primerPack,
+			Map<String, byte[]> preservedRawProperties)
 			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
 		ClassDefinition classDef = Warehouse.lookForClass(AS07CoreDMSFrameworkImpl.class);
 		SortedMap<? extends PropertyDefinition, ? extends PropertyValue> properties = classDef.getProperties(framework);
@@ -422,8 +425,15 @@ public class MXFServiceImpl implements MXFService {
 		bodyOut.write(shortToBytes((short) 16));
 		bodyOut.write(instanceID.getAUIDValue());
 
+		Set<String> written = new HashSet<String>();
 		for (PropertyDefinition property : properties.keySet()) {
 			if (property.getAUID().equals(CommonConstants.ObjectClassID)) continue;
+			byte[] preserved = preservedRawProperties.get(property.getName());
+			if (preserved != null) {
+				bodyOut.write(preserved);
+				written.add(property.getName());
+				continue;
+			}
 			PropertyValue value = properties.get(property);
 			Short localTag = primerPack.lookupLocalTag(property.getAUID());
 			long predictedLength = value.getType().lengthAsBytes(value);
@@ -433,6 +443,11 @@ public class MXFServiceImpl implements MXFService {
 			bodyOut.write(shortToBytes(localTag));
 			bodyOut.write(shortToBytes((short) actualLength));
 			bodyOut.write(valueBuffer.array(), 0, actualLength);
+		}
+		// A preserved strong reference vector may not have round-tripped into `properties`
+		// (its getter throws internally for an empty-but-present list), so write it directly.
+		for (Map.Entry<String, byte[]> entry : preservedRawProperties.entrySet()) {
+			if (!written.contains(entry.getKey())) bodyOut.write(entry.getValue());
 		}
 
 		byte[] bodyBytes = bodyOut.toByteArray();
@@ -455,6 +470,69 @@ public class MXFServiceImpl implements MXFService {
 		throw new IOException("Could not find a free local tag to add a new Core DMS property.");
 	}
 
+	// Strong reference vector properties: the generic writer below mints a fresh random UID for
+	// each entry instead of the sub-object's real one, so unchanged values must reuse the original TLV bytes.
+	private static final String[] STRONG_REFERENCE_VECTOR_PROPERTIES = { "Identifiers", "Devices" };
+
+	private static String safeIdentifiersString(AS07CoreDMSFramework framework) {
+		try {
+			return new IdentifierSetHelper().identifiersToString(framework.getIdentifiers());
+		} catch (Exception ex) {
+			return "";
+		}
+	}
+
+	private static String safeDevicesString(AS07CoreDMSFramework framework) {
+		try {
+			return new DeviceSetHelper().devicesToString(framework.getDevices());
+		} catch (Exception ex) {
+			return "";
+		}
+	}
+
+	private static PropertyDefinition findPropertyDefinition(ClassDefinition classDef, String name) {
+		for (PropertyDefinition property : classDef.getAllPropertyDefinitions()) {
+			if (property.getName().equals(name)) return property;
+		}
+		return null;
+	}
+
+	private static byte[] extractTLVBytes(byte[] data, int start, int end, short targetTag) {
+		int position = start;
+		while (position + 4 <= end) {
+			int tag = ((data[position] & 0xFF) << 8) | (data[position + 1] & 0xFF);
+			int length = ((data[position + 2] & 0xFF) << 8) | (data[position + 3] & 0xFF);
+			int valueEnd = position + 4 + length;
+			if (valueEnd > end) return null;
+			if (tag == (targetTag & 0xFFFF)) {
+				byte[] tlv = new byte[valueEnd - position];
+				System.arraycopy(data, position, tlv, 0, tlv.length);
+				return tlv;
+			}
+			position = valueEnd;
+		}
+		return null;
+	}
+
+	private static Map<String, byte[]> capturePreservedStrongReferenceVectors(byte[] originalMetadataBytes,
+			int frameworkBodyStart, int frameworkBodyEnd, PrimerPack primerPack, ClassDefinition classDef,
+			String identifiersBeforeEdit, String devicesBeforeEdit, AS07CoreDMSFramework effectiveFramework) {
+		Map<String, byte[]> preserved = new HashMap<String, byte[]>();
+		for (String propertyName : STRONG_REFERENCE_VECTOR_PROPERTIES) {
+			String beforeValue = propertyName.equals("Identifiers") ? identifiersBeforeEdit : devicesBeforeEdit;
+			String afterValue = propertyName.equals("Identifiers")
+					? safeIdentifiersString(effectiveFramework) : safeDevicesString(effectiveFramework);
+			if (!beforeValue.equals(afterValue)) continue;
+			PropertyDefinition property = findPropertyDefinition(classDef, propertyName);
+			if (property == null) continue;
+			Short tag = primerPack.lookupLocalTag(property.getAUID());
+			if (tag == null) continue;
+			byte[] raw = extractTLVBytes(originalMetadataBytes, frameworkBodyStart, frameworkBodyEnd, tag);
+			if (raw != null) preserved.put(propertyName, raw);
+		}
+		return preserved;
+	}
+
 	private PartitionEditPlan planPartitionEdit(Partition partition, CoreDMSEditor editor, RandomAccessFile source)
 			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
 		HeaderMetadata headerMetadata = partition.readHeaderMetadata();
@@ -464,6 +542,10 @@ public class MXFServiceImpl implements MXFService {
 		if (marker == null) return null;
 
 		AS07CoreDMSFramework existingFramework = (AS07CoreDMSFramework) marker.getDescriptiveFrameworkObject();
+		// existingFramework is typically mutated in place by editor.apply(), so its strong
+		// reference vector properties must be snapshotted as strings before the edit is applied.
+		String identifiersBeforeEdit = safeIdentifiersString(existingFramework);
+		String devicesBeforeEdit = safeDevicesString(existingFramework);
 		editor.apply(marker, existingFramework);
 
 		DescriptiveFramework effectiveDf = marker.getDescriptiveFrameworkObject();
@@ -489,7 +571,11 @@ public class MXFServiceImpl implements MXFService {
 
 		PrimerPack primerPack = headerMetadata.getPrimerPack().clone();
 		int tagCountBefore = primerPack.countLocalTagEntries();
-		byte[] newLocalSetBytes = encodeCoreDMSLocalSet(effectiveFramework, instanceID, primerPack);
+		ClassDefinition classDef = Warehouse.lookForClass(AS07CoreDMSFrameworkImpl.class);
+		Map<String, byte[]> preservedRawProperties = capturePreservedStrongReferenceVectors(originalMetadataBytes,
+				frameworkKlv[1], frameworkKlv[2], primerPack, classDef,
+				identifiersBeforeEdit, devicesBeforeEdit, effectiveFramework);
+		byte[] newLocalSetBytes = encodeCoreDMSLocalSet(effectiveFramework, instanceID, primerPack, preservedRawProperties);
 		boolean primerPackGrew = primerPack.countLocalTagEntries() != tagCountBefore;
 
 		int frameworkStart = frameworkKlv[0];
@@ -1371,7 +1457,13 @@ public class MXFServiceImpl implements MXFService {
 			core = new AS07CoreDMSFrameworkImpl();
 		}
 		IdentifierSetHelper idSetHelper = new IdentifierSetHelper();
-		String identifiers = idSetHelper.identifiersToString(core.getIdentifiers());
+		String identifiers = "";
+		try {
+			// getIdentifiers() throws NullPointerException, not PropertyNotPresentException, when empty.
+			identifiers = idSetHelper.identifiersToString(core.getIdentifiers());
+		} catch (Exception ex) {
+			LOGGER.log(Level.INFO, "AS_07_Core_DMS_Identifiers Property Not Present");
+		}
 
 		String devices = "";
 		try {
