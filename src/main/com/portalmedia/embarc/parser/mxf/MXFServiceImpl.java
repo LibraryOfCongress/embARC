@@ -35,6 +35,7 @@ import com.portalmedia.embarc.parser.StringMetadataColumn;
 
 import tv.amwa.maj.constant.CommonConstants;
 import tv.amwa.maj.exception.PropertyNotPresentException;
+import tv.amwa.maj.industry.MetadataObject;
 import tv.amwa.maj.industry.PropertyValue;
 import tv.amwa.maj.industry.Warehouse;
 import tv.amwa.maj.io.mxf.BodyPartition;
@@ -231,6 +232,11 @@ public class MXFServiceImpl implements MXFService {
 		byte[] contentBytes;
 	}
 
+	private static class StrongReferenceVectorEncoding {
+		Map<String, byte[]> rawPropertyOverrides = new HashMap<String, byte[]>();
+		List<byte[]> extraTopLevelKlvBlocks = new ArrayList<byte[]>();
+	}
+
 	private static final long MIN_FILL_SIZE = 20L;
 
 	/**
@@ -408,10 +414,23 @@ public class MXFServiceImpl implements MXFService {
 	}
 
 	private static byte[] encodeCoreDMSLocalSet(AS07CoreDMSFramework framework, AUID instanceID, PrimerPack primerPack,
-			Map<String, byte[]> preservedRawProperties)
+			Map<String, byte[]> rawPropertyOverrides)
 			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
-		ClassDefinition classDef = Warehouse.lookForClass(AS07CoreDMSFrameworkImpl.class);
-		SortedMap<? extends PropertyDefinition, ? extends PropertyValue> properties = classDef.getProperties(framework);
+		return encodeLocalSet(AS07CoreDMSFrameworkImpl.class, framework, instanceID, primerPack, rawPropertyOverrides);
+	}
+
+	// Used for the sub-objects a strong reference vector points to (e.g. an AS07DMSIdentifierSetImpl
+	// entry of Identifiers): plain properties only, no overrides needed.
+	private static byte[] encodeSubObjectLocalSet(Class<?> implClass, MetadataObject obj, AUID instanceID,
+			PrimerPack primerPack) throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
+		return encodeLocalSet(implClass, obj, instanceID, primerPack, java.util.Collections.<String, byte[]>emptyMap());
+	}
+
+	private static byte[] encodeLocalSet(Class<?> implClass, MetadataObject obj, AUID instanceID, PrimerPack primerPack,
+			Map<String, byte[]> rawPropertyOverrides)
+			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
+		ClassDefinition classDef = Warehouse.lookForClass(implClass);
+		SortedMap<? extends PropertyDefinition, ? extends PropertyValue> properties = classDef.getProperties(obj);
 
 		for (PropertyDefinition property : properties.keySet()) {
 			if (property.getAUID().equals(CommonConstants.ObjectClassID)) continue;
@@ -428,9 +447,9 @@ public class MXFServiceImpl implements MXFService {
 		Set<String> written = new HashSet<String>();
 		for (PropertyDefinition property : properties.keySet()) {
 			if (property.getAUID().equals(CommonConstants.ObjectClassID)) continue;
-			byte[] preserved = preservedRawProperties.get(property.getName());
-			if (preserved != null) {
-				bodyOut.write(preserved);
+			byte[] override = rawPropertyOverrides.get(property.getName());
+			if (override != null) {
+				bodyOut.write(override);
 				written.add(property.getName());
 				continue;
 			}
@@ -444,9 +463,9 @@ public class MXFServiceImpl implements MXFService {
 			bodyOut.write(shortToBytes((short) actualLength));
 			bodyOut.write(valueBuffer.array(), 0, actualLength);
 		}
-		// A preserved strong reference vector may not have round-tripped into `properties`
+		// An overridden strong reference vector may not have round-tripped into `properties`
 		// (its getter throws internally for an empty-but-present list), so write it directly.
-		for (Map.Entry<String, byte[]> entry : preservedRawProperties.entrySet()) {
+		for (Map.Entry<String, byte[]> entry : rawPropertyOverrides.entrySet()) {
 			if (!written.contains(entry.getKey())) bodyOut.write(entry.getValue());
 		}
 
@@ -455,6 +474,19 @@ public class MXFServiceImpl implements MXFService {
 		MXFStream.writeKey(out, (UL) classDef.getAUID());
 		MXFStream.writeBERLength(out, bodyBytes.length, 4);
 		out.write(bodyBytes);
+		return out.toByteArray();
+	}
+
+	private static byte[] buildStrongReferenceVectorBatchValue(List<AUID> uids) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream(8 + uids.size() * 16);
+		byte[] header = new byte[8];
+		header[0] = (byte) ((uids.size() >> 24) & 0xFF);
+		header[1] = (byte) ((uids.size() >> 16) & 0xFF);
+		header[2] = (byte) ((uids.size() >> 8) & 0xFF);
+		header[3] = (byte) (uids.size() & 0xFF);
+		header[4] = 0; header[5] = 0; header[6] = 0; header[7] = 16;
+		out.write(header, 0, 8);
+		for (AUID uid : uids) out.write(uid.getAUIDValue(), 0, 16);
 		return out.toByteArray();
 	}
 
@@ -514,26 +546,78 @@ public class MXFServiceImpl implements MXFService {
 		return null;
 	}
 
-	private static Map<String, byte[]> capturePreservedStrongReferenceVectors(byte[] originalMetadataBytes,
+	private static Class<?> subObjectImplClass(String propertyName) {
+		return propertyName.equals("Identifiers") ? AS07DMSIdentifierSetImpl.class : AS07CoreDMSDeviceObjectsImpl.class;
+	}
+
+	private static List<? extends MetadataObject> currentSubObjects(String propertyName, AS07CoreDMSFramework framework) {
+		try {
+			return propertyName.equals("Identifiers") ? framework.getIdentifiers() : framework.getDevices();
+		} catch (Exception ex) {
+			return java.util.Collections.emptyList();
+		}
+	}
+
+	// Handles both cases for Identifiers/Devices: when unchanged, the original TLV bytes are
+	// reused verbatim (see STRONG_REFERENCE_VECTOR_PROPERTIES); when genuinely edited, fresh
+	// sub-object KLV blocks are built (each with its own generated instance UID) and a matching
+	// strong reference vector value is written to point at them.
+	private static StrongReferenceVectorEncoding planStrongReferenceVectorEncoding(byte[] originalMetadataBytes,
 			int frameworkBodyStart, int frameworkBodyEnd, PrimerPack primerPack, ClassDefinition classDef,
-			String identifiersBeforeEdit, String devicesBeforeEdit, AS07CoreDMSFramework effectiveFramework) {
-		Map<String, byte[]> preserved = new HashMap<String, byte[]>();
+			String identifiersBeforeEdit, String devicesBeforeEdit, AS07CoreDMSFramework effectiveFramework,
+			Map<String, List<AUID>> sharedSubObjectUIDs)
+			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
+		StrongReferenceVectorEncoding encoding = new StrongReferenceVectorEncoding();
 		for (String propertyName : STRONG_REFERENCE_VECTOR_PROPERTIES) {
 			String beforeValue = propertyName.equals("Identifiers") ? identifiersBeforeEdit : devicesBeforeEdit;
 			String afterValue = propertyName.equals("Identifiers")
 					? safeIdentifiersString(effectiveFramework) : safeDevicesString(effectiveFramework);
-			if (!beforeValue.equals(afterValue)) continue;
 			PropertyDefinition property = findPropertyDefinition(classDef, propertyName);
 			if (property == null) continue;
+
+			if (beforeValue.equals(afterValue)) {
+				Short tag = primerPack.lookupLocalTag(property.getAUID());
+				if (tag == null) continue;
+				byte[] raw = extractTLVBytes(originalMetadataBytes, frameworkBodyStart, frameworkBodyEnd, tag);
+				if (raw != null) encoding.rawPropertyOverrides.put(propertyName, raw);
+				continue;
+			}
+
+			List<? extends MetadataObject> newItems = currentSubObjects(propertyName, effectiveFramework);
+			if (newItems.isEmpty()) continue; // property becomes absent; nothing to write or add
+
+			Class<?> implClass = subObjectImplClass(propertyName);
+			// Header and footer metadata are independently re-planned copies of the same edit, so
+			// the same conceptual new entry must reuse one UID across both instead of getting a
+			// fresh random one from each - otherwise the two partitions silently diverge.
+			List<AUID> reusableUIDs = sharedSubObjectUIDs.get(propertyName);
+			boolean canReuse = reusableUIDs != null && reusableUIDs.size() == newItems.size();
+			List<AUID> subInstanceIDs = new ArrayList<AUID>();
+			for (int i = 0; i < newItems.size(); i++) {
+				AUID subInstanceID = canReuse ? reusableUIDs.get(i) : new AUIDImpl();
+				encoding.extraTopLevelKlvBlocks.add(
+						encodeSubObjectLocalSet(implClass, newItems.get(i), subInstanceID, primerPack));
+				subInstanceIDs.add(subInstanceID);
+			}
+			if (!canReuse) sharedSubObjectUIDs.put(propertyName, subInstanceIDs);
+
 			Short tag = primerPack.lookupLocalTag(property.getAUID());
-			if (tag == null) continue;
-			byte[] raw = extractTLVBytes(originalMetadataBytes, frameworkBodyStart, frameworkBodyEnd, tag);
-			if (raw != null) preserved.put(propertyName, raw);
+			if (tag == null) {
+				tag = findFreeLocalTag(primerPack);
+				primerPack.addLocalTagEntry(tag, property.getAUID());
+			}
+			byte[] batchValue = buildStrongReferenceVectorBatchValue(subInstanceIDs);
+			ByteArrayOutputStream tlv = new ByteArrayOutputStream(4 + batchValue.length);
+			tlv.write(shortToBytes(tag));
+			tlv.write(shortToBytes((short) batchValue.length));
+			tlv.write(batchValue);
+			encoding.rawPropertyOverrides.put(propertyName, tlv.toByteArray());
 		}
-		return preserved;
+		return encoding;
 	}
 
-	private PartitionEditPlan planPartitionEdit(Partition partition, CoreDMSEditor editor, RandomAccessFile source)
+	private PartitionEditPlan planPartitionEdit(Partition partition, CoreDMSEditor editor, RandomAccessFile source,
+			Map<String, List<AUID>> sharedSubObjectUIDs)
 			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
 		HeaderMetadata headerMetadata = partition.readHeaderMetadata();
 		if (headerMetadata == null) return null;
@@ -572,10 +656,11 @@ public class MXFServiceImpl implements MXFService {
 		PrimerPack primerPack = headerMetadata.getPrimerPack().clone();
 		int tagCountBefore = primerPack.countLocalTagEntries();
 		ClassDefinition classDef = Warehouse.lookForClass(AS07CoreDMSFrameworkImpl.class);
-		Map<String, byte[]> preservedRawProperties = capturePreservedStrongReferenceVectors(originalMetadataBytes,
+		StrongReferenceVectorEncoding strongRefEncoding = planStrongReferenceVectorEncoding(originalMetadataBytes,
 				frameworkKlv[1], frameworkKlv[2], primerPack, classDef,
-				identifiersBeforeEdit, devicesBeforeEdit, effectiveFramework);
-		byte[] newLocalSetBytes = encodeCoreDMSLocalSet(effectiveFramework, instanceID, primerPack, preservedRawProperties);
+				identifiersBeforeEdit, devicesBeforeEdit, effectiveFramework, sharedSubObjectUIDs);
+		byte[] newLocalSetBytes = encodeCoreDMSLocalSet(effectiveFramework, instanceID, primerPack,
+				strongRefEncoding.rawPropertyOverrides);
 		boolean primerPackGrew = primerPack.countLocalTagEntries() != tagCountBefore;
 
 		int frameworkStart = frameworkKlv[0];
@@ -600,6 +685,9 @@ public class MXFServiceImpl implements MXFService {
 			contentStream.write(originalMetadataBytes, 0, frameworkStart);
 		}
 		contentStream.write(newLocalSetBytes);
+		for (byte[] extraKlvBlock : strongRefEncoding.extraTopLevelKlvBlocks) {
+			contentStream.write(extraKlvBlock);
+		}
 		contentStream.write(originalMetadataBytes, frameworkEnd, realMetadataEnd - frameworkEnd);
 		byte[] contentBytes = contentStream.toByteArray();
 
@@ -622,12 +710,17 @@ public class MXFServiceImpl implements MXFService {
 			if (mxfFile.getRunInSize() != 0)
 				throw new IOException("Files with a run-in are not supported by the safe Core DMS rewrite path.");
 
+			// Header and footer metadata are duplicate copies of each other, so a freshly created
+			// sub-object (e.g. a new Identifiers entry) must reuse the same instance UID in both
+			// partitions rather than getting a fresh random one from each independent plan.
+			Map<String, List<AUID>> sharedSubObjectUIDs = new HashMap<String, List<AUID>>();
 			PartitionEditPlan headerPlan;
 			PartitionEditPlan footerPlan;
 			try (RandomAccessFile source = new RandomAccessFile(filePath, "r")) {
-				headerPlan = planPartitionEdit(mxfFile.getHeaderPartition(), editor, source);
+				headerPlan = planPartitionEdit(mxfFile.getHeaderPartition(), editor, source, sharedSubObjectUIDs);
 				FooterPartition footerPartition = mxfFile.getFooterPartition();
-				footerPlan = footerPartition != null ? planPartitionEdit(footerPartition, editor, source) : null;
+				footerPlan = footerPartition != null
+						? planPartitionEdit(footerPartition, editor, source, sharedSubObjectUIDs) : null;
 			}
 
 			if (headerPlan == null && footerPlan == null) {
