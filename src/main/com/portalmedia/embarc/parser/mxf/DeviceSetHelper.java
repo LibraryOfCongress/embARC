@@ -13,7 +13,7 @@ public class DeviceSetHelper {
 
 	public ArrayList<AS07CoreDMSDeviceObjectsImpl> createDeviceListFromString(String values) {
 		ArrayList<AS07CoreDMSDeviceObjectsImpl> devices = new ArrayList<AS07CoreDMSDeviceObjectsImpl>();
-		String[] valList = values.split(slash);
+		List<String> valList = DelimitedListCodec.splitOnDelimiterRun(values, slash.charAt(0), slash.length());
 		for (String v : valList) {
 			if (!v.isEmpty()) devices.add(createDeviceFromString(v));
 		}
@@ -21,13 +21,13 @@ public class DeviceSetHelper {
 	}
 
 	public AS07CoreDMSDeviceObjectsImpl createDeviceFromString(String values) {
-		String[] valList = values.split(comma);
+		List<String> valList = DelimitedListCodec.splitOnDelimiterRun(values, comma.charAt(0), comma.length());
 		AS07CoreDMSDeviceObjectsImpl device = new AS07CoreDMSDeviceObjectsImpl();
-		if(valList.length>0) device.setDeviceType(valList[0]);
-		if(valList.length>1) device.setManufacturer(valList[1]);
-		if(valList.length>2) device.setModel(valList[2]);
-		if(valList.length>3) device.setSerialNumber(valList[3]);
-		if(valList.length>4) device.setUsageDescription(valList[4]);
+		if(valList.size()>0) device.setDeviceType(DelimitedListCodec.unescapeField(valList.get(0)));
+		if(valList.size()>1) device.setManufacturer(DelimitedListCodec.unescapeField(valList.get(1)));
+		if(valList.size()>2) device.setModel(DelimitedListCodec.unescapeField(valList.get(2)));
+		if(valList.size()>3) device.setSerialNumber(DelimitedListCodec.unescapeField(valList.get(3)));
+		if(valList.size()>4) device.setUsageDescription(DelimitedListCodec.unescapeField(valList.get(4)));
 		return device;
 	}
 	
@@ -69,6 +69,8 @@ public class DeviceSetHelper {
 			usage = device.getUsageDescription();
 		} catch(PropertyNotPresentException pex) {}
 
-		return type + comma + manu + comma + model + comma + serial + comma + usage;
+		return DelimitedListCodec.escapeField(type) + comma + DelimitedListCodec.escapeField(manu) + comma
+				+ DelimitedListCodec.escapeField(model) + comma + DelimitedListCodec.escapeField(serial) + comma
+				+ DelimitedListCodec.escapeField(usage);
 	}
 }
