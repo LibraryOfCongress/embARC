@@ -416,18 +416,21 @@ public class MXFServiceImpl implements MXFService {
 	private static byte[] encodeCoreDMSLocalSet(AS07CoreDMSFramework framework, AUID instanceID, PrimerPack primerPack,
 			Map<String, byte[]> rawPropertyOverrides)
 			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
-		return encodeLocalSet(AS07CoreDMSFrameworkImpl.class, framework, instanceID, primerPack, rawPropertyOverrides);
+		return encodeLocalSet(AS07CoreDMSFrameworkImpl.class, framework, instanceID, primerPack, rawPropertyOverrides, true);
 	}
 
 	// Used for the sub-objects a strong reference vector points to (e.g. an AS07DMSIdentifierSetImpl
-	// entry of Identifiers): plain properties only, no overrides needed.
+	// entry of Identifiers): plain properties only, no overrides needed. Empty string sub-fields are
+	// still written (omitEmptyStrings=false): IdentifierSetHelper/DeviceSetHelper encode a sub-object
+	// as a fixed number of comma-separated positions, and dropping one would shift every field after
+	// it when the record is parsed back on read.
 	private static byte[] encodeSubObjectLocalSet(Class<?> implClass, MetadataObject obj, AUID instanceID,
 			PrimerPack primerPack) throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
-		return encodeLocalSet(implClass, obj, instanceID, primerPack, java.util.Collections.<String, byte[]>emptyMap());
+		return encodeLocalSet(implClass, obj, instanceID, primerPack, java.util.Collections.<String, byte[]>emptyMap(), false);
 	}
 
 	private static byte[] encodeLocalSet(Class<?> implClass, MetadataObject obj, AUID instanceID, PrimerPack primerPack,
-			Map<String, byte[]> rawPropertyOverrides)
+			Map<String, byte[]> rawPropertyOverrides, boolean omitEmptyStrings)
 			throws IOException, tv.amwa.maj.exception.InsufficientSpaceException {
 		ClassDefinition classDef = Warehouse.lookForClass(implClass);
 		SortedMap<? extends PropertyDefinition, ? extends PropertyValue> properties = classDef.getProperties(obj);
@@ -454,6 +457,11 @@ public class MXFServiceImpl implements MXFService {
 				continue;
 			}
 			PropertyValue value = properties.get(property);
+			// A field the user (or a stale default, e.g. IntendedAFD) has left as an empty string
+			// is treated as absent rather than serialized as present-but-empty: some MAJ getters
+			// default to "" instead of null and would otherwise resurrect a property that was
+			// never actually set in the file, on every unrelated edit.
+			if (omitEmptyStrings && "".equals(value.getValue())) continue;
 			Short localTag = primerPack.lookupLocalTag(property.getAUID());
 			long predictedLength = value.getType().lengthAsBytes(value);
 			ByteBuffer valueBuffer = ByteBuffer.allocate((int) predictedLength + 64);

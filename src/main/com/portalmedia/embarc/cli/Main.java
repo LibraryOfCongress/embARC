@@ -538,7 +538,7 @@ public class Main {
 
 	private static void printCoreProperty(HashMap<MXFColumn, MetadataColumnDef> coreData, MXFColumn col, String label) {
 		String value = "";
-		if (coreData.containsKey(col)) {
+		if (coreData.containsKey(col) && coreData.get(col).getCurrentValue() != null) {
 			value = coreData.get(col).getCurrentValue();
 		}
 		System.out.format("%-35s%-1s\n", label, value);
