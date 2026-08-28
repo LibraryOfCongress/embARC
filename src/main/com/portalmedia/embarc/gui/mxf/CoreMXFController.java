@@ -423,6 +423,11 @@ public class CoreMXFController extends AnchorPane {
 		});
 		iconHbox.setAccessibleRole(AccessibleRole.BUTTON);
 		iconHbox.setAccessibleText("Open modal with Identifiers specification.");
+		if (col.isRequired() && identifiers.size() == 0) {
+			final FontIcon warningIcon = new FontIcon(FontAwesomeSolid.EXCLAMATION_CIRCLE);
+			warningIcon.getStyleClass().add("fadgi-sr-warning");
+			labelIconHbox.getChildren().add(warningIcon);
+		}
 		hbox.getChildren().addAll(labelIconHbox);
 
 		labelIconHbox.setPrefWidth(285.0);

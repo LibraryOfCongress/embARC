@@ -12,20 +12,20 @@ public class IdentifierSetHelper {
 
 	public ArrayList<AS07DMSIdentifierSetImpl> createIdentifierListFromString(String values) {
 		ArrayList<AS07DMSIdentifierSetImpl> idents = new ArrayList<AS07DMSIdentifierSetImpl>();
-		String[] valList = values.split(slash);
+		List<String> valList = DelimitedListCodec.splitOnDelimiterRun(values, slash.charAt(0), slash.length());
 		for (String v : valList) {
-			if (v != "") idents.add(createIdentifierFromString(v));
+			if (!v.isEmpty()) idents.add(createIdentifierFromString(v));
 		}
 		return idents;
 	}
 
 	public AS07DMSIdentifierSetImpl createIdentifierFromString(String values) {
-		String[] valList = values.split(comma);
+		List<String> valList = DelimitedListCodec.splitOnDelimiterRun(values, comma.charAt(0), comma.length());
 		AS07DMSIdentifierSetImpl ident = new AS07DMSIdentifierSetImpl();
-		if (valList.length > 0) ident.setIdentifierValue(valList[0]);
-		if (valList.length > 1) ident.setIdentifierRole(valList[1]);
-		if (valList.length > 2) ident.setIdentifierType(valList[2]);
-		if (valList.length > 3) ident.setIdentifierComment(valList[3]);
+		if (valList.size() > 0) ident.setIdentifierValue(DelimitedListCodec.unescapeField(valList.get(0)));
+		if (valList.size() > 1) ident.setIdentifierRole(DelimitedListCodec.unescapeField(valList.get(1)));
+		if (valList.size() > 2) ident.setIdentifierType(DelimitedListCodec.unescapeField(valList.get(2)));
+		if (valList.size() > 3) ident.setIdentifierComment(DelimitedListCodec.unescapeField(valList.get(3)));
 		return ident;
 	}
 	
@@ -47,13 +47,12 @@ public class IdentifierSetHelper {
 		String type = null;
 		String comm = null;
 
-		try {
-			val = id.getIdentifierValue();
-			role = id.getIdentifierRole();
-			type = id.getIdentifierType();
-			comm = id.getIdentifierComment();
-		} catch (PropertyNotPresentException ex) {}
+		try { val = id.getIdentifierValue(); } catch (PropertyNotPresentException ex) {}
+		try { role = id.getIdentifierRole(); } catch (PropertyNotPresentException ex) {}
+		try { type = id.getIdentifierType(); } catch (PropertyNotPresentException ex) {}
+		try { comm = id.getIdentifierComment(); } catch (PropertyNotPresentException ex) {}
 
-		return val + comma + role + comma + type + comma + comm;
+		return DelimitedListCodec.escapeField(val) + comma + DelimitedListCodec.escapeField(role) + comma
+				+ DelimitedListCodec.escapeField(type) + comma + DelimitedListCodec.escapeField(comm);
 	}
 }
