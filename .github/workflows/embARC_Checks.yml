@@ -56,8 +56,8 @@ jobs:
       - name: embARC-maj
         run: |
           # Don't use git clone because it's fail on Windows due to invalid path (.metadata/.plugins/org.eclipse.core.runtime/.settings/org.springframework.ide.eclipse.boot.dash:Cloud Foundry.prefs')
-          Invoke-WebRequest -Uri "https://github.com/PortalMedia/embARC-maj/archive/refs/heads/master.zip" -OutFile "embARC-maj.zip"
-          Expand-Archive -Path "embARC-maj.zip" -DestinationPath "."
+          Invoke-WebRequest -Uri "https://github.com/MediaArea/embARC-maj/archive/refs/heads/master.zip" -OutFile "embARC-maj.zip"
+          & 7z.exe x embARC-maj.zip
           Rename-Item -Path "embARC-maj-master" -NewName "embARC-maj"
       - name: Compile
         run: |
