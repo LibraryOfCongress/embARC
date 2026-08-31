@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file
 
+## 1.4.2 2026-08-31
+	Bugfixes:
+	- Fix MXF edition support
+
 ## 1.4.0 2025-05-20
 	Accessibility Tasks:
 	- emb-m-10 & emb-w-12 - make tabs with non-compliance issues accessible to screen reader users

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file
 
+## 1.4.2 2026-08-31
+	Bugfixes:
+	- Fix MXF edition support
+
 ## 0.4.0 2024-02-27
 	Add feature to apply DPX metadata changes from input JSON
 
