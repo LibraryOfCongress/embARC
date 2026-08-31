@@ -5,8 +5,8 @@ RequestExecutionLevel admin
 ; Some defines
 !define PRODUCT_NAME "embARC"
 !define PRODUCT_PUBLISHER "MediaArea.net"
-!define PRODUCT_VERSION "1.4"
-!define PRODUCT_VERSION4 "${PRODUCT_VERSION}.0.0"
+!define PRODUCT_VERSION "1.4.2"
+!define PRODUCT_VERSION4 "${PRODUCT_VERSION}.0"
 !define PRODUCT_WEB_SITE "https://www.mediaarea.net/embARC"
 !define COMPANY_REGISTRY "Software\MediaArea.net"
 !define PRODUCT_REGISTRY "Software\MediaArea.net\embARC"
