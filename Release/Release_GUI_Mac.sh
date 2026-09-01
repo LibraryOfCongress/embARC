@@ -33,7 +33,7 @@ pushd "${release_directory}/.."
     mkdir -p "build/distributions/macos"
     jpackage --type app-image \
              --name embARC \
-             --app-version ${version} \
+             --app-version $(echo ${version} | cut -d. -f-3) \
              --input build/libs \
              --main-jar embARC-${version}.jar \
              --main-class com.portalmedia.embarc.gui.Launcher \
