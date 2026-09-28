@@ -37,6 +37,10 @@ public class JsonWriterDpx {
             fileJson.put("General", fileValues);
             
             DPXMetadata data = dpxFileInfo.getFileData();
+            if (data == null) {
+                System.out.println("No metadata was read from " + dpxFileInfo.getName() + ", skipping it");
+                continue;
+            }
         	LinkedHashMap<ColumnDef, MetadataColumn> metadata = data.getMetadataHashMap();
 
         	String currentSection = null;

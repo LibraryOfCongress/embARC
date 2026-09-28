@@ -49,7 +49,7 @@ public class BinaryFileReader implements AutoCloseable{
 	public void skip(int position)
 	{
 		try {
-			inputStream.skip(position);
+			bytesRead += inputStream.skip(position);
 		} catch (IOException e) {
 			System.out.println("Error skipping to " + position);
 		}
@@ -66,7 +66,7 @@ public class BinaryFileReader implements AutoCloseable{
 	}
 	
 	public boolean canRead(int length) {
-		return bytesRead + length < fileSizeBytes;
+		return length >= 0 && bytesRead + length <= fileSizeBytes;
 	}
 	
 	public String readAscii(int length) {
@@ -168,10 +168,22 @@ public class BinaryFileReader implements AutoCloseable{
 	
 	public byte[] readBytes(int length) throws IOException
 	{
+		// The length often comes from a header field, so it can ask for more
+		// than the file holds. Reading anyway filled the array with the -1
+		// returned at end of file, reported back as 0xFF bytes of content.
+		if (!canRead(length)) {
+			throw new IOException("Cannot read " + length + " bytes at offset "
+					+ bytesRead + ", the file is " + fileSizeBytes + " bytes");
+		}
 		byte [] bytes = new byte[length];
 		for(int bp =0; bp < length; bp++)
 		{
-			bytes[bp] = (byte) inputStream.read();
+			int value = inputStream.read();
+			if (value == -1) {
+				throw new IOException("Unexpected end of file after " + bp
+						+ " of " + length + " bytes");
+			}
+			bytes[bp] = (byte) value;
 			bytesRead++;
 		}
 		return bytes;
